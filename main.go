@@ -132,10 +132,13 @@ func main() {
 	}
 	vars := TemplateVars{*config}
 	// TODO: Clean the path
-	outputPath := runTemplating(l, config.Output, "output", vars)
-	err := os.MkdirAll(path.Dir(outputPath), 0755)
-	if err != nil {
-		l.Fatal().Err(err).Str("dir", path.Dir(outputPath)).Msg("Failed to create directories for output")
+	outputPath := config.Output
+	if outputPath != "" {
+		outputPath = runTemplating(l, config.Output, "output", vars)
+		err := os.MkdirAll(path.Dir(outputPath), 0755)
+		if err != nil {
+			l.Fatal().Err(err).Str("dir", path.Dir(outputPath)).Msg("Failed to create directories for output")
+		}
 	}
 
 	token := runTemplating(l, config.AuthToken, "token", vars)

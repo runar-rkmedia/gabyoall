@@ -30,6 +30,9 @@ func (o *Output) AddStat(stat RequestStat) *Output {
 	return o
 }
 func (o *Output) Write() error {
+	if o.path == "" {
+		return nil
+	}
 	err := WriteAuto(o.path, o)
 	if err != nil {
 		return err
@@ -91,9 +94,14 @@ func (out *Output) PrintTable() {
 }
 
 func NewOutput(l logger.AppLogger, path, url string, query queries.GraphQLQuery, JwtPayload map[string]interface{}) (Output, error) {
-	abs, err := filepath.Abs(path)
-	if err != nil {
-		return Output{}, fmt.Errorf("filepath %s returned error: %w", path, err)
+	abs := ""
+	if path != "" {
+
+		_abs, err := filepath.Abs(path)
+		if err != nil {
+			return Output{}, fmt.Errorf("filepath %s returned error: %w", path, err)
+		}
+		abs = _abs
 	}
 	return Output{
 		l:          l,

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/rand"
 	"os"
 	"os/signal"
 	"path"
@@ -26,6 +25,7 @@ import (
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/logger"
 	"github.com/runar-rkmedia/gabyoall/queries"
+	"github.com/runar-rkmedia/gabyoall/worker"
 )
 
 var envRegex = regexp.MustCompile(`(\$({([^}]*)}))`)
@@ -125,7 +125,6 @@ func main() {
 		l.Fatal().Msg("Request-count cannot be 0")
 
 	}
-	var okStatusCodes []int
 
 	if query.Query == "" {
 		l.Fatal().Interface("query", query).Msg("Missing query")
@@ -188,67 +187,15 @@ func main() {
 	l.Info().Str("path", out.GetPath()).Msg("Will write output to path:")
 	endpoint := cmd.NewGraphQLEndpoint(logger.GetLogger("gql"), config.Url)
 	endpoint.Headers.Add("Authorization", token)
-	ch := make(chan cmd.RequestStat)
 
-	hasWorkChan := make(chan struct{}, config.Concurrency)
-	workChan := make(chan Work, config.Concurrency)
 	l.Info().Str("url", config.Url).Str("operationName", query.OperationName).Int("count", config.RequestCount).Int("paralism", config.Concurrency).Msg("Running requests with paralism")
 	SetupCloseHandler(func(signal os.Signal) {
 		out.Write()
 	})
 
-	go func() {
-		for {
-			select {
-			case work := <-workChan:
-				go work()
-				hasWorkChan <- struct{}{}
+	wt := worker.WorkThing{}
+	ch, hasWorkChan := wt.Run(endpoint, *config, query)
 
-			}
-
-		}
-	}()
-	go func() {
-		for j := 0; j < config.RequestCount; j++ {
-
-			workChan <- func(i int) Work {
-
-				return func() {
-					if config.Mock {
-						// TODO: replace with a mocked http-client-interface
-						stat := cmd.NewStat()
-						time.Sleep(time.Millisecond * time.Duration(rand.Int63n(80)+1))
-						errorType := cmd.Unknwon
-						n := rand.Intn(7)
-						switch n {
-						case 1:
-							errorType = cmd.NonOK
-						case 2:
-							errorType = cmd.ServerTestError
-						case 3:
-							errorType = "RandomErr"
-						case 4:
-							errorType = "OtherErr"
-						case 6:
-							errorType = "MadeUpError"
-
-						}
-						ch <- stat.End(errorType, nil)
-						return
-					}
-					_, stat, _ := endpoint.RunQuery(query, okStatusCodes)
-					if stat.Response != nil {
-
-						if config.ResponseData != false && stat.Response != nil && stat.Response["error"] == nil && stat.Response["data"] != nil {
-							delete(stat.Response, "data") //stat.Response[data]
-						}
-					}
-					ch <- stat
-
-				}
-			}(j)
-		}
-	}()
 	i := 0
 	successes := 0
 	startTime := time.Now()
@@ -347,8 +294,6 @@ func SetupCloseHandler(f func(signal os.Signal)) {
 		os.Exit(0)
 	}()
 }
-
-type Work func()
 
 type GraphqlRequest struct {
 	cmd.GraphQlEndpoint

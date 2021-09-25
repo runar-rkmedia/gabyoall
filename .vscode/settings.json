@@ -1,0 +1,10 @@
+{
+	"conventionalCommits.scopes": [
+		"config",
+		"output",
+		"worker"
+	],
+	"cSpell.words": [
+		"Gobyoall"
+	]
+}

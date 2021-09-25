@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"math"
 	"math/rand"
@@ -13,7 +12,6 @@ import (
 	"os/signal"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"syscall"
 	"text/template"
@@ -105,125 +103,45 @@ func prettyDuration(d time.Duration) string {
 
 }
 
-func main() {
-	// Dont want to use viper, find replacement
-	// TODO: Refactor so we only have Config and not these vars in addition
-	mock := flag.Bool("mock", false, "Set to true to mock the requests with random data instead of making request")
-	noResponseData := flag.Bool("no-response-data", false, "Set to true if you do not want the response in the output")
-	noPrintTable := flag.Bool("no-print-table", false, "Set to true if you do not want the table to be printed")
-	output := flag.String("output", `output/{{regexReplaceAll "\\..*" .Url ""}}/{{.OperationName}}/{{now | date "2006-01-02_15-04-05"}}-{{.Count}}-{{.Concurrency}}.yaml`, "Set the file to output as")
-	logLevel := flag.String("log-level", "info", "Set the file to output as")
-	noTokenValidation := flag.Bool("no-token-validation", false, "Set to skip token-validation")
-	logFormat := flag.String("log-format", "human", "Log-format. Humar or json")
-	okStatusCodesStr := flag.String("ok-status-codes", "200,204", "Comma-separated list of status-codes to consider ok.")
-	configFile := flag.String("config-file", "config.yaml", "Config-file to read from")
-	concurrency := flag.Int("concurrency", 10, "Concurrent jobs")
-	totalRequests := flag.Int("count", 100, "Total jobs")
-	_token := flag.String("token", "", "Grapqhl-token to use.")
-	token := ""
-	url := flag.String("url", "", "Url to post requests to")
-	flag.Parse()
-	if _token == nil {
-		token = strings.TrimSpace(os.Getenv("GQL_TOKEN"))
-	} else if *_token != "" {
-		token = *_token
-	}
+type TemplateVars struct {
+	cmd.Config
+}
 
-	config := cmd.GetConfig(logger.GetLogger("initial"), *configFile)
-	var query queries.GraphQLQuery
-	if config != nil && config.LogLevel != "" {
-		logLevel = &config.LogLevel
+func main() {
+	cmd.Execute()
+	config := cmd.GetConfig(logger.GetLogger("initial"))
+	var query = queries.GraphQLQuery{
+		Query:         config.Query,
+		Variables:     config.Variables,
+		OperationName: config.OperationName,
 	}
 	logger.InitLogger(logger.LogConfig{
-		Level:      *logLevel,
-		Format:     *logFormat,
+		Level:      config.LogLevel,
+		Format:     config.LogFormat,
 		WithCaller: true,
 	})
 	l := logger.GetLogger("main")
+	if config.RequestCount == 0 {
+		l.Fatal().Msg("Request-count cannot be 0")
+
+	}
 	var okStatusCodes []int
-	if okStatusCodesStr != nil && *okStatusCodesStr != "" {
-		for _, v := range strings.Split(*okStatusCodesStr, ",") {
-			n, err := strconv.ParseInt(v, 10, 16)
-			if err != nil {
-				l.Err(err).Str("value", v).Msg("failed to parse okStatusCodes")
-			}
-			okStatusCodes = append(okStatusCodes, int(n))
-		}
-	}
-
-	if config != nil {
-		if config.Url != "" {
-			url = &config.Url
-		}
-		if config.OkStatusCodes != nil && len(config.OkStatusCodes) > 0 {
-			okStatusCodes = config.OkStatusCodes
-		}
-		if config.Count != 0 {
-			totalRequests = &config.Count
-		}
-		if config.NoTokenValidation != nil {
-			*noTokenValidation = *config.NoTokenValidation
-		}
-		if config.Concurrency != 0 {
-			concurrency = &config.Concurrency
-		}
-		if config.Token != "" {
-
-			token = config.Token
-		}
-		if config.ResponseData != nil {
-			*noResponseData = !*config.ResponseData
-		}
-		if config.Output != "" {
-			*output = config.Output
-		}
-		if config.OperationName != "" {
-			if config.Query == "" {
-				query.OperationName = config.OperationName
-				pathy := path.Join("gqlQueries", query.OperationName+".yaml")
-				err := cmd.ReadYamlFile(pathy, &query, func(b []byte) []byte {
-					s := string(b)
-					r := runTemplating(l, s, "pathy", config)
-					return []byte(r)
-				})
-				if err != nil {
-					l.Fatal().Err(err).Str("path", pathy).Str("operationName", config.OperationName).Msg("Could not locate the a query for the operationName, and no query was defined")
-				}
-				if l.HasDebug() {
-					l.Debug().Err(err).Str("path", pathy).Str("operationName", config.OperationName).Msg("Found query on disk")
-				}
-			}
-		}
-		if config.Query != "" {
-			query.Query = config.Query
-		}
-		if config.Variables != nil {
-			query.Variables = *config.Variables
-		}
-	}
 
 	if query.Query == "" {
 		l.Fatal().Interface("query", query).Msg("Missing query")
 	}
-	vars := cmd.Config{
-		Concurrency:   *concurrency,
-		Count:         *totalRequests,
-		Url:           *url,
-		Query:         query.Query,
-		OperationName: query.OperationName,
-		Variables:     &query.Variables,
-	}
-	_output := runTemplating(l, *output, "output", vars)
+	vars := TemplateVars{*config}
 	// TODO: Clean the path
-	output = &_output
-	err := os.MkdirAll(path.Dir(*output), 0755)
+	outputPath := runTemplating(l, config.Output, "output", vars)
+	err := os.MkdirAll(path.Dir(outputPath), 0755)
 	if err != nil {
-		l.Fatal().Err(err).Str("dir", path.Dir(*output)).Msg("Failed to create directories for output")
+		l.Fatal().Err(err).Str("dir", path.Dir(outputPath)).Msg("Failed to create directories for output")
 	}
-	token = runTemplating(l, token, "token", vars)
+
+	token := runTemplating(l, config.AuthToken, "token", vars)
 
 	if token == "" {
-		l.Fatal().Msg("Token is requried. Set env GQL_TOKEN")
+		l.Fatal().Msg("Token is requried.")
 	}
 	// To copy straight from firefox
 	token = strings.TrimPrefix(token, "Authorization: ")
@@ -250,28 +168,28 @@ func main() {
 	if err != nil {
 		l.Fatal().Err(err).Msg("failed to decode payload in token")
 	}
-	if payload.GraphqlEndpoint != "" && !urlsAreEqual(payload.GraphqlEndpoint, *url) {
+	if payload.GraphqlEndpoint != "" && !urlsAreEqual(payload.GraphqlEndpoint, config.Url) {
 
 		// l.Fatal().Str("url", *url).Interface("payload", payloadJson).Str("graphqlEndpoint", payload.GraphqlEndpoint).Msg("Graphql-endpoint from token does not match match url")
 	}
 	pex := time.Unix(payload.Exp, 0)
 	payload.ExpiresAt = &pex
 	l.Info().Str("exp", payload.ExpiresAt.String()).Str("in", payload.ExpiresAt.Sub(time.Now()).String()).Msg("Token expires at {{exp}} in {{in}} ")
-	if *noTokenValidation != true && payload.ExpiresAt.Before(time.Now()) {
-		l.Fatal().Str("url", *url).Interface("payload", payloadJson).Msg("Token expired. Please retreive a new one.")
+	if config.NoTokenValidation != true && payload.ExpiresAt.Before(time.Now()) {
+		l.Fatal().Str("url", config.Url).Interface("payload", payloadJson).Msg("Token expired. Please retreive a new one.")
 	}
-	out, err := cmd.NewOutput(l, *output, *url, query, payloadJson)
+	out, err := cmd.NewOutput(l, outputPath, config.Url, query, payloadJson)
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to set up output")
 	}
 	l.Info().Str("path", out.GetPath()).Msg("Will write output to path:")
-	endpoint := cmd.NewGraphQLEndpoint(logger.GetLogger("gql"), *url)
+	endpoint := cmd.NewGraphQLEndpoint(logger.GetLogger("gql"), config.Url)
 	endpoint.Headers.Add("Authorization", token)
 	ch := make(chan cmd.RequestStat)
 
-	hasWorkChan := make(chan struct{}, *concurrency)
-	workChan := make(chan Work, *concurrency)
-	l.Info().Str("url", *url).Str("operationName", query.OperationName).Int("count", *totalRequests).Int("concurrency", *concurrency).Msg("Running requests with concurrency")
+	hasWorkChan := make(chan struct{}, config.Concurrency)
+	workChan := make(chan Work, config.Concurrency)
+	l.Info().Str("url", config.Url).Str("operationName", query.OperationName).Int("count", config.RequestCount).Int("paralism", config.Concurrency).Msg("Running requests with paralism")
 	SetupCloseHandler(func(signal os.Signal) {
 		out.Write()
 	})
@@ -288,14 +206,15 @@ func main() {
 		}
 	}()
 	go func() {
-		for j := 0; j < *totalRequests; j++ {
+		for j := 0; j < config.RequestCount; j++ {
 
 			workChan <- func(i int) Work {
 
 				return func() {
-					if *mock {
+					if config.Mock {
+						// TODO: replace with a mocked http-client-interface
 						stat := cmd.NewStat()
-						time.Sleep(time.Millisecond * time.Duration(rand.Int63n(8000)+1))
+						time.Sleep(time.Millisecond * time.Duration(rand.Int63n(80)+1))
 						errorType := cmd.Unknwon
 						n := rand.Intn(7)
 						switch n {
@@ -317,7 +236,7 @@ func main() {
 					_, stat, _ := endpoint.RunQuery(query, okStatusCodes)
 					if stat.Response != nil {
 
-						if *noResponseData && stat.Response != nil && stat.Response["error"] == nil && stat.Response["data"] != nil {
+						if config.ResponseData != false && stat.Response != nil && stat.Response["error"] == nil && stat.Response["data"] != nil {
 							delete(stat.Response, "data") //stat.Response[data]
 						}
 					}
@@ -341,10 +260,10 @@ func main() {
 					return
 				default:
 					payloadExp := ""
-					if *noTokenValidation != true && payload.ExpiresAt != nil {
+					if config.NoTokenValidation != true && payload.ExpiresAt != nil {
 						payloadExp = fmt.Sprintf("Token expires: %s", payload.ExpiresAt.Sub(time.Now()).String())
 					}
-					fraction := float64(i) / float64(*totalRequests)
+					fraction := float64(i) / float64(config.RequestCount)
 					dur := time.Now().Sub(startTime)
 					estimatedCompletion := time.Duration(float64(dur)/fraction) - dur
 					// TODO: sync these values. This will likely crash.
@@ -353,7 +272,7 @@ func main() {
 					if failures > 0 {
 						fails = fmt.Sprintf("\033[31m[%d (%.2f%%)\033[0m", failures, float64(failures)/float64(i)*100)
 					}
-					fmt.Printf("\r\033[36m[%d/%d (%.2f%%) %s -c=%d] %s Waiting for result from: %s (%s) \033[m %s (%s) %s", i, *totalRequests, fraction*100, fails, *concurrency, spinner.Next(), *url, query.OperationName, prettyDuration(dur), prettyDuration(estimatedCompletion), payloadExp)
+					fmt.Printf("\r\033[36m[%d/%d (%.2f%%) %s -c=%d] %s Waiting for result from: %s (%s) \033[m %s (%s) %s", i, config.RequestCount, fraction*100, fails, config.Concurrency, spinner.Next(), config.Url, query.OperationName, prettyDuration(dur), prettyDuration(estimatedCompletion), payloadExp)
 					time.Sleep(300 * time.Millisecond)
 				}
 			}
@@ -369,7 +288,7 @@ outer:
 			if stat.ErrorType == "" {
 				successes++
 			}
-			if !*noPrintTable && time.Now().Sub(lastOut) > 500*time.Millisecond {
+			if config.PrintTable && time.Now().Sub(lastOut) > 500*time.Millisecond {
 				if shouldSpin {
 					shouldSpin = false
 					go func() { quitSpinner <- struct{}{} }()
@@ -378,7 +297,7 @@ outer:
 				tm.Clear()
 				out.PrintTable()
 				now := time.Now()
-				tm.Printf("\nFinished %d of %d (%.2f%%) %s (%s) \n", i, *totalRequests, float64(i)/float64(*totalRequests)*100, now.Format("15:04:05.0"), query.OperationName)
+				tm.Printf("\nFinished %d of %d (%.2f%%) %s (%s) \n", i, config.RequestCount, float64(i)/float64(config.RequestCount)*100, now.Format("15:04:05.0"), query.OperationName)
 
 				tm.Flush()
 				lastOut = time.Now()
@@ -389,7 +308,7 @@ outer:
 			default:
 			}
 
-			if i >= *totalRequests {
+			if i >= config.RequestCount {
 				out.CalculateStats()
 				break outer
 			}
@@ -398,15 +317,16 @@ outer:
 		}
 	}
 
-	if !*noPrintTable {
+	if config.PrintTable {
 		tm.Clear()
 		out.PrintTable()
 		now := time.Now()
-		tm.Printf("\nFinished %d of %d (%.2f%%) %s \n", i, *totalRequests, float64(i)/float64(*totalRequests)*100, now.Format("15:04:05.0"))
+		tm.Printf("\nFinished %d of %d (%.2f%%) %s \n", i, config.RequestCount, float64(i)/float64(config.RequestCount)*100, now.Format("15:04:05.0"))
 
 		tm.Flush()
 		lastOut = time.Now()
 	}
+	fmt.Println("")
 	err = out.Write()
 	if err != nil {
 		l.Fatal().Err(errors.Unwrap(err)).Msg("Failed to write output")

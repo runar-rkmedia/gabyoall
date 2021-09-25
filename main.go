@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"math"
 	"os"
 	"os/signal"
 	"path"
@@ -16,14 +14,12 @@ import (
 	"text/template"
 	"time"
 
-	spin "github.com/tj/go-spin"
-
 	"github.com/Masterminds/sprig"
-	tm "github.com/buger/goterm"
 	"github.com/rs/zerolog/log"
 
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/logger"
+	"github.com/runar-rkmedia/gabyoall/printer"
 	"github.com/runar-rkmedia/gabyoall/queries"
 	"github.com/runar-rkmedia/gabyoall/worker"
 )
@@ -84,23 +80,6 @@ func urlsAreEqual(a, b string) bool {
 	A := prepareUrl(a)
 	B := prepareUrl(b)
 	return A == B
-}
-
-func prettyDuration(d time.Duration) string {
-	if d < time.Second {
-		return fmt.Sprintf("%03dms", d.Milliseconds())
-	}
-	if d < time.Minute {
-		return fmt.Sprintf("%02.1fs", d.Seconds())
-	}
-	if d < time.Hour {
-		_s := d.Seconds()
-		m := math.Floor(_s / 60)
-		s := _s - (m * 60)
-		return fmt.Sprintf("%02.0f:%02.0f", m, s)
-	}
-	return d.String()
-
 }
 
 type TemplateVars struct {
@@ -194,94 +173,37 @@ func main() {
 	})
 
 	wt := worker.WorkThing{}
-	ch, hasWorkChan := wt.Run(endpoint, *config, query)
+	ch := wt.Run(endpoint, *config, query)
 
-	i := 0
 	successes := 0
 	startTime := time.Now()
-	quitSpinner := make(chan struct{})
-	shouldSpin := true
-	if shouldSpin {
-		spinner := spin.New()
-		go func(quit chan struct{}) {
-			for {
-				select {
-				case <-quit:
-					return
-				default:
-					payloadExp := ""
-					if config.NoTokenValidation != true && payload.ExpiresAt != nil {
-						payloadExp = fmt.Sprintf("Token expires: %s", payload.ExpiresAt.Sub(time.Now()).String())
-					}
-					fraction := float64(i) / float64(config.RequestCount)
-					dur := time.Now().Sub(startTime)
-					estimatedCompletion := time.Duration(float64(dur)/fraction) - dur
-					// TODO: sync these values. This will likely crash.
-					fails := ""
-					failures := i - successes
-					if failures > 0 {
-						fails = fmt.Sprintf("\033[31m[%d (%.2f%%)\033[0m", failures, float64(failures)/float64(i)*100)
-					}
-					fmt.Printf("\r\033[36m[%d/%d (%.2f%%) %s -c=%d] %s Waiting for result from: %s (%s) \033[m %s (%s) %s", i, config.RequestCount, fraction*100, fails, config.Concurrency, spinner.Next(), config.Url, query.OperationName, prettyDuration(dur), prettyDuration(estimatedCompletion), payloadExp)
-					time.Sleep(300 * time.Millisecond)
-				}
-			}
-		}(quitSpinner)
-	}
-	var lastOut time.Time
-outer:
-	for {
-		select {
-		case stat := <-ch:
-			// bar.SetCurrent(int64(i))
-			i++
-			if stat.ErrorType == "" {
-				successes++
-			}
-			if config.PrintTable && time.Now().Sub(lastOut) > 500*time.Millisecond {
-				if shouldSpin {
-					shouldSpin = false
-					go func() { quitSpinner <- struct{}{} }()
-				}
+	print := printer.NewPrinter(
+		*config,
+		payload,
+		query.OperationName,
+		out,
+		startTime,
+	)
+	spinCh := print.Animate()
 
-				tm.Clear()
-				out.PrintTable()
-				now := time.Now()
-				tm.Printf("\nFinished %d of %d (%.2f%%) %s (%s) \n", i, config.RequestCount, float64(i)/float64(config.RequestCount)*100, now.Format("15:04:05.0"), query.OperationName)
-
-				tm.Flush()
-				lastOut = time.Now()
-			}
-			out.AddStat(stat)
-			select {
-			case <-hasWorkChan:
-			default:
-			}
-
-			if i >= config.RequestCount {
-				out.CalculateStats()
-				break outer
-			}
-		default:
-
+	for i := 0; i < config.RequestCount; i++ {
+		stat := <-ch
+		if stat.ErrorType == "" {
+			successes++
 		}
-	}
+		out.AddStat(stat)
+		print.Update(i, successes)
 
-	if config.PrintTable {
-		tm.Clear()
-		out.PrintTable()
-		now := time.Now()
-		tm.Printf("\nFinished %d of %d (%.2f%%) %s \n", i, config.RequestCount, float64(i)/float64(config.RequestCount)*100, now.Format("15:04:05.0"))
-
-		tm.Flush()
-		lastOut = time.Now()
 	}
-	fmt.Println("")
+	close(spinCh)
+	out.CalculateStats()
+
+	print.Complete(config.RequestCount, successes)
 	err = out.Write()
 	if err != nil {
 		l.Fatal().Err(errors.Unwrap(err)).Msg("Failed to write output")
 	}
-	log.Info().Interface("stat", out.Stats).Msg("All done")
+	l.Info().Msg("All done")
 }
 
 func SetupCloseHandler(f func(signal os.Signal)) {

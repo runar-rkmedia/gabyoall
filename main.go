@@ -32,7 +32,9 @@ func main() {
 		os.Exit(1)
 	}
 	config := cmd.GetConfig(logger.GetLogger("initial"))
+	// TODO: Refactor so this is a bit more general. (but still support graphql)
 	var query = queries.GraphQLQuery{
+		Body:          config.Body,
 		Query:         config.Query,
 		Variables:     config.Variables,
 		OperationName: config.OperationName,
@@ -48,8 +50,8 @@ func main() {
 
 	}
 
-	if query.Query == "" {
-		l.Fatal().Interface("query", query).Msg("Missing query")
+	if query.Query == "" && query.Body == "" {
+		l.Fatal().Interface("query", query).Msg("Missing query/body")
 	}
 	vars := TemplateVars{*config}
 	// TODO: Clean the path

@@ -36,7 +36,7 @@ type Config struct {
 	AuthToken         string     `cfg:"auth-token" description:"Set to use a token"`
 	OperationName     string     `cfg:"operation-name" description:"For Graphql, you may set an operation-name"`
 	// TODO: implement
-	Body string `cfg:"data" short:"d" description:"Data to include in requests."`
+	Body interface{} `cfg:"data" short:"d" description:"Data to include in requests."`
 	// TODO: implement
 	Header map[string]string `cfg:"header" short:"H" description:"Additional headers to include"`
 	// TODO: implement

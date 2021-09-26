@@ -104,6 +104,8 @@ func ReadConfig() {
 				}
 			}
 			rootCmd.PersistentFlags().IntSliceP(cfgName, short, defaultInts, desc)
+		case "interface {}":
+			rootCmd.PersistentFlags().StringP(cfgName, short, defaultStr, desc)
 		case "map[string]string":
 			var defaultStrings map[string]string
 			if defaultStr != "" {

@@ -105,7 +105,27 @@ func (m MockHttpClient) Do(req *http.Request) (*http.Response, error) {
 func (g *Endpoint) RunQuery(query queries.GraphQLQuery, okStatusCodes []int) (*http.Response, RequestStat, error) {
 	stat := NewStat()
 	l := logger.AppLogger{Logger: g.l.With().Str("operationName", query.OperationName).Str("endpoint", g.Url).Str("requestId", stat.RequestID).Logger()}
-	b, err := json.Marshal(query)
+	var b []byte
+	var err error
+	if query.Query != "" {
+		b, err = json.Marshal(query)
+	} else {
+
+		if str, ok := query.Body.(string); ok {
+			// Not really sure what to do about this case at the moment?
+			var JSON map[string]interface{}
+			err = json.Unmarshal([]byte(str), &JSON)
+			b, err = json.Marshal(JSON)
+		} else if JSON, ok := query.Body.(map[string]interface{}); ok {
+			b, err = json.Marshal(JSON)
+		}
+		if err != nil {
+			return nil, stat.End(ServerTestError, err), err
+		}
+	}
+	if l.HasDebug() {
+		l.Debug().Bytes("body", b).Msg("Running query with body")
+	}
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to marshal query")
 		return nil, stat.End(ServerTestError, err), err

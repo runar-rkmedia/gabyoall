@@ -1,16 +1,13 @@
 package worker
 
 import (
-	"math/rand"
-	"time"
-
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/queries"
 )
 
 type WorkThing struct{}
 
-func (w WorkThing) Run(endpoint cmd.GraphQlEndpoint, config cmd.Config, query queries.GraphQLQuery) chan cmd.RequestStat {
+func (w WorkThing) Run(endpoint cmd.Endpoint, config cmd.Config, query queries.GraphQLQuery) chan cmd.RequestStat {
 	jobCh := make(chan Job, config.RequestCount)
 	resultCh := make(chan cmd.RequestStat, config.RequestCount)
 	// Create work
@@ -35,35 +32,12 @@ func (w WorkThing) Run(endpoint cmd.GraphQlEndpoint, config cmd.Config, query qu
 
 type Job struct {
 	config   *cmd.Config
-	endpoint *cmd.GraphQlEndpoint
+	endpoint *cmd.Endpoint
 	query    *queries.GraphQLQuery
 }
 
 func worker(id int, ch chan cmd.RequestStat, jobCh chan Job) {
 	for job := range jobCh {
-
-		if job.config.Mock {
-			// TODO: replace with a mocked http-client-interface
-			stat := cmd.NewStat()
-			time.Sleep(time.Millisecond * time.Duration(rand.Int63n(80)+1))
-			errorType := cmd.Unknwon
-			n := rand.Intn(7)
-			switch n {
-			case 1:
-				errorType = cmd.NonOK
-			case 2:
-				errorType = cmd.ServerTestError
-			case 3:
-				errorType = "RandomErr"
-			case 4:
-				errorType = "OtherErr"
-			case 6:
-				errorType = "MadeUpError"
-
-			}
-			ch <- stat.End(errorType, nil)
-			continue
-		}
 		_, stat, _ := job.endpoint.RunQuery(*job.query, job.config.OkStatusCodes)
 		if stat.Response != nil {
 

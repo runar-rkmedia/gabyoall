@@ -120,7 +120,7 @@ func ReadConfig() {
 
 }
 
-func Execute() {
+func Execute() error {
 	ReadConfig()
-	rootCmd.Execute()
+	return rootCmd.Execute()
 }

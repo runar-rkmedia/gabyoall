@@ -19,6 +19,7 @@ type Printer struct {
 	out           cmd.Output
 	operationName string
 	lastOut       time.Time
+	quit          chan struct{}
 	sync.Mutex
 }
 
@@ -29,13 +30,13 @@ func NewPrinter(config cmd.Config, jwtPayload cmd.JwtPayload, operationName stri
 		startTime:     startTime,
 		spinner:       spin.New(),
 		operationName: operationName,
+		quit:          make(chan struct{}),
 		out:           out,
 	}
 	return &printer
 }
 
 func (p *Printer) Animate() chan struct{} {
-	spinCh := make(chan struct{})
 	go func(quit chan struct{}) {
 		for {
 			select {
@@ -47,8 +48,8 @@ func (p *Printer) Animate() chan struct{} {
 			}
 		}
 
-	}(spinCh)
-	return spinCh
+	}(p.quit)
+	return p.quit
 }
 func (p *Printer) Update(i int, successes int) {
 
@@ -86,5 +87,6 @@ func (p *Printer) update(i int, successes int) {
 
 func (p *Printer) Complete(i int, successes int) {
 	p.update(i, successes)
+	close(p.quit)
 	fmt.Println("")
 }

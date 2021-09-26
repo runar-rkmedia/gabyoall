@@ -51,3 +51,4 @@ gobyoall-conf*
 *.zip
 run.sh
 !*.go
+out*.y*ml

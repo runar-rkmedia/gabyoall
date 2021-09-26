@@ -1,93 +1,38 @@
 package main
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"os"
 	"os/signal"
 	"path"
-	"regexp"
 	"strings"
 	"syscall"
-	"text/template"
 	"time"
 
-	"github.com/Masterminds/sprig"
 	"github.com/rs/zerolog/log"
 
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/logger"
 	"github.com/runar-rkmedia/gabyoall/printer"
 	"github.com/runar-rkmedia/gabyoall/queries"
+	"github.com/runar-rkmedia/gabyoall/utils"
 	"github.com/runar-rkmedia/gabyoall/worker"
 )
 
-var envRegex = regexp.MustCompile(`(\$({([^}]*)}))`)
-
 // TODO: Reread token every minute? In case of short-lived tokens.
 // For instance, if they are read from env-variables, the user could set them.
-
-func expandEnv(s string) string {
-	envRegex.FindAllStringSubmatch(s, -1)
-	return envRegex.ReplaceAllStringFunc(s, func(str string) string {
-		_envKey := strings.TrimSuffix(strings.TrimPrefix(strings.TrimPrefix(str, "$"), "{"), "}")
-		split := strings.Split(_envKey, ":")
-		def := ""
-		envKey := split[0]
-		if len(split) > 1 {
-			def = split[1]
-		}
-
-		val := os.Getenv(envKey)
-		if val == "" {
-			return def
-		}
-		return val
-	})
-}
-func executeTemplate(l logger.AppLogger, templateString, name string, vars interface{}) string {
-	buf := new(bytes.Buffer)
-	t := template.New(name)
-	t.Funcs(sprig.TxtFuncMap())
-	tmpl, err := t.Parse(templateString)
-	if err != nil {
-		l.Error().Err(err).Str("templateString", templateString).Str("name", name).Msg("Failed to parse templateString to template")
-	}
-
-	err = tmpl.Execute(buf, vars)
-	if err != nil {
-		l.Error().Err(err).Str("templateString", templateString).Str("name", name).Msg("Failed to execute templateString to template")
-	}
-	return buf.String()
-}
-
-func runTemplating(l logger.AppLogger, templateString, name string, vars interface{}) string {
-	templateString = expandEnv(templateString)
-	return executeTemplate(l, templateString, name, vars)
-}
-
-func prepareUrl(s string) string {
-	if !strings.HasPrefix(s, "http") {
-		s = "https://" + s
-	}
-	s = strings.TrimSuffix(s, "/")
-	return s
-}
-
-func urlsAreEqual(a, b string) bool {
-	A := prepareUrl(a)
-	B := prepareUrl(b)
-	return A == B
-}
 
 type TemplateVars struct {
 	cmd.Config
 }
 
 func main() {
-	cmd.Execute()
+	err := cmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
 	config := cmd.GetConfig(logger.GetLogger("initial"))
 	var query = queries.GraphQLQuery{
 		Query:         config.Query,
@@ -112,14 +57,14 @@ func main() {
 	// TODO: Clean the path
 	outputPath := config.Output
 	if outputPath != "" {
-		outputPath = runTemplating(l, config.Output, "output", vars)
+		outputPath = utils.RunTemplating(l, config.Output, "output", vars)
 		err := os.MkdirAll(path.Dir(outputPath), 0755)
 		if err != nil {
 			l.Fatal().Err(err).Str("dir", path.Dir(outputPath)).Msg("Failed to create directories for output")
 		}
 	}
 
-	token := runTemplating(l, config.AuthToken, "token", vars)
+	token := utils.RunTemplating(l, config.AuthToken, "token", vars)
 
 	if token == "" {
 		l.Fatal().Msg("Token is requried.")
@@ -149,7 +94,7 @@ func main() {
 	if err != nil {
 		l.Fatal().Err(err).Msg("failed to decode payload in token")
 	}
-	if payload.GraphqlEndpoint != "" && !urlsAreEqual(payload.GraphqlEndpoint, config.Url) {
+	if payload.GraphqlEndpoint != "" && !utils.UrlsAreEqual(payload.GraphqlEndpoint, config.Url) {
 
 		// l.Fatal().Str("url", *url).Interface("payload", payloadJson).Str("graphqlEndpoint", payload.GraphqlEndpoint).Msg("Graphql-endpoint from token does not match match url")
 	}
@@ -164,7 +109,7 @@ func main() {
 		l.Fatal().Err(err).Msg("Failed to set up output")
 	}
 	l.Info().Str("path", out.GetPath()).Msg("Will write output to path:")
-	endpoint := cmd.NewGraphQLEndpoint(logger.GetLogger("gql"), config.Url)
+	endpoint := cmd.NewEndpoint(logger.GetLogger("gql"), config.Url)
 	endpoint.Headers.Add("Authorization", token)
 
 	l.Info().Str("url", config.Url).Str("operationName", query.OperationName).Int("count", config.RequestCount).Int("paralism", config.Concurrency).Msg("Running requests with paralism")
@@ -184,7 +129,7 @@ func main() {
 		out,
 		startTime,
 	)
-	spinCh := print.Animate()
+	print.Animate()
 
 	for i := 0; i < config.RequestCount; i++ {
 		stat := <-ch
@@ -195,7 +140,6 @@ func main() {
 		print.Update(i, successes)
 
 	}
-	close(spinCh)
 	out.CalculateStats()
 
 	print.Complete(config.RequestCount, successes)
@@ -218,6 +162,6 @@ func SetupCloseHandler(f func(signal os.Signal)) {
 }
 
 type GraphqlRequest struct {
-	cmd.GraphQlEndpoint
+	cmd.Endpoint
 	queries.GraphQLQuery
 }

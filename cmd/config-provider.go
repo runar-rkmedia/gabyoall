@@ -56,6 +56,10 @@ func ReadConfig() {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		cfgName := field.Tag.Get("cfg")
+		if cfgName == "-" {
+
+			continue
+		}
 		if cfgName == "" {
 			panic(fmt.Sprintf("field %d has no name %#v", i+1, field))
 		}

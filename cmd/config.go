@@ -1,16 +1,40 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/runar-rkmedia/gabyoall/logger"
 	"github.com/spf13/viper"
 )
 
+type AuthConfig struct {
+	Kind string
+	ImpersionationCredentials
+	ClientID     string
+	RedirectUri  string
+	ClientSecret string
+	Endpoint     string
+	EndpointType string
+	Token        string
+	Expires      *time.Time
+	Payload      map[string]interface{}
+}
+type ImpersionationCredentials struct {
+	// Username to impersonate with. Needs to have the impersonation-role
+	Username,
+	Password,
+	// UserID to impersonate as. This is preferred over UserNameToImpersonate
+	UserIDToImpersonate string
+	// Will perform a lookup to get the ID of the username.
+	UserNameToImpersonate string
+}
 type Config struct {
-	Url               string `cfg:"url" description:"The url to make requests to"`
-	NoTokenValidation bool   `cfg:"no-token-validation" description:"If set, will skip validation of token"`
-	PrintTable        bool   `cfg:"print-table" description:"If set, will print table while running"`
-	AuthToken         string `cfg:"auth-token" description:"Set to use a token"`
-	OperationName     string `cfg:"operation-name" description:"For Graphql, you may set an operation-name"`
+	Auth              AuthConfig `cfg:"-"`
+	Url               string     `cfg:"url" description:"The url to make requests to"`
+	NoTokenValidation bool       `cfg:"no-token-validation" description:"If set, will skip validation of token"`
+	PrintTable        bool       `cfg:"print-table" description:"If set, will print table while running"`
+	AuthToken         string     `cfg:"auth-token" description:"Set to use a token"`
+	OperationName     string     `cfg:"operation-name" description:"For Graphql, you may set an operation-name"`
 	// TODO: implement
 	Body string `cfg:"data" short:"d" description:"Data to include in requests."`
 	// TODO: implement

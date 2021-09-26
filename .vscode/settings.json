@@ -2,7 +2,8 @@
 	"conventionalCommits.scopes": [
 		"config",
 		"output",
-		"worker"
+		"worker",
+		"token"
 	],
 	"cSpell.words": [
 		"Gobyoall"

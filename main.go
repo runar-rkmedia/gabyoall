@@ -1,18 +1,16 @@
 package main
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"os"
 	"os/signal"
 	"path"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/runar-rkmedia/gabyoall/auth"
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/logger"
 	"github.com/runar-rkmedia/gabyoall/printer"
@@ -65,45 +63,47 @@ func main() {
 	}
 
 	token := utils.RunTemplating(l, config.AuthToken, "token", vars)
+	bearerC := auth.NewBearerTokenCreator(
+		logger.GetLogger("token-handler"),
+		auth.BearerTokenCreatorOptions{
+			ImpersionationCredentials: auth.ImpersionationCredentials{
+				Username:              config.Auth.ImpersionationCredentials.Username,
+				Password:              config.Auth.ImpersionationCredentials.Password,
+				UserIDToImpersonate:   config.Auth.ImpersionationCredentials.UserIDToImpersonate,
+				UserNameToImpersonate: config.Auth.ImpersionationCredentials.UserNameToImpersonate,
+			},
+			ClientID:     config.Auth.ClientID,
+			RedirectUri:  config.Auth.RedirectUri,
+			Endpoint:     config.Auth.Endpoint,
+			Token:        config.AuthToken,
+			EndpointType: config.Auth.EndpointType,
+			ClientSecret: config.Auth.ClientSecret,
+		})
+	if config.Auth.ImpersionationCredentials.UserIDToImpersonate != "" || config.Auth.ImpersionationCredentials.UserNameToImpersonate != "" {
+		err := bearerC.Retrieve()
+		if err != nil {
+			l.Fatal().Err(err).Msg("failed to retrieve token")
+		}
+	} else {
 
-	if token == "" {
-		l.Fatal().Msg("Token is requried.")
 	}
-	// To copy straight from firefox
-	token = strings.TrimPrefix(token, "Authorization: ")
-	if !strings.HasPrefix(token, "Bearer ") {
-		token = "Bearer " + token
-	}
-	rawToken := strings.TrimPrefix(token, "Bearer ")
-	tokenSplitted := strings.Split(rawToken, ".")
-	if len(tokenSplitted) != 3 {
-		l.Fatal().Str("rawToken", rawToken).Msg("Token looks invalid. Expected to find JWT with 3 parts seperated by '.'")
-	}
-	data := tokenSplitted[1]
-	payloadRaw, err := base64.RawStdEncoding.DecodeString(data)
-	if err != nil {
-		l.Fatal().Err(err).Str("raw", tokenSplitted[1]).Msg("failed to base64-decode payload")
-	}
-	var payload cmd.JwtPayload
-	err = json.Unmarshal([]byte(payloadRaw), &payload)
-	if err != nil {
-		l.Fatal().Err(err).Msg("failed to decode payload in token")
-	}
-	var payloadJson map[string]interface{}
-	err = json.Unmarshal([]byte(payloadRaw), &payloadJson)
-	if err != nil {
-		l.Fatal().Err(err).Msg("failed to decode payload in token")
-	}
-	if payload.GraphqlEndpoint != "" && !utils.UrlsAreEqual(payload.GraphqlEndpoint, config.Url) {
 
-		// l.Fatal().Str("url", *url).Interface("payload", payloadJson).Str("graphqlEndpoint", payload.GraphqlEndpoint).Msg("Graphql-endpoint from token does not match match url")
+	if token != "" && bearerC.Token == "" {
+		bearerC.Token = token
+	} else {
+		token = bearerC.Token
 	}
-	pex := time.Unix(payload.Exp, 0)
-	payload.ExpiresAt = &pex
-	l.Info().Str("exp", payload.ExpiresAt.String()).Str("in", payload.ExpiresAt.Sub(time.Now()).String()).Msg("Token expires at {{exp}} in {{in}} ")
-	if config.NoTokenValidation != true && payload.ExpiresAt.Before(time.Now()) {
-		l.Fatal().Str("url", config.Url).Interface("payload", payloadJson).Msg("Token expired. Please retreive a new one.")
+	// bearerC.Retrieve()
+	payloadJson, err := bearerC.ParseToken()
+	if err != nil {
+		l.Fatal().Interface("payload", payloadJson).Err(err).Msg("Could not parse token")
 	}
+	err = bearerC.Validate()
+	if err != nil {
+		l.Fatal().Err(err).Msg("Token is not valid")
+	}
+	// os.Exit(1)
+
 	out, err := cmd.NewOutput(l, outputPath, config.Url, query, payloadJson)
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to set up output")
@@ -124,7 +124,7 @@ func main() {
 	startTime := time.Now()
 	print := printer.NewPrinter(
 		*config,
-		payload,
+		&bearerC,
 		query.OperationName,
 		out,
 		startTime,

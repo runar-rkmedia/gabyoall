@@ -11,27 +11,31 @@ import (
 	"github.com/tj/go-spin"
 )
 
+type ValidityStringer interface {
+	PrintValidity() (string, error)
+}
+
 type Printer struct {
-	config        cmd.Config
-	jwtPayload    cmd.JwtPayload
-	startTime     time.Time
-	spinner       *spin.Spinner
-	out           cmd.Output
-	operationName string
-	lastOut       time.Time
-	quit          chan struct{}
+	config           cmd.Config
+	validityStringer ValidityStringer
+	startTime        time.Time
+	spinner          *spin.Spinner
+	out              cmd.Output
+	operationName    string
+	lastOut          time.Time
+	quit             chan struct{}
 	sync.Mutex
 }
 
-func NewPrinter(config cmd.Config, jwtPayload cmd.JwtPayload, operationName string, out cmd.Output, startTime time.Time) *Printer {
+func NewPrinter(config cmd.Config, validityStringer ValidityStringer, operationName string, out cmd.Output, startTime time.Time) *Printer {
 	printer := Printer{
-		config:        config,
-		jwtPayload:    jwtPayload,
-		startTime:     startTime,
-		spinner:       spin.New(),
-		operationName: operationName,
-		quit:          make(chan struct{}),
-		out:           out,
+		config:           config,
+		validityStringer: validityStringer,
+		startTime:        startTime,
+		spinner:          spin.New(),
+		operationName:    operationName,
+		quit:             make(chan struct{}),
+		out:              out,
 	}
 	return &printer
 }
@@ -69,9 +73,10 @@ func (p *Printer) update(i int, successes int) {
 		p.out.PrintTable()
 		tm.Flush()
 	}
-	payloadExp := ""
-	if p.config.NoTokenValidation != true && p.jwtPayload.ExpiresAt != nil {
-		payloadExp = fmt.Sprintf("Token expires: %s", p.jwtPayload.ExpiresAt.Sub(time.Now()).String())
+	validStr := ""
+	if p.validityStringer != nil {
+		_validStr, _ := p.validityStringer.PrintValidity()
+		validStr = _validStr
 	}
 	fraction := float64(i) / float64(p.config.RequestCount)
 	dur := time.Now().Sub(p.startTime)
@@ -81,7 +86,7 @@ func (p *Printer) update(i int, successes int) {
 	if failures > 0 {
 		fails = fmt.Sprintf("\033[31m[%d (%.2f%%)\033[0m", failures, float64(failures)/float64(i)*100)
 	}
-	fmt.Printf("\r\033[36m[%d/%d (%.2f%%) %s -c=%d] %s Waiting for result from: %s (%s) \033[m %s (%s) %s", i, p.config.RequestCount, fraction*100, fails, p.config.Concurrency, p.spinner.Current(), p.config.Url, p.operationName, utils.PrettyDuration(dur), utils.PrettyDuration(estimatedCompletion), payloadExp)
+	fmt.Printf("\r\033[36m[%d/%d (%.2f%%) %s -c=%d] %s Waiting for result from: %s (%s) \033[m %s (%s) %s", i, p.config.RequestCount, fraction*100, fails, p.config.Concurrency, p.spinner.Current(), p.config.Url, p.operationName, utils.PrettyDuration(dur), utils.PrettyDuration(estimatedCompletion), validStr)
 
 }
 

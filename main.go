@@ -38,6 +38,8 @@ func main() {
 		Query:         config.Query,
 		Variables:     config.Variables,
 		OperationName: config.OperationName,
+		Headers:       config.Header,
+		Method:        config.Method,
 	}
 	logger.InitLogger(logger.LogConfig{
 		Level:      config.LogLevel,

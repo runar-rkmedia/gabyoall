@@ -4,7 +4,8 @@
 		"output",
 		"worker",
 		"token",
-		"readme"
+		"readme",
+		"http"
 	],
 	"cSpell.words": [
 		"Gobyoall"

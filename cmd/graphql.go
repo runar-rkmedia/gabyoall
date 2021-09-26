@@ -107,6 +107,9 @@ func (g *Endpoint) RunQuery(query queries.GraphQLQuery, okStatusCodes []int) (*h
 	l := logger.AppLogger{Logger: g.l.With().Str("operationName", query.OperationName).Str("endpoint", g.Url).Str("requestId", stat.RequestID).Logger()}
 	var b []byte
 	var err error
+	if query.Method == "" {
+		query.Method = http.MethodPost
+	}
 	if query.Query != "" {
 		b, err = json.Marshal(query)
 	} else {
@@ -131,12 +134,17 @@ func (g *Endpoint) RunQuery(query queries.GraphQLQuery, okStatusCodes []int) (*h
 		return nil, stat.End(ServerTestError, err), err
 	}
 
-	r, err := http.NewRequest(http.MethodPost, g.Url, bytes.NewReader(b))
+	r, err := http.NewRequest(query.Method, g.Url, bytes.NewReader(b))
 	if err != nil {
 		l.Error().Err(err).Msg("Failed to create request")
 		return nil, stat.End(ServerTestError, err), err
 	}
 	r.Body.Close()
+	if query.Headers != nil {
+		for k, v := range query.Headers {
+			r.Header.Add(k, v)
+		}
+	}
 	return g.DoRequest(l, r, stat, okStatusCodes)
 }
 func (g *Endpoint) DoRequest(l logger.AppLogger, r *http.Request, stat RequestStat, okStatusCodes []int) (*http.Response, RequestStat, error) {

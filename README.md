@@ -54,3 +54,43 @@ go install github.com/runar-rkmedia/gabyoall
 
 Environment-variables are all prefixed with `GOBYOALL_`. For instance, to set `auth-token` use `GOBYOALL_AUTHTOKEN`.
 
+## JWT-tokens
+
+Tokens can be either set manually, but it is vary practical to have the gobyoall generate them for you via impersonation. This lets you automate more stress-tests without the hassle of handling the tokens yourself, or opening up your server-application with special logic.
+
+To set manually, see the help-section.
+
+### Impersonation
+
+> Impersonation currenly only works with Keycloak.
+
+#### Keycloak
+
+To impersonate a user, you need:
+
+- A keycloak client with:
+  - Direct Access Grants enabled
+  - Implicit Flow Enabled
+  - A Valid Redirect URI. The exact URI does not matter, as it will not be followed, e.g. the call wont be made.
+- A user with:
+  - Role Mapping: `impersonation` (under realm-managent)
+  - (Optional) Role Mapping: manage-users. (under realm-management)
+
+You then need to add these items to the config. Env-variables can also be used.
+
+```yaml
+auth:
+  type: Bearer
+  endpoint: https://keycloak-server.com/auth/realms/example/
+  endpointType: keycloak
+  # The exact value does not matter, as the redirect will never be followed.
+  redirectUri: http://localhost:3000 
+  clientId: test-client
+  clientSecret: 4ac...8
+  impersionationCredentials: 
+    username: test
+    password: test
+    # prefer to set the userID over UserNameToImpersonate as it does not require a lookup
+    userIDToImpersonate: 638492ff-282e-4ccd-8e4c-f65db4093d12
+#     userNameToImpersonate: johndoe
+```

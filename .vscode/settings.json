@@ -3,7 +3,8 @@
 		"config",
 		"output",
 		"worker",
-		"token"
+		"token",
+		"readme"
 	],
 	"cSpell.words": [
 		"Gobyoall"

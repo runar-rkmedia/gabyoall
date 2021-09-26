@@ -1,0 +1,22 @@
+query: >-
+  query Files($name: String){
+    files(where: {name: $name}){id}
+  }
+operationName: Files
+variables:
+  name: "My-Super-files"
+url: https://graphql-server.com
+auth:
+  type: Bearer
+  endpoint: https://keycloak-server.com/auth/
+  endpointType: keycloak
+  # The exact value does not matter, as the redirect will never be followed.
+  redirectUri: http://localhost:3000 
+  clientId: test-client
+  clientSecret: 3afac5d1-60ba-4e9d-810f-9463e8101015
+  impersionationCredentials: 
+    username: test
+    password: test
+    UserNameToImpersonate: m
+    # prefer to use this over UserNameToImpersonate as it does not require a loojup
+    userIDToImpersonate: 638492ff-282e-4ccd-8e4c-f65db4093d12

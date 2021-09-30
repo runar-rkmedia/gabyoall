@@ -48,6 +48,9 @@ func executeTemplate(l logger.AppLogger, templateString, name string, vars inter
 }
 
 func RunTemplating(l logger.AppLogger, templateString, name string, vars interface{}) string {
+	if templateString == "" {
+		return ""
+	}
 	templateString = expandEnv(templateString)
 	return executeTemplate(l, templateString, name, vars)
 }

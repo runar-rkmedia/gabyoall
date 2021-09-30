@@ -69,6 +69,7 @@ To set manually, see the help-section.
 To impersonate a user, you need:
 
 - A keycloak client with:
+  - Access Type set to `confidential`
   - Direct Access Grants enabled
   - Implicit Flow Enabled
   - A Valid Redirect URI. The exact URI does not matter, as it will not be followed, e.g. the call wont be made.

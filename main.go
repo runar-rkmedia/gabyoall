@@ -67,48 +67,44 @@ func main() {
 	}
 
 	token := utils.RunTemplating(l, config.AuthToken, "token", vars)
-	bearerC := auth.NewBearerTokenCreator(
-		logger.GetLogger("token-handler"),
-		auth.BearerTokenCreatorOptions{
-			ImpersionationCredentials: auth.ImpersionationCredentials{
-				Username:              config.Auth.ImpersionationCredentials.Username,
-				Password:              config.Auth.ImpersionationCredentials.Password,
-				UserIDToImpersonate:   config.Auth.ImpersionationCredentials.UserIDToImpersonate,
-				UserNameToImpersonate: config.Auth.ImpersionationCredentials.UserNameToImpersonate,
-			},
-			ClientID:     config.Auth.ClientID,
-			RedirectUri:  config.Auth.RedirectUri,
-			Endpoint:     config.Auth.Endpoint,
-			Token:        config.AuthToken,
-			EndpointType: config.Auth.EndpointType,
-			ClientSecret: config.Auth.ClientSecret,
-		})
-	if config.Auth.ImpersionationCredentials.UserIDToImpersonate != "" || config.Auth.ImpersionationCredentials.UserNameToImpersonate != "" {
-		err := bearerC.Retrieve()
-		if err != nil {
-			l.Fatal().Err(err).Msg("failed to retrieve token")
+	var tokenPayload auth.TokenPayload
+	var validityStringer printer.ValidityStringer
+	if token == "" {
+
+		bearerC := auth.NewBearerTokenCreator(
+			logger.GetLogger("token-handler"),
+			auth.BearerTokenCreatorOptions{
+				ImpersionationCredentials: auth.ImpersionationCredentials{
+					Username:              config.Auth.ImpersionationCredentials.Username,
+					Password:              config.Auth.ImpersionationCredentials.Password,
+					UserIDToImpersonate:   config.Auth.ImpersionationCredentials.UserIDToImpersonate,
+					UserNameToImpersonate: config.Auth.ImpersionationCredentials.UserNameToImpersonate,
+				},
+				ClientID:     config.Auth.ClientID,
+				RedirectUri:  config.Auth.RedirectUri,
+				Endpoint:     config.Auth.Endpoint,
+				EndpointType: config.Auth.EndpointType,
+				ClientSecret: config.Auth.ClientSecret,
+			})
+		validityStringer = &bearerC
+		if config.Auth.ImpersionationCredentials.UserIDToImpersonate != "" || config.Auth.ImpersionationCredentials.UserNameToImpersonate != "" {
+
+			tokenPayload, err := bearerC.Impersionate(auth.ImpersionateOptions{
+				UserName: config.Auth.UserNameToImpersonate,
+				UserID:   config.Auth.UserIDToImpersonate,
+			})
+			if err != nil {
+				l.Fatal().Err(err).Msg("failed to retrieve token")
+			}
+			token = tokenPayload.Token
 		}
-	} else {
-
 	}
 
-	if token != "" && bearerC.Token == "" {
-		bearerC.Token = token
-	} else {
-		token = bearerC.Token
-	}
-	// bearerC.Retrieve()
-	payloadJson, err := bearerC.ParseToken()
-	if err != nil {
-		l.Fatal().Interface("payload", payloadJson).Err(err).Msg("Could not parse token")
-	}
-	err = bearerC.Validate()
 	if err != nil {
 		l.Fatal().Err(err).Msg("Token is not valid")
 	}
-	// os.Exit(1)
 
-	out, err := cmd.NewOutput(l, outputPath, config.Url, query, payloadJson)
+	out, err := cmd.NewOutput(l, outputPath, config.Url, query, tokenPayload.Raw)
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to set up output")
 	}
@@ -128,7 +124,7 @@ func main() {
 	startTime := time.Now()
 	print := printer.NewPrinter(
 		*config,
-		&bearerC,
+		validityStringer,
 		query.OperationName,
 		out,
 		startTime,

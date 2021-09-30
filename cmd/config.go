@@ -53,5 +53,8 @@ type Config struct {
 func GetConfig(l logger.AppLogger) *Config {
 	var cfg Config
 	viper.Unmarshal(&cfg)
+	if cfg.Concurrency > cfg.RequestCount {
+		cfg.Concurrency = cfg.RequestCount
+	}
 	return &cfg
 }

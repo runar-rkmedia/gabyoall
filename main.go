@@ -15,7 +15,7 @@ import (
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/logger"
 	"github.com/runar-rkmedia/gabyoall/printer"
-	"github.com/runar-rkmedia/gabyoall/queries"
+	"github.com/runar-rkmedia/gabyoall/requests"
 	"github.com/runar-rkmedia/gabyoall/utils"
 	"github.com/runar-rkmedia/gabyoall/worker"
 )
@@ -34,7 +34,7 @@ func main() {
 	}
 	config := cmd.GetConfig(logger.GetLogger("initial"))
 	// TODO: Refactor so this is a bit more general. (but still support graphql)
-	var query = queries.GraphQLQuery{
+	var query = requests.Request{
 		Body:          config.Body,
 		Query:         config.Query,
 		Variables:     config.Variables,
@@ -138,7 +138,7 @@ func main() {
 		l.Fatal().Err(err).Msg("Failed to set up output")
 	}
 	l.Info().Str("path", out.GetPath()).Msg("Will write output to path:")
-	endpoint := cmd.NewEndpoint(logger.GetLogger("gql"), config.Url)
+	endpoint := requests.NewEndpoint(logger.GetLogger("gql"), config.Url)
 	endpoint.Headers.Add(config.Auth.HeaderKey, token)
 
 	l.Info().Str("url", config.Url).Str("operationName", query.OperationName).Int("count", config.RequestCount).Int("paralism", config.Concurrency).Msg("Running requests with paralism")
@@ -188,9 +188,4 @@ func SetupCloseHandler(f func(signal os.Signal)) {
 		f(signal)
 		os.Exit(0)
 	}()
-}
-
-type GraphqlRequest struct {
-	cmd.Endpoint
-	queries.GraphQLQuery
 }

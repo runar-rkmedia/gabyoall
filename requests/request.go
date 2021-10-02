@@ -1,6 +1,6 @@
-package queries
+package requests
 
-type GraphQLQuery struct {
+type Request struct {
 	// Will only be used if Query is unset.
 	Body      interface{}            `json:"-"`
 	Query     string                 `json:"query,omitempty"`

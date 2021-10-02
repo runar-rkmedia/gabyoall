@@ -1,4 +1,4 @@
-package cmd
+package requests
 
 import (
 	"time"
@@ -55,4 +55,29 @@ type GqlResponse struct {
 
 type Error struct {
 	Message string `json:"message"`
+}
+
+type RequestStats []RequestStat
+
+func (r RequestStats) Calculate() Stats {
+
+	s := Stats{
+		Min: time.Hour * 24,
+	}
+	for i := 0; i < len(r); i++ {
+		if r[i].Duration > s.Max {
+			s.Max = r[i].Duration
+		}
+		if r[i].Duration < s.Min {
+			s.Min = r[i].Duration
+		}
+		s.Total += r[i].Duration
+	}
+	s.Average = s.Total / time.Duration(len(r))
+	s.TotalText = s.Total.String()
+	s.MinText = s.Min.String()
+	s.MaxText = s.Max.String()
+	s.AverageText = s.Average.String()
+	return s
+
 }

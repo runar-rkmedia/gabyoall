@@ -1,4 +1,4 @@
-package cmd
+package requests
 
 import (
 	"bytes"
@@ -6,13 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/runar-rkmedia/gabyoall/logger"
-	"github.com/runar-rkmedia/gabyoall/queries"
 	"golang.org/x/net/http2"
 )
 
@@ -23,9 +21,6 @@ type Endpoint struct {
 	client  HttpClient
 }
 
-func NewMockedEndpoint(l logger.AppLogger, url string) Endpoint {
-	return NewEndpointWithClient(l, url, MockHttpClient{})
-}
 func NewEndpoint(l logger.AppLogger, url string) Endpoint {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -49,6 +44,7 @@ func NewEndpoint(l logger.AppLogger, url string) Endpoint {
 	}
 	return NewEndpointWithClient(l, url, client)
 }
+
 func NewEndpointWithClient(l logger.AppLogger, url string, client HttpClient) Endpoint {
 	if url == "" {
 		l.Fatal().Str("url", url).Msg("Got empty url")
@@ -73,36 +69,7 @@ type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-type MockHttpClient struct{}
-
-func (m MockHttpClient) Do(req *http.Request) (*http.Response, error) {
-
-	// TODO: replace with a mocked http-client-interface
-	time.Sleep(time.Millisecond * time.Duration(rand.Int63n(80)+1))
-	errorType := Unknwon
-	n := rand.Intn(7)
-	switch n {
-	case 1:
-		errorType = NonOK
-	case 2:
-		errorType = ServerTestError
-	case 3:
-		errorType = "RandomErr"
-	case 4:
-		errorType = "OtherErr"
-	case 6:
-		errorType = "MadeUpError"
-
-	}
-	res := http.Response{
-		StatusCode: rand.Intn(500) + 100,
-		Body:       io.NopCloser(strings.NewReader(string(errorType))),
-	}
-
-	return &res, nil
-}
-
-func (g *Endpoint) RunQuery(query queries.GraphQLQuery, okStatusCodes []int) (*http.Response, RequestStat, error) {
+func (g *Endpoint) RunQuery(query Request, okStatusCodes []int) (*http.Response, RequestStat, error) {
 	stat := NewStat()
 	l := logger.AppLogger{Logger: g.l.With().Str("operationName", query.OperationName).Str("endpoint", g.Url).Str("requestId", stat.RequestID).Logger()}
 	var b []byte
@@ -194,9 +161,6 @@ func (g *Endpoint) DoRequest(l logger.AppLogger, r *http.Request, stat RequestSt
 			l.ErrWarn(err).Msg("Failed to unmarshal body (raw)")
 		} else {
 			stat.Response = gqlResponseRaw
-			if debug {
-				l.Debug().Interface("json-response", gqlResponseRaw).Msg("got json body")
-			}
 		}
 		err = json.Unmarshal(body, &gqlResponse)
 		if err != nil {

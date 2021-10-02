@@ -216,7 +216,14 @@ func (g *Endpoint) DoRequest(l logger.AppLogger, r *http.Request, stat RequestSt
 		stat.RequestID = res.Header.Get("X-Request-Id")
 		l = l.WithStringPairs("requestId", stat.RequestID)
 	}
-	l.Debug().Int("statusCode", res.StatusCode).Interface("headers", res.Header).Msg("Got response")
+	if l.HasDebug() {
+
+		l.Debug().
+			Int("statusCode", res.StatusCode).
+			Interface("headers", res.Header).
+			Bytes("body", body).
+			Msg("Got response")
+	}
 
 	statusOk := false
 	for _, s := range okStatusCodes {

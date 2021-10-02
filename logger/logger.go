@@ -58,10 +58,10 @@ func InitLogger(cfg LogConfig) AppLogger {
 	if cfg.WithCaller {
 		l = l.With().Caller().Logger()
 	}
-	al = AppLogger{l}
 	if level, ok := convertLevelStr(cfg.Level); ok {
-		zerolog.SetGlobalLevel(level)
+		l = l.Level(level)
 	}
+	al = AppLogger{l}
 
 	return al
 }
@@ -81,10 +81,11 @@ func GetLogger(label string) AppLogger {
 }
 
 func (al *AppLogger) HasDebug() bool {
-	return al.GetLevel() >= zerolog.DebugLevel
+
+	return al.GetLevel() <= zerolog.DebugLevel
 }
 func (al *AppLogger) HasTrace() bool {
-	return al.GetLevel() >= zerolog.TraceLevel
+	return al.GetLevel() <= zerolog.TraceLevel
 }
 func (al *AppLogger) ErrErr(err error) *zerolog.Event {
 	return al.Error().Err(err)

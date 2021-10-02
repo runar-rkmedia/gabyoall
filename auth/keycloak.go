@@ -171,7 +171,7 @@ func (bc *Keycloak) Impersonate(clientToken TokenPayload, userID string) (TokenP
 	bc.Lock()
 	defer bc.Unlock()
 
-	bc.l.Info().Str("userID", userID).Msg("attempting to imppersonate user with impersonator-token")
+	bc.l.Info().Str("userID", userID).Msg("attempting to impersonate user with impersonator-token")
 	if clientToken.Token == "" {
 		return tp, fmt.Errorf("clientToken not set. Please call Retrieve first")
 	}

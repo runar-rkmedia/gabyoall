@@ -8,7 +8,8 @@ import (
 )
 
 type AuthConfig struct {
-	Kind string
+	Dynamic DynamicAuth
+	Kind    string
 	ImpersionationCredentials
 	ClientID     string
 	RedirectUri  string
@@ -17,6 +18,7 @@ type AuthConfig struct {
 	EndpointType string
 	Token        string
 	Expires      *time.Time
+	HeaderKey    string
 	Payload      map[string]interface{}
 }
 type ImpersionationCredentials struct {
@@ -48,6 +50,20 @@ type Config struct {
 	Mock              bool                   `cfg:"mock" description:"Enable to mock the requests."`
 	Concurrency       int                    `cfg:"concurrency" description:"Amount of concurrent requests." default:"100" short:"c"`
 	RequestCount      int                    `cfg:"request-count" default:"200" description:"Number of request to make total" short:"n"`
+}
+
+type DynamicAuth struct {
+	Requests []DynamicRequest
+}
+
+type DynamicRequest struct {
+	Method         string
+	Uri            string
+	Headers        map[string]string
+	JsonRequest    bool
+	JsonResponse   bool
+	ResultJmesPath string
+	Body           interface{}
 }
 
 func GetConfig(l logger.AppLogger) *Config {

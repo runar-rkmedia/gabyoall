@@ -7,7 +7,8 @@
 		"readme",
 		"http",
 		"logger",
-		"config"
+		"config",
+		"auth"
 	],
 	"cSpell.words": [
 		"Gobyoall"

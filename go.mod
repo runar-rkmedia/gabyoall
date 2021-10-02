@@ -38,3 +38,5 @@ require (
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+require github.com/jmespath/go-jmespath v0.4.0 // indirect

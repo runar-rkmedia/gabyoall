@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"syscall"
 	"time"
 
@@ -55,6 +56,9 @@ func main() {
 	if query.Query == "" && query.Body == "" {
 		l.Fatal().Interface("query", query).Msg("Missing query/body")
 	}
+	if config.Auth.HeaderKey == "" {
+		config.Auth.HeaderKey = "Authorization"
+	}
 	vars := TemplateVars{*config}
 	// TODO: Clean the path
 	outputPath := config.Output
@@ -70,33 +74,58 @@ func main() {
 	var tokenPayload auth.TokenPayload
 	var validityStringer printer.ValidityStringer
 	if token == "" {
-
-		bearerC := auth.NewBearerTokenCreator(
-			logger.GetLogger("token-handler"),
-			auth.BearerTokenCreatorOptions{
-				ImpersionationCredentials: auth.ImpersionationCredentials{
-					Username:              config.Auth.ImpersionationCredentials.Username,
-					Password:              config.Auth.ImpersionationCredentials.Password,
-					UserIDToImpersonate:   config.Auth.ImpersionationCredentials.UserIDToImpersonate,
-					UserNameToImpersonate: config.Auth.ImpersionationCredentials.UserNameToImpersonate,
-				},
-				ClientID:     config.Auth.ClientID,
-				RedirectUri:  config.Auth.RedirectUri,
-				Endpoint:     config.Auth.Endpoint,
-				EndpointType: config.Auth.EndpointType,
-				ClientSecret: config.Auth.ClientSecret,
-			})
-		validityStringer = &bearerC
-		if config.Auth.ImpersionationCredentials.UserIDToImpersonate != "" || config.Auth.ImpersionationCredentials.UserNameToImpersonate != "" {
-
-			tokenPayload, err := bearerC.Impersionate(auth.ImpersionateOptions{
-				UserName: config.Auth.UserNameToImpersonate,
-				UserID:   config.Auth.UserIDToImpersonate,
-			})
-			if err != nil {
-				l.Fatal().Err(err).Msg("failed to retrieve token")
+		switch strings.ToLower(config.Auth.Kind) {
+		case "dynamic":
+			if len(config.Auth.Dynamic.Requests) == 0 {
+				l.Fatal().Msg("With auth.kind set to dynamic, at least one request must be added")
 			}
-			token = tokenPayload.Token
+			da := auth.DynamicAuth{
+				Requests:  make([]auth.DynamicRequest, len(config.Auth.Dynamic.Requests)),
+				HeaderKey: config.Auth.HeaderKey,
+			}
+			// This is not ideal, but it keeps the config from importing DynamicRequests, and vice verca.
+			for i := 0; i < len(config.Auth.Dynamic.Requests); i++ {
+				da.Requests[i] = auth.DynamicRequest(config.Auth.Dynamic.Requests[i])
+			}
+			res, err := da.Retrieve()
+			if err != nil {
+				l.Fatal().Err(err).Msg("Failed during dynamic-auth-request")
+			}
+			token = res.Token
+		case "bearer":
+			if config.Auth.ClientID != "" {
+				bearerC := auth.NewBearerTokenCreator(
+					logger.GetLogger("token-handler"),
+					auth.BearerTokenCreatorOptions{
+						ImpersionationCredentials: auth.ImpersionationCredentials{
+							Username:              config.Auth.ImpersionationCredentials.Username,
+							Password:              config.Auth.ImpersionationCredentials.Password,
+							UserIDToImpersonate:   config.Auth.ImpersionationCredentials.UserIDToImpersonate,
+							UserNameToImpersonate: config.Auth.ImpersionationCredentials.UserNameToImpersonate,
+						},
+						ClientID:     config.Auth.ClientID,
+						RedirectUri:  config.Auth.RedirectUri,
+						Endpoint:     config.Auth.Endpoint,
+						EndpointType: config.Auth.EndpointType,
+						ClientSecret: config.Auth.ClientSecret,
+					})
+				validityStringer = &bearerC
+				if config.Auth.ImpersionationCredentials.UserIDToImpersonate != "" || config.Auth.ImpersionationCredentials.UserNameToImpersonate != "" {
+
+					tokenPayload, err := bearerC.Impersionate(auth.ImpersionateOptions{
+						UserName: config.Auth.UserNameToImpersonate,
+						UserID:   config.Auth.UserIDToImpersonate,
+					})
+					if err != nil {
+						l.Fatal().Err(err).Msg("failed to retrieve token")
+					}
+					token = tokenPayload.Token
+				}
+			}
+		case "":
+			l.Fatal().Msg("No auth.kind set, not using any authentication")
+		default:
+			l.Debug().Str("auth.kind", config.Auth.Kind).Msg("unrecognized option.")
 		}
 	}
 
@@ -110,7 +139,7 @@ func main() {
 	}
 	l.Info().Str("path", out.GetPath()).Msg("Will write output to path:")
 	endpoint := cmd.NewEndpoint(logger.GetLogger("gql"), config.Url)
-	endpoint.Headers.Add("Authorization", token)
+	endpoint.Headers.Add(config.Auth.HeaderKey, token)
 
 	l.Info().Str("url", config.Url).Str("operationName", query.OperationName).Int("count", config.RequestCount).Int("paralism", config.Concurrency).Msg("Running requests with paralism")
 	SetupCloseHandler(func(signal os.Signal) {

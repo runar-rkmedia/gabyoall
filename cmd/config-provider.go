@@ -32,7 +32,6 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 		viper.SetConfigName("gobyoall-conf")
-		viper.SetConfigType("yaml")
 		viper.AddConfigPath(path.Join(home, "gobyall"))
 		viper.AddConfigPath(path.Join(home, ".config", "gobyall"))
 		viper.AddConfigPath(".")

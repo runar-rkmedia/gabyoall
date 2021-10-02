@@ -5,7 +5,9 @@
 		"worker",
 		"token",
 		"readme",
-		"http"
+		"http",
+		"logger",
+		"config"
 	],
 	"cSpell.words": [
 		"Gobyoall"

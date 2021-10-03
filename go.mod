@@ -28,8 +28,7 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/naoina/toml v0.1.1
-	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/pelletier/go-toml v1.9.4
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -44,11 +43,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-require github.com/naoina/go-stringutil v0.1.0 // indirect
-
 require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942 // indirect
 )

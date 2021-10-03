@@ -52,3 +52,5 @@ gobyoall-conf*
 run.sh
 !*.go
 out*.y*ml
+*generated*
+*.bbolt

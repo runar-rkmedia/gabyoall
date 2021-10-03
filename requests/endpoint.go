@@ -15,9 +15,9 @@ import (
 )
 
 type Endpoint struct {
+	Url     string      `json:"url,omitempty"`
+	Headers http.Header `json:"headers,omitempty"`
 	l       logger.AppLogger
-	Url     string
-	Headers http.Header
 	client  HttpClient
 }
 

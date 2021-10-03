@@ -20,6 +20,10 @@ type AppLogger struct {
 	zerolog.Logger
 }
 
+func With(l zerolog.Logger) AppLogger {
+	return AppLogger{l}
+}
+
 type LogConfig struct {
 	Level      string
 	Format     string

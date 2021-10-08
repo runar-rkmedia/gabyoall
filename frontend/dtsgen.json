@@ -1,0 +1,20 @@
+{
+  "plugins": {
+    "@dtsgenerator/replace-namespace": {
+      "map": [
+        {
+          "from": ["Definitions"],
+          "to": ["ApiDef"]
+        },
+        {
+          "from": ["Responses"],
+          "to": ["ApiResponses"]
+        },
+        {
+          "from": ["Paths"],
+          "to": ["ApiPaths"]
+        }
+      ]
+    }
+  }
+}

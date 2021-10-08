@@ -40,7 +40,7 @@ Example:
 ```
 gobyoall \
   --query 'query{me}' \
-  --auth-token "eyJ..." \
+  --auth-token "ey..." \
   --url example.com
 ```
 

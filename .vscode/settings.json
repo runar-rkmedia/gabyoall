@@ -9,9 +9,14 @@
 		"logger",
 		"config",
 		"auth",
-		"api"
+		"api",
+		"frontend"
 	],
 	"cSpell.words": [
 		"Gobyoall"
-	]
+	],
+	"cssvar.files": [
+		"./frontend/node_modules/pollen-css/pollen.css",
+		// "./frontend/styles/variables.css" // Your theme file
+	],
 }

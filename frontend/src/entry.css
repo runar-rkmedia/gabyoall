@@ -1,0 +1,14 @@
+body {
+  background-color: var(--color-blue-700);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+form label {
+  display: flex;
+  flex-direction: column;
+}

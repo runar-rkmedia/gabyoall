@@ -42,12 +42,12 @@ func (rc ReqContext) WriteError(msg string, errCode ErrorCodes) {
 func (rc ReqContext) WriteErr(err error, errCode ErrorCodes) {
 	WriteErr(err, errCode, rc.Req, rc.Rw)
 }
-func (rc ReqContext) WriteOutput(output interface{}) {
-	WriteOutput(false, output, rc.Req, rc.Rw)
+func (rc ReqContext) WriteOutput(output interface{}, statusCode int) {
+	WriteOutput(false, statusCode, output, rc.Req, rc.Rw)
 }
 func (rc ReqContext) ValidateStruct(input interface{}) error {
 	err := rc.Context.StructValidater.Struct(input)
-	if rc.L.HasDebug() {
+	if err != nil && rc.L.HasDebug() {
 		rc.L.Debug().
 			Err(err).
 			Interface("input", input).Msg("validation failed with input")
@@ -56,11 +56,29 @@ func (rc ReqContext) ValidateStruct(input interface{}) error {
 }
 func (rc ReqContext) Unmarshal(body []byte, j interface{}) error {
 	err := UnmarshalWithKind(rc.ContentKind, body, j)
-	if rc.L.HasDebug() {
+	if err != nil && rc.L.HasDebug() {
 		rc.L.Debug().
 			Bytes("body", body).
 			Err(err).
 			Msg("marshalling failed with input")
+	}
+	return err
+}
+
+// Will perform validation and write errors to responsewriter if validation failed.
+// If err is non-nill, the caller should simply return
+func (rc ReqContext) ValidateBytes(body []byte, j interface{}) error {
+	err := rc.Unmarshal(body, j)
+	if err != nil {
+		rc.WriteErr(err, CodeErrMarhal)
+		return err
+	}
+	err = rc.ValidateStruct(j)
+	if err != nil {
+		// rw.Header().Set("Content-Type", "application/json")
+		// rw.WriteHeader(http.StatusBadRequest)
+		rc.WriteErr(err, CodeErrInputValidation)
+		return err
 	}
 	return err
 }

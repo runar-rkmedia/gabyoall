@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	_ "embed"
 
@@ -14,6 +15,7 @@ import (
 	_ "github.com/runar-rkmedia/gabyoall/api/docs"
 	"github.com/runar-rkmedia/gabyoall/api/requestContext"
 	"github.com/runar-rkmedia/gabyoall/api/types"
+	"github.com/runar-rkmedia/gabyoall/frontend"
 	"github.com/runar-rkmedia/gabyoall/logger"
 )
 
@@ -46,29 +48,65 @@ func main() {
 		l.Fatal().Err(err).Msg("Failed to initialize storage")
 	}
 	ctx := requestContext.Context{
-		l,
-		&db,
-		validator.New(),
+		L:               l,
+		DB:              &db,
+		StructValidater: validator.New(),
 	}
 	address := fmt.Sprintf("%s:%d", cfg.Address, cfg.Port)
 	// handler := http.NewServeMux()
-	handler := http.StripPrefix("/api/", EndpointsHandler(ctx))
+	http.Handle("/api/", http.StripPrefix("/api/", EndpointsHandler(ctx)))
+
+	if isDev {
+		// In development, we serve the file directly.
+		http.Handle("/", http.FileServer(http.Dir("./frontend/dist/")))
+	} else {
+		http.Handle("/", frontend.DistServer)
+	}
 	l.Info().Str("address", cfg.Address).Int("port", cfg.Port).Msg("Creating listeners")
-	err = http.ListenAndServe(address, handler)
+	err = http.ListenAndServe(address, nil)
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to create listener")
 	}
 }
 
+type AccessControl struct {
+	AllowOrigin string
+	MaxAge      time.Duration
+}
+
+var (
+	accessControl = AccessControl{
+		AllowOrigin: "_any_",
+		MaxAge:      24 * time.Hour,
+	}
+	// Will be set to false for production-builds via build-tags
+	isDev = true
+)
+
 func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
+		h := rw.Header()
+		switch accessControl.AllowOrigin {
+		case "_any_":
+			h.Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+		default:
+			h.Set("Access-Control-Allow-Origin", accessControl.AllowOrigin)
+		}
+		h.Set("Access-Control-Allow-Headers", "x-request-id, content-type, jmes-path")
+		h.Set("Access-Control-Max-Age", fmt.Sprintf("%0.f", accessControl.MaxAge.Seconds()))
+		if r.Method == "OPTIONS" {
+			h.Set("Cache-Control", fmt.Sprintf("public, max-age=%0.f", accessControl.MaxAge.Seconds()))
+			h.Set("Vary", "origin")
+
+			return
+		}
 		rc := requestContext.NewReqContext(&ctx, r, rw)
 		var body []byte
 		var err error
 		isGet := r.Method == http.MethodGet
 		isPost := r.Method == http.MethodPost
 		path := r.URL.Path
-		paths := strings.Split(path, "/")
+		paths := strings.Split(strings.TrimSuffix(path, "/"), "/")
 
 		if rc.ContentKind > 0 && isPost {
 			body, err = ioutil.ReadAll(r.Body)
@@ -85,22 +123,14 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 			return
 		case "endpoint":
 			// Create endpoint
-			if isPost && paths[1] == "" {
+			if isPost && len(paths) == 1 {
 				var input types.EndpointPayload
-				err := rc.Unmarshal(body, &input)
-				if err != nil {
-					rc.WriteErr(err, requestContext.CodeErrMarhal)
-					return
-				}
-				err = rc.ValidateStruct(input)
-				if err != nil {
-					rc.WriteErr(err, requestContext.CodeErrInputValidation)
+				if err := rc.ValidateBytes(body, &input); err != nil {
 					return
 				}
 				e, err := ctx.DB.CreateEndpoint(input)
 				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateEndpoint)
 				return
-
 			}
 			// List endpoints
 			if isGet && len(paths) == 1 {
@@ -114,7 +144,31 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 				rc.WriteAuto(es, err, requestContext.CodeErrEndpoint)
 				return
 			}
+		case "request":
+			// Create request
+			if isPost && len(paths) == 1 {
+				var input types.RequestPayload
+				if err := rc.ValidateBytes(body, &input); err != nil {
+					return
+				}
+				e, err := ctx.DB.CreateRequest(input)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateEndpoint)
+				return
+			}
+			// List requests
+			if isGet && len(paths) == 1 {
+				es, err := ctx.DB.Requests()
+				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
+				return
+			}
+			// Get request
+			if isGet && len(paths) == 2 {
+				es, err := ctx.DB.Endpoint(paths[1])
+				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
+				return
+			}
 		}
+		// http.FileServer(frontend.StaticFiles).ServeHTTP(rc.Rw, rc.rw)
 
 		rc.WriteError("No route here", requestContext.CodeErrNoRoute)
 	}

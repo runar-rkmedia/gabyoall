@@ -3,11 +3,8 @@ package bboltStorage
 import (
 	"time"
 
-	"net/http"
-
 	"github.com/runar-rkmedia/gabyoall/api/types"
 	"github.com/runar-rkmedia/gabyoall/logger"
-	"github.com/runar-rkmedia/gabyoall/requests"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -30,31 +27,6 @@ func NewBbolt(l logger.AppLogger, path string) (bb BBolter, err error) {
 	return
 }
 
-func (s *BBolter) Endpoints() (es map[string]types.EndpointEntity, err error) {
-	es = map[string]types.EndpointEntity{}
-	err = s.View(func(tx *bolt.Tx) error {
-		// Assume bucket exists and has keys
-		b := tx.Bucket(BucketEndpoints)
-
-		c := b.Cursor()
-
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var e types.EndpointEntity
-			err := s.Unmarshal(v, &e)
-			if err != nil {
-				return err
-			}
-			es[string(k)] = e
-		}
-
-		return nil
-	})
-	if err != nil {
-		s.l.Error().Err(err).Msg("failed to lookup endpoints")
-	}
-
-	return es, err
-}
 func (s *BBolter) GetItem(bucket []byte, id string, j interface{}) error {
 	err := s.DB.View(func(t *bolt.Tx) error {
 		bucket := t.Bucket(bucket)
@@ -66,35 +38,15 @@ func (s *BBolter) GetItem(bucket []byte, id string, j interface{}) error {
 	}
 
 	return err
-
 }
-func (s *BBolter) Endpoint(id string) (e types.EndpointEntity, err error) {
-	err = s.GetItem(BucketEndpoints, id, &e)
-	return
-}
-func (s *BBolter) CreateEndpoint(p types.EndpointPayload) (types.EndpointEntity, error) {
-	id, _ := CreateUniqueId()
-	now := time.Now()
-	e := types.EndpointEntity{
-		Endpoint: requests.Endpoint{
-			Url:     p.Url,
-			Headers: http.Header(p.Headers),
-		},
-		Entity: types.Entity{
-			ID:        id,
-			CreatedAt: now,
-		},
+func (s *BBolter) NewEntity() types.Entity {
+	// ForceNewEntity may return an error, but it guarantees the the Entity is still usable.
+	// The error should be logged, though.
+	e, err := ForceNewEntity()
+	if err != nil {
+		s.l.Error().Err(err).Str("id", e.ID).Msg("An error occured while creating entity. ")
 	}
-
-	err := s.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(BucketEndpoints)
-		bytes, err := s.Marshal(e)
-		if err != nil {
-			return err
-		}
-		return bucket.Put([]byte(e.ID), bytes)
-	})
-	return e, err
+	return e
 }
 
 type BBolter struct {
@@ -104,5 +56,6 @@ type BBolter struct {
 }
 
 var (
-	BucketEndpoints = []byte("1")
+	BucketEndpoints = []byte("endpoints")
+	BucketRequests  = []byte("requests")
 )

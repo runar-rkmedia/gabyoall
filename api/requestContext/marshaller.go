@@ -37,7 +37,7 @@ func UnmarshalWithKind(kind OutputKind, b []byte, j interface{}) error {
 	return toml.Unmarshal(b, j)
 }
 
-func WriteOutput(isError bool, output interface{}, r *http.Request, rw http.ResponseWriter) {
+func WriteOutput(isError bool, statusCode int, output interface{}, r *http.Request, rw http.ResponseWriter) {
 	o := WantedOutputFormat(r)
 	switch o {
 	case OutputJson:
@@ -79,9 +79,12 @@ func WriteOutput(isError bool, output interface{}, r *http.Request, rw http.Resp
 				}
 			}
 			// Technically not an error, but we dont want to run jmes-path-again
-			WriteOutput(true, result, r, rw)
+			WriteOutput(true, statusCode, result, r, rw)
 			return
 		}
+	}
+	if statusCode >= 100 {
+		rw.WriteHeader(statusCode)
 	}
 	switch o {
 	case OutputJson:
@@ -116,7 +119,6 @@ func WriteOutput(isError bool, output interface{}, r *http.Request, rw http.Resp
 		}
 		b, err := toml.Marshal(JSON)
 		if err != nil {
-			fmt.Println(JSON, err)
 			WriteErr(err, CodeErrMarhal, r, rw)
 			return
 		}

@@ -19,7 +19,7 @@ func WriteAuto(output interface{}, err error, errCode ErrorCodes, r *http.Reques
 		return
 	}
 
-	WriteOutput(false, output, r, rw)
+	WriteOutput(false, http.StatusOK, output, r, rw)
 }
 func WriteErr(err error, code ErrorCodes, r *http.Request, rw http.ResponseWriter) {
 	WriteError(err.Error(), code, r, rw)
@@ -27,12 +27,19 @@ func WriteErr(err error, code ErrorCodes, r *http.Request, rw http.ResponseWrite
 }
 func WriteError(msg string, code ErrorCodes, r *http.Request, rw http.ResponseWriter) {
 	ae := ApiError{msg, string(code)}
-	WriteOutput(true, ae, r, rw)
+	statusCode := http.StatusBadGateway
 	switch code {
 	case CodeErrMethodNotAllowed:
-		rw.WriteHeader(http.StatusMethodNotAllowed)
+		statusCode = http.StatusMethodNotAllowed
+		// duplicates??
+	case CodeErrEndpoint, CodeErrNoRoute:
+		statusCode = http.StatusNotFound
+	case CodeErrReadBody, CodeErrDBCreateEndpoint:
+		statusCode = http.StatusBadGateway
+	case CodeErrUnmarshal, CodeErrMarhal, CodeErrJmesPath, CodeErrJmesPathMarshal, CodeErrInputValidation, CodeErrIDNonValid, CodeErrIDTooLong, CodeErrIDEmpty:
+		statusCode = http.StatusBadRequest
 	}
-
+	WriteOutput(true, statusCode, ae, r, rw)
 	return
 
 }

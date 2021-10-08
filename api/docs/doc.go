@@ -42,9 +42,10 @@ type createResponse struct {
 }
 
 // FIXME: duplicates, use import
+
 type ApiError struct {
-	Message string
-	Code    int
+	Error string `json:"error"`
+	Code  string `json:"code,omitempty"`
 }
 type OkResponse struct {
 	Ok bool `json:"ok"`

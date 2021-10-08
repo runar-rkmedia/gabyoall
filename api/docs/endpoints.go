@@ -38,7 +38,7 @@ type endpointResponse struct {
 }
 
 // swagger:parameters getEndpoint
-type GetParams struct {
+type getEndpointParams struct {
 	// minLength: 3
 	// maxLength: 40
 	// in: path

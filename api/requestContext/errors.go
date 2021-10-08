@@ -24,6 +24,7 @@ var (
 
 const (
 	CodeErrEndpoint         ErrorCodes = "Endpoint"
+	CodeErrRequest          ErrorCodes = "Request"
 	CodeErrMethodNotAllowed ErrorCodes = "MethodNotAllowed"
 	CodeErrNoRoute          ErrorCodes = "NoRoute"
 	CodeErrReadBody         ErrorCodes = "ReadBody"
@@ -32,6 +33,7 @@ const (
 	CodeErrJmesPath         ErrorCodes = "JmesPath"
 	CodeErrJmesPathMarshal  ErrorCodes = "JmesPathMarshal"
 	CodeErrDBCreateEndpoint ErrorCodes = "DBCreateEndpoint"
+	CodeErrDBCreateRequest  ErrorCodes = "DBCreateRequest"
 	CodeErrInputValidation  ErrorCodes = "InputValidation"
 	CodeErrIDNonValid       ErrorCodes = "IDNonValid"
 	CodeErrIDTooLong        ErrorCodes = "IDTooLong"
@@ -39,6 +41,6 @@ const (
 )
 
 type ApiError struct {
-	Message string
-	Code    string
+	Error string `json:"error"`
+	Code  string `json:"code,omitempty"`
 }

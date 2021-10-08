@@ -15,6 +15,7 @@ import (
 )
 
 type Endpoint struct {
+	// Required: true
 	Url     string      `json:"url,omitempty"`
 	Headers http.Header `json:"headers,omitempty"`
 	l       logger.AppLogger

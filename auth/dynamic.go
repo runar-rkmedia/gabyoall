@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/jmespath/go-jmespath"
 )
 
@@ -68,9 +67,6 @@ func (dr DynamicRequest) Do() (*DynamicResponse, error) {
 	if dr.Uri == "" {
 		return nil, fmt.Errorf("missing field uri")
 	}
-	b, _ := yaml.Marshal(dr)
-	fmt.Println(string(b))
-	// return nil, fmt.Errorf("FFFFFFFFFFF")
 	if dr.JsonRequest && dr.Body != nil {
 		JSON, ok := dr.Body.(map[string]interface{})
 		if !ok {

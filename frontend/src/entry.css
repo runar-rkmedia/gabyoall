@@ -1,5 +1,32 @@
 body {
-  background-color: var(--color-blue-700);
+  background-color: var(--color-blue);
+  font-family: var(--font-sans);
+  margin: 0;
+}
+
+.paper {
+  box-shadow: var(--elevation-4);
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-grey-100);
+  padding-inline: var(--size-4);
+  padding-block: var(--size-2);
+  margin-block-end: var(--size-8);
+}
+
+nav .active .fas {
+  transform: scale(1.2);
+}
+
+input,
+select {
+  font-size: 1.2rem;
+  padding: var(--size-2);
+  border-radius: var(--radius-md);
+}
+*:focus,
+input:focus,
+select:focus {
+  box-shadow: var(--elevation-4);
 }
 
 *,
@@ -11,4 +38,35 @@ body {
 form label {
   display: flex;
   flex-direction: column;
+}
+
+nav button,
+.btn-reset,
+.icon-button {
+  border: none;
+  cursor: pointer;
+  margin: 0;
+  padding: var(--size-1) var(--size-2);
+  width: auto;
+  overflow: visible;
+
+  background: transparent;
+
+  /* inherit font & color from ancestor */
+  color: inherit;
+  font: inherit;
+
+  /* Normalize `line-height`. Cannot be changed from `normal` in Firefox 4+. */
+  line-height: normal;
+
+  /* Corrects font smoothing for webkit */
+  -webkit-font-smoothing: inherit;
+  -moz-osx-font-smoothing: inherit;
+
+  /* Corrects inability to style clickable `input` types in iOS */
+  -webkit-appearance: none;
+}
+
+.icon-button {
+  padding: var(--size-1) var(--size-2);
 }

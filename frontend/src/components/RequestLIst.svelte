@@ -28,7 +28,7 @@
       return 0
     })
     .reverse() as [k, v]}
-    <li id={k} transition:slide>
+    <li id={k} transition:slide|local>
       {v.method}
       {v.operationName}
       {new Date(v.createdAt).toLocaleTimeString()}

@@ -25,7 +25,7 @@ func (s *BBolter) CreateRequest(p types.RequestPayload) (types.RequestEntity, er
 	}
 
 	err := s.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(BucketEndpoints)
+		bucket := tx.Bucket(BucketRequests)
 		bytes, err := s.Marshal(e)
 		if err != nil {
 			return err
@@ -39,7 +39,7 @@ func (s *BBolter) Requests() (es map[string]types.RequestEntity, err error) {
 	es = map[string]types.RequestEntity{}
 	err = s.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
-		b := tx.Bucket(BucketEndpoints)
+		b := tx.Bucket(BucketRequests)
 
 		c := b.Cursor()
 

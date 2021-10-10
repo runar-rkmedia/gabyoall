@@ -28,9 +28,19 @@
       return 0
     })
     .reverse() as [k, v]}
-    <li id={k} transition:slide>
+    <li id={k} transition:slide|local>
       {v.url}
       {new Date(v.createdAt).toLocaleTimeString()}
+      {#if v.headers}
+        <strong>Headers</strong>
+        <ul>
+          {#each Object.entries(v.headers) as [hKey, hVal]}
+            <li>
+              {hKey} - {hVal.join('; ')}
+            </li>
+          {/each}
+        </ul>
+      {/if}
     </li>
   {/each}
 </ul>

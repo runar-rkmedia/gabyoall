@@ -14,7 +14,9 @@ import (
 	"github.com/runar-rkmedia/gabyoall/api/bboltStorage"
 	_ "github.com/runar-rkmedia/gabyoall/api/docs"
 	"github.com/runar-rkmedia/gabyoall/api/requestContext"
+	"github.com/runar-rkmedia/gabyoall/api/scheduler"
 	"github.com/runar-rkmedia/gabyoall/api/types"
+	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/frontend"
 	"github.com/runar-rkmedia/gabyoall/logger"
 )
@@ -53,6 +55,10 @@ type ApiConfig struct {
 //go:generate swagger generate spec -o generated-swagger.yml
 //go:generate sh -c "cd ../frontend && yarn gen"
 func main() {
+	err := cmd.InitConfig()
+	if err != nil {
+		panic(err)
+	}
 	cfg := ApiConfig{
 		Address: "0.0.0.0",
 		Port:    80,
@@ -74,6 +80,10 @@ func main() {
 		DB:              &db,
 		StructValidater: validator.New(),
 	}
+
+	s := scheduler.NewScheduler(l, &db, cmd.GetConfig(l))
+
+	s.Run()
 	address := fmt.Sprintf("%s:%d", cfg.Address, cfg.Port)
 	// handler := http.NewServeMux()
 	http.Handle("/api/", http.StripPrefix("/api/", EndpointsHandler(ctx)))
@@ -125,10 +135,11 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 		var err error
 		isGet := r.Method == http.MethodGet
 		isPost := r.Method == http.MethodPost
+		isPut := r.Method == http.MethodPut
 		path := r.URL.Path
 		paths := strings.Split(strings.TrimSuffix(path, "/"), "/")
 
-		if rc.ContentKind > 0 && isPost {
+		if rc.ContentKind > 0 && (isPost || isPut) {
 			body, err = ioutil.ReadAll(r.Body)
 			if err != nil {
 				rc.WriteErr(err, requestContext.CodeErrReadBody)
@@ -183,8 +194,41 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 			}
 			// Get request
 			if isGet && len(paths) == 2 {
-				es, err := ctx.DB.Endpoint(paths[1])
+				es, err := ctx.DB.Request(paths[1])
 				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
+				return
+			}
+		case "schedule":
+			// Create schedule
+			if isPost && len(paths) == 1 {
+				var input types.SchedulePayload
+				if err := rc.ValidateBytes(body, &input); err != nil {
+					return
+				}
+				e, err := ctx.DB.CreateSchedule(input)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateEndpoint)
+				return
+			}
+			// Update schedule
+			if isPut && len(paths) == 2 {
+				var input types.SchedulePayload
+				if err := rc.ValidateBytes(body, &input); err != nil {
+					return
+				}
+				e, err := ctx.DB.UpdateSchedule(paths[1], types.Schedule{SchedulePayload: input})
+				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateEndpoint)
+				return
+			}
+			// List schedules
+			if isGet && len(paths) == 1 {
+				es, err := ctx.DB.Schedules()
+				rc.WriteAuto(es, err, requestContext.CodeErrSchedule)
+				return
+			}
+			// Get schedule
+			if isGet && len(paths) == 2 {
+				es, err := ctx.DB.Schedule(paths[1])
+				rc.WriteAuto(es, err, requestContext.CodeErrSchedule)
 				return
 			}
 		}

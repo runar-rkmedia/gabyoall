@@ -1,11 +1,17 @@
 package bboltStorage
 
 import (
+	"errors"
 	"time"
 
 	"github.com/runar-rkmedia/gabyoall/api/types"
 	"github.com/runar-rkmedia/gabyoall/logger"
 	bolt "go.etcd.io/bbolt"
+)
+
+var (
+	ErrMissingIdArg = errors.New("Missing id as argument")
+	ErrNotFound     = errors.New("Not found")
 )
 
 // Caller must call close when ending
@@ -21,16 +27,29 @@ func NewBbolt(l logger.AppLogger, path string) (bb BBolter, err error) {
 	bb.DB = db
 	bb.Marshaller = Gob{}
 	err = bb.Update(func(t *bolt.Tx) error {
-		_, err := t.CreateBucketIfNotExists(BucketEndpoints)
-		return err
+		buckets := [][]byte{BucketEndpoints, BucketRequests, BucketSchedules}
+		for i := 0; i < len(buckets); i++ {
+			_, err := t.CreateBucketIfNotExists(buckets[i])
+			if err != nil {
+				return err
+
+			}
+		}
+		return nil
 	})
 	return
 }
 
 func (s *BBolter) GetItem(bucket []byte, id string, j interface{}) error {
+	if id == "" {
+		return ErrMissingIdArg
+	}
 	err := s.DB.View(func(t *bolt.Tx) error {
 		bucket := t.Bucket(bucket)
 		b := bucket.Get([]byte(id))
+		if b == nil || len(b) == 0 {
+			return ErrNotFound
+		}
 		return s.Unmarshal(b, j)
 	})
 	if err != nil {
@@ -58,4 +77,5 @@ type BBolter struct {
 var (
 	BucketEndpoints = []byte("endpoints")
 	BucketRequests  = []byte("requests")
+	BucketSchedules = []byte("schedules")
 )

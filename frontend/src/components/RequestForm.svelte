@@ -5,7 +5,7 @@
   let query = 'query {galaxies}'
   let variables = '{}'
   let body = ''
-  let method = '{}'
+  let method = 'POST'
   let operationName = 'Name'
   let isGraphql = false
   let createResponse: ReturnType<typeof api.request.create>
@@ -31,8 +31,12 @@
 
 <form>
   <label>
-    operationName
-    <textarea type="text" bind:value={operationName} />
+    {isGraphql ? 'Operation Name' : 'Label'}
+    <input type="text" bind:value={operationName} />
+  </label>
+  <label>
+    Method
+    <input type="text" bind:value={method} />
   </label>
   <label>
     As GraphQL
@@ -42,6 +46,15 @@
     <label>
       query
       <textarea type="text" bind:value={query} />
+    </label>
+    <label>
+      variables
+      <textarea type="text" bind:value={variables} />
+    </label>
+  {:else}
+    <label>
+      body
+      <textarea type="text" bind:value={body} />
     </label>
   {/if}
   <button

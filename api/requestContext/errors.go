@@ -33,6 +33,7 @@ const (
 	CodeErrJmesPath         ErrorCodes = "JmesPath"
 	CodeErrJmesPathMarshal  ErrorCodes = "JmesPathMarshal"
 	CodeErrDBCreateEndpoint ErrorCodes = "DBCreateEndpoint"
+	CodeErrSchedule         ErrorCodes = "DBCreateSchedule"
 	CodeErrDBCreateRequest  ErrorCodes = "DBCreateRequest"
 	CodeErrInputValidation  ErrorCodes = "InputValidation"
 	CodeErrIDNonValid       ErrorCodes = "IDNonValid"

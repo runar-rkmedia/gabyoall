@@ -1,5 +1,6 @@
 import { ApiFetchOptions, fetchApi, methods } from './apiFetcher'
 import createStore from './store'
+import { objectKeys } from 'simplytyped'
 
 /**
  * Typedefintions are created by running `yarn gen`.
@@ -10,28 +11,26 @@ import createStore from './store'
 export type DB = {
   endpoint: Record<string, ApiDef.EndpointEntity>
   request: Record<string, ApiDef.RequestEntity>
+  schedule: Record<string, ApiDef.ScheduleEntity>
 }
 
 export const api = {
-  request: CrudFactory<ApiDef.RequestPayload, 'request'>('request', 'request'),
-  endpoint: CrudFactory<ApiDef.EndpointPayload, 'endpoint'>(
-    'endpoint',
-    'endpoint'
-  ),
-}
-
-const withStorage = !!false
+  request: CrudFactory<ApiDef.RequestPayload, 'request'>('request'),
+  endpoint: CrudFactory<ApiDef.EndpointPayload, 'endpoint'>('endpoint'),
+  schedule: {
+    ...CrudFactory<ApiDef.SchedulePayload, 'schedule'>('schedule'),
+    update: apiUpdateFactory<ApiDef.SchedulePayload, 'schedule'>(
+      'schedule',
+      'schedule'
+    ),
+  },
+} as const
 
 export const db = createStore<DB>({
-  initialValue: {
-    endpoint: {},
-    request: {},
-  },
-  ...(withStorage && {
-    storage: {
-      key: 'store',
-    },
-  }),
+  initialValue: objectKeys(api).reduce((r, k) => {
+    r[k] = {}
+    return r
+  }, {} as DB),
 })
 
 const mergeMap = <K extends keyof DB, V extends DB[K]>(key: K, value: V) => {
@@ -93,13 +92,13 @@ const mergeField = <K extends keyof DB, V extends DB[K]['s']>(
   yes, that is not really all of the cruds...
 */
 function CrudFactory<Payload extends {}, K extends keyof DB>(
-  subPath: string,
-  storeKey: K
+  storeKey: K,
+  subPath?: string
 ) {
   return {
-    get: apiGetFactory(subPath, storeKey),
-    list: apiGetListFactory(subPath, storeKey),
-    create: apiCreateFactory<Payload, K>(subPath, storeKey),
+    get: apiGetFactory(subPath || storeKey, storeKey),
+    list: apiGetListFactory(subPath || storeKey, storeKey),
+    create: apiCreateFactory<Payload, K>(subPath || storeKey, storeKey),
   }
 }
 
@@ -140,4 +139,23 @@ function apiCreateFactory<Payload extends {}, K extends keyof DB>(
       body,
       ...options,
     })
+}
+
+function apiUpdateFactory<Payload extends {}, K extends keyof DB>(
+  subPath: string,
+  storeKey: K
+) {
+  if (!subPath) {
+    subPath = storeKey
+  }
+  return (id: string, body: Payload, options?: ApiFetchOptions) =>
+    fetchApi<DB[K]['s']>(
+      subPath + '/' + id,
+      (e: any) => mergeField(storeKey, e, e.id),
+      {
+        method: methods.PUT,
+        body,
+        ...options,
+      }
+    )
 }

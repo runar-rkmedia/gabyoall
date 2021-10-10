@@ -7,6 +7,7 @@ export const contentTypes = {
 export const methods = {
   POST: 'POST',
   GET: 'GET',
+  PUT: 'PUT',
 } as const
 
 export const baseUrl = 'http://localhost/api'
@@ -34,19 +35,19 @@ export async function fetchApi<T extends {}>(
     headers: {
       accept: contentTypes.json,
       'content-type': contentTypes.json,
+      ...(!!jmespath && {
+        'jmes-path': jmespath,
+      }),
     },
     ...(!!body && {
       body: typeof body === 'string' ? body : JSON.stringify(body),
     }),
   }
-  if (jmespath) {
-    opts.headers['jmes-path'] = jmespath
-  }
   const url = baseUrl + sub
   const result: {
     data: T
   } = {} as any
-  let response: Response
+  let response: Response | null = null
   try {
     response = await fetch(url, opts)
     const contentType = response.headers.get('content-type') || ''
@@ -78,4 +79,11 @@ export async function fetchApi<T extends {}>(
     ] as const
   }
   return [result, null] as const
+}
+
+export function serializeDate(date: Date) {
+  return date.toISOString()
+}
+export function deserializeDate(dateStr: string) {
+  return new Date(dateStr)
 }

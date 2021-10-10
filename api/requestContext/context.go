@@ -1,6 +1,7 @@
 package requestContext
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -55,12 +56,18 @@ func (rc ReqContext) ValidateStruct(input interface{}) error {
 	return err
 }
 func (rc ReqContext) Unmarshal(body []byte, j interface{}) error {
+	if body == nil {
+		if rc.L.HasDebug() {
+			rc.L.Debug().Msg("Body was nil")
+		}
+		return fmt.Errorf("Body was nil")
+	}
 	err := UnmarshalWithKind(rc.ContentKind, body, j)
 	if err != nil && rc.L.HasDebug() {
 		rc.L.Debug().
 			Bytes("body", body).
 			Err(err).
-			Msg("marshalling failed with input")
+			Msg("unmarshalling failed with input")
 	}
 	return err
 }

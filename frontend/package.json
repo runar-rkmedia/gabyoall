@@ -10,7 +10,7 @@
   "scripts": {
     "watch": "yarn build -d",
     "dev": "sh -c 'yarn build -d & serve dist & wait' ",
-    "gen": "yarn dtsgen --out src/api.d.ts ../api/generated-swagger.yml",
+    "gen": "yarn dtsgen --out src/apiTypes.d.ts ../api/generated-swagger.yml",
     "gogen": "go generate ../...",
     "build": "node build.mjs"
   },

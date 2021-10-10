@@ -95,3 +95,31 @@ auth:
     userIDToImpersonate: 638492ff-282e-4ccd-8e4c-f65db4093d12
 #     userNameToImpersonate: johndoe
 ```
+
+## Development
+
+The cli is located at `./main.go`, you can start it with:
+
+```shell-script
+go run main.go
+```
+
+The api-server is located at `/api/apiMain.go`, you can start it with:
+
+```shell-script
+go run api/apiMain.go
+```
+
+The front-end is located at `/frontend/`, it can be started with:
+
+```shell-script
+(cd frontend && yarn dev)
+```
+
+When developing for the api-server and frontend, there is is a convenience-script which does the following:
+
+- watch for changes in all go-related-files and restarts the server as needed.
+- generates the swagger-definition
+- generates the frontends type-information from the swagger-defintion
+- starts the front-end in development-mode
+- serves the front-end-code.

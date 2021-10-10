@@ -22,7 +22,27 @@ import (
 var (
 	//go:embed generated-swagger.yml
 	swaggerYml string
+	// These are added at build...
+	Version      string
+	BuildDateStr string
+	BuildDate    time.Time
+	GitHash      string
+	isDev        = true
+	IsDevStr     = "1"
 )
+
+func init() {
+	if BuildDateStr != "" {
+		t, err := time.Parse("2006-01-02T15:04:05", BuildDateStr)
+		if err != nil {
+			panic(fmt.Errorf("Failed to parse build-date: %w", err))
+		}
+		BuildDate = t
+	}
+	if IsDevStr != "1" {
+		isDev = false
+	}
+}
 
 type ApiConfig struct {
 	Address string
@@ -31,6 +51,7 @@ type ApiConfig struct {
 }
 
 //go:generate swagger generate spec -o generated-swagger.yml
+//go:generate sh -c "cd ../frontend && yarn gen"
 func main() {
 	cfg := ApiConfig{
 		Address: "0.0.0.0",
@@ -43,6 +64,7 @@ func main() {
 	}
 	logger.InitLogger(cfg.LogConfig)
 	l := logger.GetLogger("main")
+	l.Info().Str("version", Version).Time("buildDate", BuildDate).Time("buildDateLocal", BuildDate.Local()).Str("gitHash", GitHash).Msg("Starting")
 	db, err := bboltStorage.NewBbolt(l, "db.bbolt")
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to initialize storage")
@@ -79,8 +101,6 @@ var (
 		AllowOrigin: "_any_",
 		MaxAge:      24 * time.Hour,
 	}
-	// Will be set to false for production-builds via build-tags
-	isDev = true
 )
 
 func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {

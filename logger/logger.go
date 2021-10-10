@@ -54,7 +54,11 @@ func InitLogger(cfg LogConfig) AppLogger {
 	var l zerolog.Logger
 	switch cfg.Format {
 	case "human":
-		l = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		out := zerolog.ConsoleWriter{Out: os.Stderr}
+		out.FormatTimestamp = func(i interface{}) string {
+			return i.(string)
+		}
+		l = log.Output(out)
 	default:
 		l = log.Logger
 	}

@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"reflect"
 	"strconv"
 	"strings"
@@ -25,30 +23,8 @@ var (
 	}
 )
 
-func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-		viper.SetConfigName("gobyoall-conf")
-		viper.AddConfigPath(path.Join(home, "gobyall"))
-		viper.AddConfigPath(path.Join(home, ".config", "gobyall"))
-		viper.AddConfigPath(".")
-	}
-	viper.SetEnvPrefix("gobyoall")
-	viper.AutomaticEnv()
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error if desired
-		} else {
-			panic(fmt.Errorf("Fatal error config file: %w \n", err))
-		}
-	}
-}
-
-func ReadConfig() {
-	cobra.OnInitialize(initConfig)
+func ReadConfig(y ...func()) {
+	cobra.OnInitialize(y...)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/gobyoall-conf.yaml)")
 	var cfg Config
 	t := reflect.TypeOf(cfg)
@@ -125,7 +101,7 @@ func ReadConfig() {
 
 }
 
-func Execute() error {
-	ReadConfig()
+func Execute(y ...func()) error {
+	ReadConfig(y...)
 	return rootCmd.Execute()
 }

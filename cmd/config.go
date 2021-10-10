@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+	"path"
 	"time"
 
 	"github.com/runar-rkmedia/gabyoall/logger"
@@ -73,4 +76,29 @@ func GetConfig(l logger.AppLogger) *Config {
 		cfg.Concurrency = cfg.RequestCount
 	}
 	return &cfg
+}
+
+func InitConfig() error {
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		viper.SetConfigName("gobyoall-conf")
+		viper.AddConfigPath(path.Join(home, "gobyall"))
+		viper.AddConfigPath(path.Join(home, ".config", "gobyall"))
+		viper.AddConfigPath(".")
+	}
+	viper.SetEnvPrefix("gobyoall")
+	viper.AutomaticEnv()
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error if desired
+		} else {
+			return fmt.Errorf("Fatal error config file: %w \n", err)
+		}
+	}
+	return nil
 }

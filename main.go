@@ -28,7 +28,13 @@ type TemplateVars struct {
 }
 
 func main() {
-	err := cmd.Execute()
+
+	err := cmd.Execute(func() {
+		err := cmd.InitConfig()
+		if err != nil {
+			panic(err)
+		}
+	})
 	if err != nil {
 		os.Exit(1)
 	}
@@ -139,7 +145,11 @@ func main() {
 	}
 	l.Info().Str("path", out.GetPath()).Msg("Will write output to path:")
 	endpoint := requests.NewEndpoint(logger.GetLogger("gql"), config.Url)
-	endpoint.Headers.Add(config.Auth.HeaderKey, token)
+	authPrefix := ""
+	if strings.ToLower(config.Auth.Kind) == "bearer" {
+		authPrefix = "Bearer "
+	}
+	endpoint.Headers.Add(config.Auth.HeaderKey, authPrefix+token)
 
 	l.Info().Str("url", config.Url).Str("operationName", query.OperationName).Int("count", config.RequestCount).Int("paralism", config.Concurrency).Msg("Running requests with paralism")
 	SetupCloseHandler(func(signal os.Signal) {

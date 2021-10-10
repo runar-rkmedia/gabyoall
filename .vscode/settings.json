@@ -10,7 +10,8 @@
 		"config",
 		"auth",
 		"api",
-		"frontend"
+		"frontend",
+		"cli"
 	],
 	"cSpell.words": [
 		"Gobyoall"

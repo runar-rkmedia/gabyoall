@@ -79,7 +79,15 @@ func (g *Endpoint) RunQuery(query Request, okStatusCodes []int) (*http.Response,
 		query.Method = http.MethodPost
 	}
 	if query.Query != "" {
-		b, err = json.Marshal(query)
+		b, err = json.MarshalIndent(struct {
+			Query         string                 `json:"query"`
+			Variables     map[string]interface{} `json:"variables,omitempty"`
+			OperationName string                 `json:"operationName"`
+		}{
+			Query:         query.Query,
+			Variables:     query.Variables,
+			OperationName: query.OperationName,
+		}, "", "  ")
 	} else {
 
 		if str, ok := query.Body.(string); ok {

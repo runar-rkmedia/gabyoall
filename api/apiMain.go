@@ -31,6 +31,7 @@ type ApiConfig struct {
 }
 
 //go:generate swagger generate spec -o generated-swagger.yml
+//go:generate sh -c "cd ../frontend && yarn gen"
 func main() {
 	cfg := ApiConfig{
 		Address: "0.0.0.0",

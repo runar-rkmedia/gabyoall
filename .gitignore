@@ -54,3 +54,6 @@ run.sh
 out*.y*ml
 *generated*
 *.bbolt
+tmp/main
+job-2*
+dist

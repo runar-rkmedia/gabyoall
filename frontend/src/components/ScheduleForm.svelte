@@ -1,6 +1,5 @@
 <script lang="ts">
   import { serializeDate } from 'apiFetcher'
-  import { parse, parseISO } from 'date-fns'
 
   import { objectKeys } from 'simplytyped'
 
@@ -49,7 +48,6 @@
       const s = $db.schedule[editID]
       if (s) {
         lastEdit = editID
-        console.log('writing for edit')
         endpointID = s.endpointID
         requestID = s.requestID
         frequency = s.frequency || 0
@@ -164,13 +162,11 @@
     <input
       type="datetime-local"
       name="start_date"
-      bind:value={start_date_str}
-    />
+      bind:value={start_date_str} />
   </label>
   <button
     on:click|preventDefault={() =>
-      (start_date_str = serializeInputDate(new Date()))}>Now</button
-  >
+      (start_date_str = serializeInputDate(new Date()))}>Now</button>
   {#if errors}
     {#each Object.values(errors) as err}
       <div class="error">{err}</div>

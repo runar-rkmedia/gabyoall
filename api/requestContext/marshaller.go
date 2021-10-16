@@ -37,7 +37,7 @@ func UnmarshalWithKind(kind OutputKind, b []byte, j interface{}) error {
 	return toml.Unmarshal(b, j)
 }
 
-func WriteOutput(isError bool, statusCode int, output interface{}, r *http.Request, rw http.ResponseWriter) {
+func WriteOutput(isError bool, statusCode int, output interface{}, r *http.Request, rw http.ResponseWriter) error {
 	o := WantedOutputFormat(r)
 	switch o {
 	case OutputJson:
@@ -53,18 +53,18 @@ func WriteOutput(isError bool, statusCode int, output interface{}, r *http.Reque
 			b, err := json.Marshal(output)
 			if err != nil {
 				WriteErr(err, CodeErrMarhal, r, rw)
-				return
+				return err
 			}
 			var JSON map[string]interface{}
 			err = json.Unmarshal(b, &JSON)
 			if err != nil {
 				WriteErr(err, CodeErrUnmarshal, r, rw)
-				return
+				return err
 			}
 			result, err := jmespath.Search(jmesPath, JSON)
 			if err != nil {
 				WriteErr(fmt.Errorf("failed in jmes-path '%s': %w", jmesPath, err), CodeErrJmesPath, r, rw)
-				return
+				return err
 			}
 
 			if o == OutputToml {
@@ -75,12 +75,11 @@ func WriteOutput(isError bool, statusCode int, output interface{}, r *http.Reque
 					// return
 				case int, int8, int16, int32, int64:
 					rw.Write([]byte(fmt.Sprintf("%d", result)))
-					return
+					return err
 				}
 			}
 			// Technically not an error, but we dont want to run jmes-path-again
-			WriteOutput(true, statusCode, result, r, rw)
-			return
+			return WriteOutput(true, statusCode, result, r, rw)
 		}
 	}
 	if statusCode >= 100 {
@@ -91,14 +90,14 @@ func WriteOutput(isError bool, statusCode int, output interface{}, r *http.Reque
 		b, err := json.Marshal(output)
 		if err != nil {
 			WriteErr(err, CodeErrMarhal, r, rw)
-			return
+			return err
 		}
 		rw.Write(b)
 	case OutputYaml:
 		b, err := yaml.Marshal(output)
 		if err != nil {
 			WriteErr(err, CodeErrMarhal, r, rw)
-			return
+			return err
 		}
 		rw.Write(b)
 	case OutputToml:
@@ -108,20 +107,21 @@ func WriteOutput(isError bool, statusCode int, output interface{}, r *http.Reque
 		jb, err := json.Marshal(output)
 		if err != nil {
 			WriteErr(err, CodeErrMarhal, r, rw)
-			return
+			return err
 		}
 
 		var JSON map[string]interface{}
 		err = json.Unmarshal(jb, &JSON)
 		if err != nil {
 			WriteErr(err, CodeErrMarhal, r, rw)
-			return
+			return err
 		}
 		b, err := toml.Marshal(JSON)
 		if err != nil {
 			WriteErr(err, CodeErrMarhal, r, rw)
-			return
+			return err
 		}
 		rw.Write(b)
 	}
+	return nil
 }

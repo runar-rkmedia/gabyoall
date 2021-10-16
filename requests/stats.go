@@ -3,15 +3,16 @@ package requests
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/runar-rkmedia/gabyoall/utils"
 )
 
 type RequestStat struct {
-	ErrorType    `json:",omitempty"`
-	Response     map[string]interface{} `json:",omitempty"`
-	RawResponse  string                 `json:",omitempty"`
-	StatusCode   int                    `json:",omitempty"`
-	Error        error                  `json:",omitempty"`
+	ErrorType `json:",omitempty"`
+	Response  map[string]interface{} `json:",omitempty"`
+	// deprecated, will by replaced by a []byte-slice
+	RawResponse  string `json:",omitempty"`
+	StatusCode   int    `json:",omitempty"`
+	Error        error  `json:",omitempty"`
 	Duration     time.Duration
 	DurationText string
 	RequestID    string
@@ -42,8 +43,9 @@ type Stats struct {
 }
 
 func NewStat() RequestStat {
+	id, _ := utils.ForceCreateUniqueId()
 	return RequestStat{
-		RequestID: "srv-test-" + uuid.NewString(),
+		RequestID: "srv-test-" + id,
 		Start:     time.Now(),
 	}
 }

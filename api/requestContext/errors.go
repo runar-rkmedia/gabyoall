@@ -28,7 +28,7 @@ const (
 	CodeErrMethodNotAllowed ErrorCodes = "MethodNotAllowed"
 	CodeErrNoRoute          ErrorCodes = "NoRoute"
 	CodeErrReadBody         ErrorCodes = "ReadBody"
-	CodeErrMarhal           ErrorCodes = "Marhal"
+	CodeErrMarhal           ErrorCodes = "Marshal"
 	CodeErrUnmarshal        ErrorCodes = "Unmarshal"
 	CodeErrJmesPath         ErrorCodes = "JmesPath"
 	CodeErrJmesPathMarshal  ErrorCodes = "JmesPathMarshal"

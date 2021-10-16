@@ -27,7 +27,7 @@ func NewBbolt(l logger.AppLogger, path string) (bb BBolter, err error) {
 	bb.DB = db
 	bb.Marshaller = Gob{}
 	err = bb.Update(func(t *bolt.Tx) error {
-		buckets := [][]byte{BucketEndpoints, BucketRequests, BucketSchedules}
+		buckets := [][]byte{BucketEndpoints, BucketRequests, BucketSchedules, BucketStats}
 		for i := 0; i < len(buckets); i++ {
 			_, err := t.CreateBucketIfNotExists(buckets[i])
 			if err != nil {
@@ -78,4 +78,5 @@ var (
 	BucketEndpoints = []byte("endpoints")
 	BucketRequests  = []byte("requests")
 	BucketSchedules = []byte("schedules")
+	BucketStats     = []byte("stats")
 )

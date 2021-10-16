@@ -742,17 +742,26 @@ fsevents@~2.3.2:
     dtsgenerator: ^3.13.1
     esbuild: ^0.13.3
     esbuild-svelte: ^0.5.6
+    lodash.clonedeep: ^4.5.0
     lodash.debounce: ^4.0.8
     lodash.merge: ^4.6.2
     nanoid: ^3.1.29
     pollen-css: ^2.1.0
+    prettier: ^2.4.1
+    prettier-plugin-svelte: ^2.4.0
     sass: ^1.42.1
     simplytyped: ^3.3.0
     svelte: ^3.43.1
+    svelte-highlight: ^5.0.0
     svelte-preprocess: ^4.9.8
     svelte-preprocess-sass: ^2.0.1
+    svelte-tiny-linked-charts: ^1.0.6
+    toml-js: ^0.0.8
+    ts-essentials: ^9.0.0
     typescript: ^4.4.3
+    utility-types: ^3.10.0
     uvu: ^0.5.1
+    yaml: ^1.10.2
   languageName: unknown
   linkType: soft
 
@@ -767,6 +776,13 @@ fsevents@~2.3.2:
   version: 2.0.1
   resolution: "has-unicode@npm:2.0.1"
   checksum: 1eab07a7436512db0be40a710b29b5dc21fa04880b7f63c9980b706683127e3c1b57cb80ea96d47991bdae2dfe479604f6a1ba410106ee1046a41d1bd0814400
+  languageName: node
+  linkType: hard
+
+"highlight.js@npm:11.2.0":
+  version: 11.2.0
+  resolution: "highlight.js@npm:11.2.0"
+  checksum: 12bfd562899a6a70d20321460ec40a94456bd8a9cb7deedbb70630c1981b937690fa0c7cf056d8f12c3c39981b400fb1a4f8b784b97399b26bd812460809cc0e
   languageName: node
   linkType: hard
 
@@ -945,6 +961,13 @@ fsevents@~2.3.2:
   version: 4.1.4
   resolution: "kleur@npm:4.1.4"
   checksum: 7f6db36e378045dec14acd3cbf0b1e59130c09e984ee8b8ce56dd2d2257cfff90389c1e8f8b19bd09dd5d241080566a814b4ccd99fdcef91f59ef93ec33c8a44
+  languageName: node
+  linkType: hard
+
+"lodash.clonedeep@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.clonedeep@npm:4.5.0"
+  checksum: 92c46f094b064e876a23c97f57f81fbffd5d760bf2d8a1c61d85db6d1e488c66b0384c943abee4f6af7debf5ad4e4282e74ff83177c9e63d8ff081a4837c3489
   languageName: node
   linkType: hard
 
@@ -1258,6 +1281,25 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
+"prettier-plugin-svelte@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "prettier-plugin-svelte@npm:2.4.0"
+  peerDependencies:
+    prettier: ^1.16.4 || ^2.0.0
+    svelte: ^3.2.0
+  checksum: f09ce50c636f673c40429edb71735fb716f1c3bba51ce31a9650ffd2a77aca28e0726471953ed27528ba16b6b50db4571c3a7bf705d16570f645d9523813a0bf
+  languageName: node
+  linkType: hard
+
+"prettier@npm:^2.4.1":
+  version: 2.4.1
+  resolution: "prettier@npm:2.4.1"
+  bin:
+    prettier: bin-prettier.js
+  checksum: cc6830588b401b0d742862fe9c46bc9118204fb307c3abe0e49e95b35ed23629573807ffdf9cdd65289c252a0bb51fc0171437f6626ee36378dea80f0ee80b91
+  languageName: node
+  linkType: hard
+
 "process-nextick-args@npm:~2.0.0":
   version: 2.0.1
   resolution: "process-nextick-args@npm:2.0.1"
@@ -1530,6 +1572,15 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
+"svelte-highlight@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "svelte-highlight@npm:5.0.0"
+  dependencies:
+    highlight.js: 11.2.0
+  checksum: 89cd0b90c77316c32e53c381ababc0d732449b40d27bdf18443329f0d7b48448bd5113b00f1b94b9b47c2443207f8f52f03700f88698ecfd716151b32fd36f50
+  languageName: node
+  linkType: hard
+
 "svelte-preprocess-filter@npm:^1.0.0":
   version: 1.0.0
   resolution: "svelte-preprocess-filter@npm:1.0.0"
@@ -1597,6 +1648,13 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
+"svelte-tiny-linked-charts@npm:^1.0.6":
+  version: 1.0.6
+  resolution: "svelte-tiny-linked-charts@npm:1.0.6"
+  checksum: 3113d456f4fae8ee4c5a91dd82a0dafff598981da31d8c10bfa0fd7f54cd4a6435c8edfac85e51b6a90e2431804c3592afe58cf51b496ed845d08e57b755c2c0
+  languageName: node
+  linkType: hard
+
 "svelte@npm:^3.42.6, svelte@npm:^3.43.1":
   version: 3.43.1
   resolution: "svelte@npm:3.43.1"
@@ -1627,10 +1685,26 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
+"toml-js@npm:^0.0.8":
+  version: 0.0.8
+  resolution: "toml-js@npm:0.0.8"
+  checksum: b89174b9d669ec6b52d6ef1018678370ade31ec9a55d683b0277487d0a57b7da26ff58cf29dde9e9e6492245d3a1ac1bd944551d3a597cac07bb1092ab301c60
+  languageName: node
+  linkType: hard
+
 "totalist@npm:^2.0.0":
   version: 2.0.0
   resolution: "totalist@npm:2.0.0"
   checksum: 9cc5aa15c78374e50ea90a93fd0137dfec68c2139db6767f0707951681fa931343ae9a71ed257da80bc5deb994cf841f14a1512cb6708c4806617eb4513cd965
+  languageName: node
+  linkType: hard
+
+"ts-essentials@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "ts-essentials@npm:9.0.0"
+  peerDependencies:
+    typescript: ">=4.1.0"
+  checksum: 7122715b96dd5a93ca9e234e764ead870d11be8171b4ce1c97dad72d93f3213dac92c7e32ff198d16f44f4c27d4d9a35671f3f57ec3c18e8a215675c604326ad
   languageName: node
   linkType: hard
 
@@ -1693,6 +1767,13 @@ typescript@^4.4.3:
   languageName: node
   linkType: hard
 
+"utility-types@npm:^3.10.0":
+  version: 3.10.0
+  resolution: "utility-types@npm:3.10.0"
+  checksum: 8f274415c6196ab62883b8bd98c9d2f8829b58016e4269aaa1ebd84184ac5dda7dc2ca45800c0d5e0e0650966ba063bf9a412aaeaea6850ca4440a391283d5c8
+  languageName: node
+  linkType: hard
+
 "uvu@npm:^0.5.1":
   version: 0.5.1
   resolution: "uvu@npm:0.5.1"
@@ -1739,5 +1820,12 @@ typescript@^4.4.3:
   version: 4.0.0
   resolution: "yallist@npm:4.0.0"
   checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^1.10.2":
+  version: 1.10.2
+  resolution: "yaml@npm:1.10.2"
+  checksum: ce4ada136e8a78a0b08dc10b4b900936912d15de59905b2bf415b4d33c63df1d555d23acb2a41b23cf9fb5da41c256441afca3d6509de7247daa062fd2c5ea5f
   languageName: node
   linkType: hard

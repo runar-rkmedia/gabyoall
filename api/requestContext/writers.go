@@ -13,19 +13,17 @@ const (
 	OutputToml
 )
 
-func WriteAuto(output interface{}, err error, errCode ErrorCodes, r *http.Request, rw http.ResponseWriter) {
+func WriteAuto(output interface{}, err error, errCode ErrorCodes, r *http.Request, rw http.ResponseWriter) error {
 	if err != nil {
-		WriteError(err.Error(), CodeErrEndpoint, r, rw)
-		return
+		return WriteError(err.Error(), CodeErrEndpoint, r, rw)
 	}
 
-	WriteOutput(false, http.StatusOK, output, r, rw)
+	return WriteOutput(false, http.StatusOK, output, r, rw)
 }
-func WriteErr(err error, code ErrorCodes, r *http.Request, rw http.ResponseWriter) {
-	WriteError(err.Error(), code, r, rw)
-	return
+func WriteErr(err error, code ErrorCodes, r *http.Request, rw http.ResponseWriter) error {
+	return WriteError(err.Error(), code, r, rw)
 }
-func WriteError(msg string, code ErrorCodes, r *http.Request, rw http.ResponseWriter) {
+func WriteError(msg string, code ErrorCodes, r *http.Request, rw http.ResponseWriter) error {
 	ae := ApiError{msg, string(code)}
 	statusCode := http.StatusBadGateway
 	switch code {
@@ -39,8 +37,7 @@ func WriteError(msg string, code ErrorCodes, r *http.Request, rw http.ResponseWr
 	case CodeErrUnmarshal, CodeErrMarhal, CodeErrJmesPath, CodeErrJmesPathMarshal, CodeErrInputValidation, CodeErrIDNonValid, CodeErrIDTooLong, CodeErrIDEmpty:
 		statusCode = http.StatusBadRequest
 	}
-	WriteOutput(true, statusCode, ae, r, rw)
-	return
+	return WriteOutput(true, statusCode, ae, r, rw)
 
 }
 
@@ -53,13 +50,18 @@ func WantedOutputFormat(r *http.Request) OutputKind {
 	if o := contentType(r.Header.Get("Content-Type")); o > 0 {
 		return o
 	}
+	q := r.URL.Query().Get("format")
+	if o := contentType(q); o > 0 {
+		return o
+	}
+
 	// Fallback to a readable format.
 	return OutputToml
 }
 
 func contentType(kind string) OutputKind {
 	switch {
-	case strings.Contains(kind, "application/json"):
+	case strings.Contains(kind, "json"):
 		return OutputJson
 	case strings.Contains(kind, "yaml"):
 		return OutputYaml

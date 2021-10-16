@@ -1,23 +1,22 @@
 {
-	"conventionalCommits.scopes": [
-		"config",
-		"output",
-		"worker",
-		"token",
-		"readme",
-		"http",
-		"logger",
-		"config",
-		"auth",
-		"api",
-		"frontend",
-		"cli"
-	],
-	"cSpell.words": [
-		"Gobyoall"
-	],
-	"cssvar.files": [
-		"./frontend/node_modules/pollen-css/pollen.css",
-		// "./frontend/styles/variables.css" // Your theme file
-	],
+  "conventionalCommits.scopes": [
+    "config",
+    "output",
+    "worker",
+    "token",
+    "readme",
+    "http",
+    "logger",
+    "config",
+    "auth",
+    "api",
+    "frontend",
+    "cli",
+    "stats"
+  ],
+  "cSpell.words": ["Gobyoall"],
+  "cssvar.files": [
+    "./frontend/node_modules/pollen-css/pollen.css"
+    // "./frontend/styles/variables.css" // Your theme file
+  ]
 }

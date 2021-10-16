@@ -1,10 +1,7 @@
-package bboltStorage
+package utils
 
 import (
-	"time"
-
 	"github.com/google/uuid"
-	"github.com/runar-rkmedia/gabyoall/api/types"
 	"github.com/teris-io/shortid"
 )
 
@@ -28,16 +25,4 @@ func ForceCreateUniqueId() (string, error) {
 		err = didErr
 	}
 	return id, err
-}
-
-// Returns an entity for use by database, with id set and createdAt to current time.
-// It is guaranteeed to be created correctly, if if it errors.
-// The error should be logged.
-func ForceNewEntity() (types.Entity, error) {
-	id, err := ForceCreateUniqueId()
-
-	return types.Entity{
-		ID:        id,
-		CreatedAt: time.Now(),
-	}, err
 }

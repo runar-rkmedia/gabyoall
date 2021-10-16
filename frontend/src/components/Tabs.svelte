@@ -1,5 +1,6 @@
 <script lang="ts">
   import { api, db } from 'api'
+  import Icon from './Icon.svelte'
 
   import Tab from './Tab.svelte'
   export let value = 'request'
@@ -14,18 +15,24 @@
 </script>
 
 <nav>
-  <Tab active={value === 'request'} on:click={onClick('request')}>
-    <i class="fas fa-network-wired" /> Requests ({requestCount})
-  </Tab>
   <Tab active={value === 'endpoint'} on:click={onClick('endpoint')}>
-    <i class="fas fa-ethernet" /> Endpoints ({endpointCount})
+    <Icon icon={'gEndpoint'} />
+    Endpoints ({endpointCount})
+  </Tab>
+  <Tab active={value === 'request'} on:click={onClick('request')}>
+    <Icon icon={'gRequest'} />
+    Requests ({requestCount})
   </Tab>
   <Tab
     active={value === 'schedule'}
     on:click={onClick('schedule')}
-    disabled={!scheduleCount}
-  >
-    <i class="fas fa-calendar" /> Schedule ({scheduleCount})
+    disabled={!endpointCount && !requestCount}>
+    <Icon icon={'gSchedula'} />
+    Schedule ({scheduleCount})
+  </Tab>
+  <Tab active={value === 'stats'} on:click={onClick('stat')}>
+    <Icon icon={'gStat'} />
+    Stats
   </Tab>
 </nav>
 

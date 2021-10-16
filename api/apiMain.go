@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	_ "embed"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/go-playground/validator/v10"
 	"github.com/runar-rkmedia/gabyoall/api/bboltStorage"
 	_ "github.com/runar-rkmedia/gabyoall/api/docs"
@@ -31,6 +33,8 @@ var (
 	GitHash      string
 	isDev        = true
 	IsDevStr     = "1"
+
+	serverStartTime = time.Now()
 )
 
 func init() {
@@ -47,8 +51,11 @@ func init() {
 }
 
 type ApiConfig struct {
-	Address string
-	Port    int
+	Address      string
+	RedirectPort int
+	Port         int
+	CertFile     string
+	CertKey      string
 	logger.LogConfig
 }
 
@@ -60,10 +67,13 @@ func main() {
 		panic(err)
 	}
 	cfg := ApiConfig{
-		Address: "0.0.0.0",
-		Port:    80,
+		Address:      "0.0.0.0",
+		Port:         443,
+		RedirectPort: 80,
+		CertFile:     "server.crt",
+		CertKey:      "server.key",
 		LogConfig: logger.LogConfig{
-			Level:      "debug",
+			Level:      "info",
 			Format:     "human",
 			WithCaller: true,
 		},
@@ -85,20 +95,56 @@ func main() {
 
 	s.Run()
 	address := fmt.Sprintf("%s:%d", cfg.Address, cfg.Port)
-	// handler := http.NewServeMux()
-	http.Handle("/api/", http.StripPrefix("/api/", EndpointsHandler(ctx)))
+	handler := http.NewServeMux()
+	// http.Handle("/api/", http.StripPrefix("/api/", EndpointsHandler(ctx)))
+	handler.Handle("/api/",
+		gziphandler.GzipHandler(
+			http.StripPrefix("/api/", EndpointsHandler(ctx))))
+
+	useCert := false
+	if cfg.CertFile != "" {
+		_, err := os.Stat(cfg.CertFile)
+		if err == nil {
+			useCert = true
+		}
+
+	}
 
 	if isDev {
 		// In development, we serve the file directly.
-		http.Handle("/", http.FileServer(http.Dir("./frontend/dist/")))
+		handler.Handle("/", http.FileServer(http.Dir("./frontend/dist/")))
 	} else {
-		http.Handle("/", frontend.DistServer)
+		handler.Handle("/", frontend.DistServer)
 	}
-	l.Info().Str("address", cfg.Address).Int("port", cfg.Port).Msg("Creating listeners")
-	err = http.ListenAndServe(address, nil)
+	l.Info().Str("address", cfg.Address).Int("port", cfg.Port).Bool("redirectHttpToHttps", useCert && cfg.RedirectPort != 0).Bool("tls", useCert).Msg("Creating listener")
+	srv := http.Server{Addr: address, Handler: handler}
+	if useCert {
+		// TODO: re-read the certificate before it expires.
+		if cfg.RedirectPort != 0 {
+			redirectTLS := func(w http.ResponseWriter, r *http.Request) {
+				newAddress := "https://" + r.Host
+				if cfg.Port != 443 {
+					newAddress += fmt.Sprintf(":%d", cfg.Port)
+				}
+				http.Redirect(w, r, newAddress+r.RequestURI, http.StatusMovedPermanently)
+			}
+			go func() {
+				redirectAddress := fmt.Sprintf("%s:%d", cfg.Address, cfg.RedirectPort)
+				if err := http.ListenAndServe(redirectAddress, http.HandlerFunc(redirectTLS)); err != nil {
+					l.Fatal().Err(err).Str("redirectAddress", redirectAddress).Msg("Failed to create redirect-listener")
+
+				}
+			}()
+
+		}
+		err = srv.ListenAndServeTLS("server.crt", "server.key")
+	} else {
+		srv.ListenAndServe()
+	}
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to create listener")
 	}
+
 }
 
 type AccessControl struct {
@@ -111,10 +157,15 @@ var (
 		AllowOrigin: "_any_",
 		MaxAge:      24 * time.Hour,
 	}
+	pingByte = []byte{}
 )
 
 func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "ping" {
+			rw.Write(pingByte)
+			return
+		}
 		h := rw.Header()
 		switch accessControl.AllowOrigin {
 		case "_any_":
@@ -152,6 +203,17 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 			rw.Header().Set("Content-Disposition", `attachment; filename="swagger-gobyoall.yaml"`)
 			rw.Write([]byte(swaggerYml))
 			return
+		case "serverInfo":
+			if isGet && len(paths) == 1 {
+				info := types.ServerInfo{
+					ServerStartedAt: serverStartTime,
+					GitHash:         GitHash,
+					Version:         Version,
+					BuildDate:       BuildDate,
+				}
+				rc.WriteAuto(info, err, "serverInfo")
+				return
+			}
 		case "endpoint":
 			// Create endpoint
 			if isPost && len(paths) == 1 {
@@ -198,6 +260,13 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
 				return
 			}
+		case "stat":
+			// List stats
+			if isGet && len(paths) == 1 {
+				es, err := ctx.DB.CompactStats()
+				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
+				return
+			}
 		case "schedule":
 			// Create schedule
 			if isPost && len(paths) == 1 {
@@ -234,7 +303,7 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 		}
 		// http.FileServer(frontend.StaticFiles).ServeHTTP(rc.Rw, rc.rw)
 
-		rc.WriteError("No route here", requestContext.CodeErrNoRoute)
+		rc.WriteError(fmt.Sprintf("No route registerd for: %s %s", r.Method, r.URL.Path), requestContext.CodeErrNoRoute)
 	}
 }
 

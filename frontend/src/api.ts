@@ -12,11 +12,22 @@ export type DB = {
   endpoint: Record<string, ApiDef.EndpointEntity>
   request: Record<string, ApiDef.RequestEntity>
   schedule: Record<string, ApiDef.ScheduleEntity>
+  stat: Record<string, ApiDef.CompactRequestStatisticsEntity>
+  serverInfo: ApiDef.ServerInfo
 }
 
 export const api = {
+  serverInfo: (options?: ApiFetchOptions) =>
+    fetchApi<ApiDef.ServerInfo>(
+      'serverInfo',
+      (e) => db.update((s) => ({ ...s, serverInfo: e })),
+      options
+    ),
   request: CrudFactory<ApiDef.RequestPayload, 'request'>('request'),
   endpoint: CrudFactory<ApiDef.EndpointPayload, 'endpoint'>('endpoint'),
+  stat: {
+    list: apiGetListFactory<'stat'>('stat', 'stat'),
+  },
   schedule: {
     ...CrudFactory<ApiDef.SchedulePayload, 'schedule'>('schedule'),
     update: apiUpdateFactory<ApiDef.SchedulePayload, 'schedule'>(
@@ -26,14 +37,14 @@ export const api = {
   },
 } as const
 
-export const db = createStore<DB>({
+export const db = createStore<DB, null>({
   initialValue: objectKeys(api).reduce((r, k) => {
     r[k] = {}
     return r
   }, {} as DB),
 })
 
-const mergeMap = <K extends keyof DB, V extends DB[K]>(key: K, value: V) => {
+const mergeMap = <K extends DBKeyValue, V extends DB[K]>(key: K, value: V) => {
   if (!key) {
     console.error('key is required in mergeField')
     return
@@ -52,7 +63,11 @@ const mergeMap = <K extends keyof DB, V extends DB[K]>(key: K, value: V) => {
     }
   })
 }
-const mergeField = <K extends keyof DB, V extends DB[K]['s']>(
+
+// Keys in in that are of type Record<string, T>
+type DBKeyValue = keyof Omit<DB, 'serverInfo'>
+
+const mergeField = <K extends DBKeyValue, V extends DB[K]['s']>(
   key: K,
   value: V,
   id: string
@@ -91,7 +106,7 @@ const mergeField = <K extends keyof DB, V extends DB[K]['s']>(
 
   yes, that is not really all of the cruds...
 */
-function CrudFactory<Payload extends {}, K extends keyof DB>(
+function CrudFactory<Payload extends {}, K extends DBKeyValue>(
   storeKey: K,
   subPath?: string
 ) {
@@ -102,11 +117,11 @@ function CrudFactory<Payload extends {}, K extends keyof DB>(
   }
 }
 
-function apiGetListFactory<K extends keyof DB>(subPath: string, storeKey: K) {
+function apiGetListFactory<K extends DBKeyValue>(subPath: string, storeKey: K) {
   return async (options?: ApiFetchOptions) => {
     const res = await fetchApi<DB[K]>(
       subPath,
-      (e: any) => mergeMap(storeKey, e),
+      (e) => mergeMap(storeKey, e),
       options
     )
     if (!res[1]) {
@@ -121,7 +136,7 @@ function apiGetListFactory<K extends keyof DB>(subPath: string, storeKey: K) {
   }
 }
 
-function apiGetFactory<K extends keyof DB>(subPath: string, storeKey: K) {
+function apiGetFactory<K extends DBKeyValue>(subPath: string, storeKey: K) {
   return (id: string, options?: ApiFetchOptions) =>
     fetchApi<DB[K]>(
       subPath + id,
@@ -129,19 +144,19 @@ function apiGetFactory<K extends keyof DB>(subPath: string, storeKey: K) {
       options
     )
 }
-function apiCreateFactory<Payload extends {}, K extends keyof DB>(
+function apiCreateFactory<Payload extends {}, K extends DBKeyValue>(
   subPath: string,
   storeKey: K
 ) {
   return (body: Payload, options?: ApiFetchOptions) =>
-    fetchApi<DB[K]['s']>(subPath, (e: any) => mergeField(storeKey, e, e.id), {
+    fetchApi<DB[K]['s']>(subPath, (e) => mergeField(storeKey, e, e.id), {
       method: methods.POST,
       body,
       ...options,
     })
 }
 
-function apiUpdateFactory<Payload extends {}, K extends keyof DB>(
+function apiUpdateFactory<Payload extends {}, K extends DBKeyValue>(
   subPath: string,
   storeKey: K
 ) {
@@ -151,7 +166,7 @@ function apiUpdateFactory<Payload extends {}, K extends keyof DB>(
   return (id: string, body: Payload, options?: ApiFetchOptions) =>
     fetchApi<DB[K]['s']>(
       subPath + '/' + id,
-      (e: any) => mergeField(storeKey, e, e.id),
+      (e) => mergeField(storeKey, e, e.id),
       {
         method: methods.PUT,
         body,

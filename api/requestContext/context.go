@@ -34,8 +34,20 @@ func NewReqContext(context *Context, req *http.Request, rw http.ResponseWriter) 
 	}
 }
 
-func (rc ReqContext) WriteAuto(output interface{}, err error, errCode ErrorCodes) {
-	WriteAuto(output, err, errCode, rc.Req, rc.Rw)
+func (rc ReqContext) WriteAuto(output interface{}, error error, errCode ErrorCodes) {
+	err := WriteAuto(output, error, errCode, rc.Req, rc.Rw)
+	if err != nil {
+		l := rc.L.Error().
+			Err(err).
+			Str("path", rc.Req.URL.String()).
+			Str("method", rc.Req.Method)
+		if error != nil {
+			l = l.
+				Str("for-error-code", string(errCode)).
+				Str("for-error", error.Error())
+		}
+		l.Msg("Failure during WriteAuto")
+	}
 }
 func (rc ReqContext) WriteError(msg string, errCode ErrorCodes) {
 	WriteError(msg, errCode, rc.Req, rc.Rw)

@@ -6,21 +6,6 @@ import (
 	"github.com/runar-rkmedia/gabyoall/requests"
 )
 
-type Storage interface {
-	Endpoints() (es map[string]EndpointEntity, err error)
-	Endpoint(id string) (EndpointEntity, error)
-	CreateEndpoint(e EndpointPayload) (EndpointEntity, error)
-
-	Requests() (es map[string]RequestEntity, err error)
-	Request(id string) (RequestEntity, error)
-	CreateRequest(e RequestPayload) (RequestEntity, error)
-
-	Schedules() (es map[string]ScheduleEntity, err error)
-	Schedule(id string) (ScheduleEntity, error)
-	CreateSchedule(e SchedulePayload) (ScheduleEntity, error)
-	UpdateSchedule(id string, p Schedule) (ScheduleEntity, error)
-}
-
 type Entity struct {
 	// Time of which the entity was created in the database
 	// Required: true
@@ -37,6 +22,7 @@ type EndpointPayload struct {
 	// example: https://example.com
 	Url     string              `json:"url,omitempty" validate:"required,uri"`
 	Headers map[string][]string `json:"headers,omitempty" validate:"dive,max=1000"`
+	Config  Config              `json:"config,omitempty"`
 }
 type RequestPayload struct {
 	Body          string                 `json:"body,omitempty"`
@@ -50,6 +36,7 @@ type RequestPayload struct {
 type EndpointEntity struct {
 	requests.Endpoint
 	Entity
+	Config *Config `json:"config,omitempty"`
 }
 type RequestEntity struct {
 	requests.Request
@@ -60,6 +47,7 @@ type ScheduleEntity struct {
 	Entity
 	Schedule
 }
+
 type Schedule struct {
 	// These are calculated in create/update. These are used for faster lookups.
 	// Should be ordered Ascending, e.g. the first element
@@ -67,7 +55,7 @@ type Schedule struct {
 	// From these, the dates above can be calculated
 	SchedulePayload
 	LastRun   *time.Time `json:"lastRun,omitempty"`
-	LastError error      `json:"lastError,omitempty"`
+	LastError string     `json:"lastError,omitempty"`
 
 	// TODO: implement runs, which hold historical information about a run.
 	// These should hold a reference to the object of which is was created with,
@@ -93,7 +81,7 @@ func (s Schedule) ShouldRun() bool {
 	}
 
 	now := time.Now()
-	if s.LastError != nil {
+	if s.LastError != "" {
 		// If there was an error, we postpone the run a bit.
 		now = now.Add(-time.Minute)
 	}
@@ -126,3 +114,14 @@ const (
 	FrequencyWeek   Frequency = iota
 	FrequencyMonth  Frequency = iota
 )
+
+type ServerInfo struct {
+	// When the server was started
+	ServerStartedAt time.Time
+	// Short githash for current commit
+	GitHash string
+	// Version-number for commit
+	Version string
+	// Date of build
+	BuildDate time.Time
+}

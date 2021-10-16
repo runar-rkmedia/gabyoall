@@ -10,7 +10,7 @@ export const methods = {
   PUT: 'PUT',
 } as const
 
-export const baseUrl = 'http://localhost/api'
+export const baseUrl = `${window.location.protocol}//localhost/api`
 
 export type ApiFetchOptions = {
   /** Body, as json. Can either be stringified or an object, in which case it will be stringified */

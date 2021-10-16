@@ -8,7 +8,7 @@
   let method = 'POST'
   let operationName = 'Name'
   let isGraphql = false
-  let createResponse: ReturnType<typeof api.request.create>
+  let createResponse: ReturnType<typeof api.request.create> | undefined
   let loading = false
   async function endpointCreate() {
     loading = true
@@ -60,8 +60,7 @@
   <button
     disabled={loading}
     type="submit"
-    on:click|preventDefault={endpointCreate}>Create request</button
-  >
+    on:click|preventDefault={endpointCreate}>Create request</button>
   <div class="spinner"><Spinner active={loading} /></div>
   {#if createResponse}
     {#await createResponse then [_, err]}

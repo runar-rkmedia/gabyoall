@@ -3,18 +3,12 @@
   import { slide } from 'svelte/transition'
   import Spinner from './Spinner.svelte'
   import formatDate from 'dates'
+  import Icon from './Icon.svelte'
   export let selectedID: string = ''
-  let schedules = api.schedule.list()
   let loading = true
-  schedules.then(() => (loading = false))
 </script>
 
 <div class="spinner"><Spinner active={loading} /></div>
-{#await schedules then [_, err]}
-  {#if err}
-    {err.error}
-  {/if}
-{/await}
 <ul>
   {#each Object.entries($db.schedule)
     .sort((a, b) => {
@@ -34,7 +28,7 @@
       <div class="item-content">
         <div class="item-header">
           {#if v.lastError}
-            <i class="fas fa-exclamation-triangle" />
+            <Icon icon={'error'} />
           {/if}
           {v.label}
         </div>
@@ -47,7 +41,7 @@
       </div>
       <div class="item-actions">
         <button class="icon-button" on:click={() => (selectedID = k)}>
-          <i class="fas fa-edit" />
+          <Icon icon="edit" />
           Edit
         </button>
       </div>

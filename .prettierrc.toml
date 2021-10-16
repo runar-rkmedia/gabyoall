@@ -1,0 +1,7 @@
+proseWrap = "preserve"
+semi = false
+singleQuote = true
+svelteBracketNewLine = false
+tabWidth = 2
+trailingComma = "es5"
+useTabs = false

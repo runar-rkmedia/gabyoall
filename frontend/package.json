@@ -16,10 +16,15 @@
   },
   "dependencies": {
     "date-fns": "^2.25.0",
+    "lodash.clonedeep": "^4.5.0",
     "lodash.debounce": "^4.0.8",
     "lodash.merge": "^4.6.2",
     "nanoid": "^3.1.29",
-    "svelte": "^3.43.1"
+    "svelte": "^3.43.1",
+    "svelte-highlight": "^5.0.0",
+    "svelte-tiny-linked-charts": "^1.0.6",
+    "toml-js": "^0.0.8",
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@dtsgenerator/replace-namespace": "^1.5.1",
@@ -32,11 +37,15 @@
     "esbuild": "^0.13.3",
     "esbuild-svelte": "^0.5.6",
     "pollen-css": "^2.1.0",
+    "prettier": "^2.4.1",
+    "prettier-plugin-svelte": "^2.4.0",
     "sass": "^1.42.1",
     "simplytyped": "^3.3.0",
     "svelte-preprocess": "^4.9.8",
     "svelte-preprocess-sass": "^2.0.1",
+    "ts-essentials": "^9.0.0",
     "typescript": "^4.4.3",
+    "utility-types": "^3.10.0",
     "uvu": "^0.5.1"
   }
 }

@@ -3,11 +3,144 @@ declare namespace ApiDef {
         code?: string;
         error?: string;
     }
+    export interface AuthConfig {
+        /**
+         * ClientID to use for
+         */
+        client_id?: string;
+        client_secret?: Secret;
+        dynamic?: DynamicAuth;
+        endpoint?: string;
+        /**
+         * Used with kind=Bearer and impersonation. Currenly, only keycloak is supported
+         */
+        endpoint_type?: string;
+        /**
+         * The header-key to use. Defaults to Authorization
+         */
+        header_key?: string;
+        impersionation_credentials?: ImpersionationCredentials;
+        /**
+         * Bearer or Dynamic
+         */
+        kind?: string;
+        redirect_uri?: string;
+        token?: Secret;
+    }
+    export type ByteHashMap = any;
+    export interface CompactRequestStatisticsEntity {
+        Average?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        AverageText?: string;
+        Max?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        MaxText?: string;
+        Min?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        MinText?: string;
+        Requests?: {
+            [name: string]: CompactStat;
+        };
+        ResponseHashMap?: ByteHashMap;
+        StartTime: string; // date-time
+        Total?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        TotalText?: string;
+        /**
+         * Time of which the entity was created in the database
+         */
+        createdAt: string; // date-time
+        /**
+         * Unique identifier of the entity
+         */
+        id: string;
+        /**
+         * Time of which the entity was updated, if any
+         */
+        updatedAt?: string; // date-time
+    }
+    export interface CompactStat {
+        duration?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        error?: string;
+        offset?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        request_id?: string;
+        response_hash?: Hash;
+        status_code?: number; // int16
+    }
+    export interface Config {
+        auth?: AuthConfig;
+        /**
+         * Concurrency for the requests to be made
+         */
+        concurrency?: number; // int64
+        /**
+         * A list of http-status-codes to consider OK. Defaults to 200 and 204.
+         */
+        ok_status_codes?: number /* int64 */[];
+        /**
+         * Number of requests to be performaed
+         */
+        request_count?: number; // int64
+        /**
+         * Whether or not Response-data should be stored.
+         */
+        response_data?: boolean;
+        secrets?: Secrets;
+    }
     export interface CreateResponse {
         id?: string;
         ok?: boolean;
     }
+    /**
+     * A Duration represents the elapsed time between two instants
+     * as an int64 nanosecond count. The representation limits the
+     * largest representable duration to approximately 290 years.
+     */
+    export type Duration = number; // int64
+    export interface DynamicAuth {
+        requests?: DynamicRequest[];
+    }
+    export interface DynamicRequest {
+        body?: {
+            [key: string]: any;
+        };
+        headers?: {
+            [name: string]: string;
+        };
+        json_request?: boolean;
+        json_response?: boolean;
+        method?: string;
+        result_jmes_path?: string;
+        uri?: string;
+    }
     export interface EndpointEntity {
+        config?: Config;
         /**
          * Time of which the entity was created in the database
          */
@@ -29,6 +162,7 @@ declare namespace ApiDef {
         url: string;
     }
     export interface EndpointPayload {
+        config?: Config;
         headers?: {
             [name: string]: string[];
         };
@@ -39,6 +173,7 @@ declare namespace ApiDef {
         url: string;
     }
     export type Frequency = number; // int8
+    export type Hash = number /* uint8 */[];
     /**
      * A Header represents the key-value pairs in an HTTP header.
      * The keys should be in canonical form, as returned by
@@ -46,6 +181,21 @@ declare namespace ApiDef {
      */
     export interface Header {
         [name: string]: string[];
+    }
+    export interface ImpersionationCredentials {
+        password?: Secret;
+        /**
+         * UserID to impersonate as. This is preferred over UserNameToImpersonate
+         */
+        user_id_to_impersonate?: string;
+        /**
+         * Will perform a lookup to get the ID of the username.
+         */
+        user_name_to_impersonate?: string;
+        /**
+         * Username to impersonate with. Needs to have the impersonation-role
+         */
+        username?: string;
     }
     export interface OkResponse {
         ok?: boolean;
@@ -148,6 +298,28 @@ declare namespace ApiDef {
         requestID?: string;
         start_date?: string; // date-time
     }
+    export type Secret = string;
+    export interface Secrets {
+        [name: string]: Secret;
+    }
+    export interface ServerInfo {
+        /**
+         * Date of build
+         */
+        BuildDate?: string; // date-time
+        /**
+         * Short githash for current commit
+         */
+        GitHash?: string;
+        /**
+         * When the server was started
+         */
+        ServerStartedAt?: string; // date-time
+        /**
+         * Version-number for commit
+         */
+        Version?: string;
+    }
 }
 declare namespace ApiPaths {
     namespace CreateEndpoint {
@@ -222,6 +394,22 @@ declare namespace ApiPaths {
             Parameters.Id;
         }
     }
+    namespace GetStat {
+        namespace Parameters {
+            /**
+             * example:
+             * abc123
+             */
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: /**
+             * example:
+             * abc123
+             */
+            Parameters.Id;
+        }
+    }
     namespace UpdateSchedule {
         export interface BodyParameters {
             Body: Parameters.Body;
@@ -241,4 +429,7 @@ declare namespace ApiResponses {
     export type RequestsResponse = ApiDef.RequestEntity[];
     export type ScheduleResponse = ApiDef.ScheduleEntity;
     export type SchedulesResponse = ApiDef.ScheduleEntity[];
+    export type ServerInfoResponse = ApiDef.ServerInfo[];
+    export type StatResponse = ApiDef.CompactRequestStatisticsEntity;
+    export type StatsResponse = ApiDef.CompactRequestStatisticsEntity[];
 }

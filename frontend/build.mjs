@@ -32,25 +32,25 @@ const createTypescriptApiDefinitions = async () => {
   if (!withDTS) {
     return
   }
-  console.time('creating typescript api defintions...')
+  console.time('🌱 creating typescript api defintions...')
   const [res, err] = await execP('yarn gen')
   if (err) {
-    console.error('Failed to create typescript-defintitions for api: ', err)
+    console.error('🔥 Failed to create typescript-defintitions for api: ', err)
   } else {
-    console.log('Created typescript-defintions for api', out)
+    console.log('🪴 Created typescript-defintions for api', out)
   }
-  console.timeEnd('creating typescript api defintions...')
+  console.timeEnd('🌱 creating typescript api defintions...')
 }
 const typecheck = async () => {
-  console.time('typechecking')
+  console.time('🦴 typechecking')
   const [res, err] = await execP('yarn tsc --noEmit')
   if (res) {
     console.log(res)
   }
   if (err && !(res || '').includes('error')) {
-    console.error(err)
+    console.error('🔥🦴', err)
   }
-  console.timeEnd('typechecking')
+  console.timeEnd('🦴 typechecking')
 }
 createTypescriptApiDefinitions()
 typecheck()
@@ -75,7 +75,24 @@ await build({
         if (error) {
           console.error('watch build failed:', error)
         } else {
-          console.log('watch build succeeded:', result)
+          const reduced = Object.entries(result).reduce((r, [k, v]) => {
+            if (!v) {
+              return r
+            }
+            if (typeof v === 'function') {
+              return r
+            }
+            if (Array.isArray(v) && !v.length) {
+              return r
+            }
+            r[k] = v
+            return r
+          }, {})
+          if (Object.keys(reduced).length) {
+            console.log('🎉 watch build succeeded with result:', reduced)
+          } else {
+            console.log('🎉 watch build succeeded')
+          }
         }
         createTypescriptApiDefinitions()
         typecheck()

@@ -57,3 +57,5 @@ out*.y*ml
 tmp/main
 job-2*
 dist
+*.crt
+*.key

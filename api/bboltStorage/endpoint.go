@@ -6,6 +6,7 @@ import (
 
 	"github.com/runar-rkmedia/gabyoall/api/types"
 	"github.com/runar-rkmedia/gabyoall/requests"
+	"github.com/runar-rkmedia/gabyoall/utils"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -14,17 +15,14 @@ func (s *BBolter) Endpoint(id string) (e types.EndpointEntity, err error) {
 	return
 }
 func (s *BBolter) CreateEndpoint(p types.EndpointPayload) (types.EndpointEntity, error) {
-	id, _ := ForceCreateUniqueId()
-	now := time.Now()
+	entity, _ := ForceNewEntity()
 	e := types.EndpointEntity{
 		Endpoint: requests.Endpoint{
 			Url:     p.Url,
 			Headers: http.Header(p.Headers),
 		},
-		Entity: types.Entity{
-			ID:        id,
-			CreatedAt: now,
-		},
+		Entity: entity,
+		Config: &p.Config,
 	}
 
 	err := s.Update(func(tx *bolt.Tx) error {
@@ -62,4 +60,16 @@ func (s *BBolter) Endpoints() (es map[string]types.EndpointEntity, err error) {
 	}
 
 	return es, err
+}
+
+// Returns an entity for use by database, with id set and createdAt to current time.
+// It is guaranteeed to be created correctly, if if it errors.
+// The error should be logged.
+func ForceNewEntity() (types.Entity, error) {
+	id, err := utils.ForceCreateUniqueId()
+
+	return types.Entity{
+		ID:        id,
+		CreatedAt: time.Now(),
+	}, err
 }

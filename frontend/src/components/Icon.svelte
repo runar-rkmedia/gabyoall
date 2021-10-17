@@ -11,6 +11,7 @@
     | 'info'
     | 'secondary'
     | 'tertiary'
+    | 'inherit'
     | '' = ''
   const colorMap = {
     error: 'color-error',
@@ -21,7 +22,7 @@
 
 <i
   class={[
-    color ? `color-${color}` : colorMap[icon],
+    color !== 'inherit' && (color ? `color-${color}` : colorMap[icon]),
     kind,
     iconMap[icon],
     $$props.class,

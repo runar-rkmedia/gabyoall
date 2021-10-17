@@ -1,6 +1,8 @@
 package types
 
-import "time"
+import (
+	"time"
+)
 
 type Storage interface {
 	Endpoints() (es map[string]EndpointEntity, err error)
@@ -16,11 +18,11 @@ type Storage interface {
 	CreateSchedule(e SchedulePayload) (ScheduleEntity, error)
 	UpdateSchedule(id string, p Schedule) (ScheduleEntity, error)
 
-	CompactStats() (es map[string]CompactRequestStatisticsEntity, err error)
+	CompactStats() (es map[string]StatEntity, err error)
 
 	// These are only used internally.
 
-	CreateCompactStats(id string, createdAt time.Time, p CompactRequestStatistics) error
+	CreateCompactStats(id string, createdAt time.Time, p StatPayload) error
 
-	UpdateCompactStats(id string, createdAt time.Time, p CompactRequestStatistics) error
+	UpdateCompactStats(id string, createdAt time.Time, p StatPayload) error
 }

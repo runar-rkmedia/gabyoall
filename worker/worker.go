@@ -1,6 +1,8 @@
 package worker
 
 import (
+	"time"
+
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/requests"
 )
@@ -10,10 +12,11 @@ type WorkThing struct{}
 func (w WorkThing) Run(endpoint requests.Endpoint, config cmd.Config, query requests.Request) chan requests.RequestStat {
 	jobCh := make(chan Job, config.RequestCount)
 	resultCh := make(chan requests.RequestStat, config.RequestCount)
+	startTime := time.Now()
 	// Create work
 	for w := 0; w < config.Concurrency; w++ {
 		// FIXME: this probably requires a lot of memory
-		go worker(w, resultCh, jobCh)
+		go worker(startTime, w, resultCh, jobCh)
 	}
 
 	// Create
@@ -36,15 +39,9 @@ type Job struct {
 	query    *requests.Request
 }
 
-func worker(id int, ch chan requests.RequestStat, jobCh chan Job) {
+func worker(startTime time.Time, id int, ch chan requests.RequestStat, jobCh chan Job) {
 	for job := range jobCh {
-		_, stat, _ := job.endpoint.RunQuery(*job.query, job.config.OkStatusCodes)
-		if stat.Response != nil {
-
-			if job.config.ResponseData != false && stat.Response != nil && stat.Response["error"] == nil && stat.Response["data"] != nil {
-				delete(stat.Response, "data") //stat.Response[data]
-			}
-		}
+		_, stat, _ := job.endpoint.RunQuery(startTime, *job.query, job.config.OkStatusCodes)
 		ch <- stat
 	}
 }

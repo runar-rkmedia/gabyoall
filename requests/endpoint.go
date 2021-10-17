@@ -70,8 +70,8 @@ type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func (g *Endpoint) RunQuery(query Request, okStatusCodes []int) (*http.Response, RequestStat, error) {
-	stat := NewStat()
+func (g *Endpoint) RunQuery(startTime time.Time, query Request, okStatusCodes []int) (*http.Response, RequestStat, error) {
+	stat := NewStat(time.Now().Sub(startTime))
 	l := logger.AppLogger{Logger: g.l.With().Str("operationName", query.OperationName).Str("endpoint", g.Url).Str("requestId", stat.RequestID).Logger()}
 	var b []byte
 	var err error
@@ -99,7 +99,7 @@ func (g *Endpoint) RunQuery(query Request, okStatusCodes []int) (*http.Response,
 			b, err = json.Marshal(JSON)
 		}
 		if err != nil {
-			return nil, stat.End(ServerTestError, err), err
+			return nil, stat.End(nil, ServerTestError, err), err
 		}
 	}
 	if l.HasDebug() {
@@ -107,13 +107,13 @@ func (g *Endpoint) RunQuery(query Request, okStatusCodes []int) (*http.Response,
 	}
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to marshal query")
-		return nil, stat.End(ServerTestError, err), err
+		return nil, stat.End(nil, ServerTestError, err), err
 	}
 
 	r, err := http.NewRequest(query.Method, g.Url, bytes.NewReader(b))
 	if err != nil {
 		l.Error().Err(err).Msg("Failed to create request")
-		return nil, stat.End(ServerTestError, err), err
+		return nil, stat.End(nil, ServerTestError, err), err
 	}
 	r.Body.Close()
 	if query.Headers != nil {
@@ -146,16 +146,17 @@ func (g *Endpoint) DoRequest(l logger.AppLogger, r *http.Request, stat RequestSt
 	res, err := g.client.Do(r)
 	if err != nil {
 		l.ErrErr(err).Msg("Failed to run request")
-		return nil, stat.End(Unknwon+"Request", err), err
+		return nil, stat.End(nil, Unknwon+"Request", err), err
 	}
-	stat.StatusCode = res.StatusCode
+	stat.StatusCode = int16(res.StatusCode)
 	contentType := res.Header.Get("Content-Type")
+	stat.ContentType = contentType
 	l = logger.AppLogger{Logger: l.With().Str("contentType", contentType).Int("statusCode", res.StatusCode).Logger()}
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		l.ErrErr(err).Msg("failed to ready body")
 		err = fmt.Errorf("failed to read body")
-		return nil, stat.End(Unknwon+"Body", err), err
+		return nil, stat.End(nil, Unknwon+"Body", err), err
 	}
 	res.Body.Close()
 	if l.HasTrace() {
@@ -168,8 +169,6 @@ func (g *Endpoint) DoRequest(l logger.AppLogger, r *http.Request, stat RequestSt
 		err = json.Unmarshal(body, &gqlResponseRaw)
 		if err != nil {
 			l.ErrWarn(err).Msg("Failed to unmarshal body (raw)")
-		} else {
-			stat.Response = gqlResponseRaw
 		}
 		err = json.Unmarshal(body, &gqlResponse)
 		if err != nil {
@@ -178,7 +177,7 @@ func (g *Endpoint) DoRequest(l logger.AppLogger, r *http.Request, stat RequestSt
 			if gqlResponse.Errors != nil && len(gqlResponse.Errors) > 0 {
 				firstMessage := gqlResponse.Errors[0].Message
 				l.Error().Str("firstMessage", firstMessage).Interface("json-response", gqlResponseRaw).Msg("got errors in request")
-				return nil, stat.End(ErrorType(firstMessage), err), err
+				return nil, stat.End(body, ErrorType(firstMessage), err), err
 			}
 
 		}
@@ -210,15 +209,15 @@ func (g *Endpoint) DoRequest(l logger.AppLogger, r *http.Request, stat RequestSt
 		statusOk = res.StatusCode < 299
 	}
 	if !statusOk {
-		stat.RawResponse = string(body)
+		stat.RawResponse = body
 		err := fmt.Errorf("Got non-ok-statusCode: %d", res.StatusCode)
 		l.Error().Msg("Statuscode is not 2xx")
-		return res, stat.End(ErrorType(fmt.Sprintf("%s-%d", NonOK, res.StatusCode)), err), err
+		return res, stat.End(body, ErrorType(fmt.Sprintf("%s-%d", NonOK, res.StatusCode)), err), err
 	}
 	switch contentType {
 	case "text/html":
 		l.Warn().Msg("Looks like an html-page. Is the endpoint correct")
 	}
-	return res, stat.End("", err), err
+	return res, stat.End(body, "", err), err
 
 }

@@ -3,6 +3,33 @@
   --color-warning-icon: hsl(35.8, 100%, 50%);
   --color-info-icon: hsl(199, 92%, 56%);
   --color-success-icon: hsl(122.4, 39.4%, 49.2%);
+  --color-secondary: var(--color-teal-500);
+  --color-secondary-300: var(--color-teal-500);
+  --color-secondary-700: var(--color-teal-500);
+  --color-primary: var(--color-indigo-500);
+  --color-primary-300: var(--color-indigo-500);
+  --color-primary-700: var(--color-indigo-500);
+}
+.color-error {
+  color: var(--color-error-icon);
+}
+.color-warning {
+  color: var(--color-warning-icon);
+}
+.color-info {
+  color: var(--color-info-icon);
+}
+.color-success {
+  color: var(--color-success-icon);
+}
+.color-primary {
+  color: var(--color-primary);
+}
+.color-secondary {
+  color: var(--color-secondary);
+}
+.color-tertiary {
+  color: var(--color-red-500);
 }
 body {
   background-color: var(--color-black);
@@ -120,26 +147,26 @@ button.secondary {
   padding-block: var(--size-2);
 }
 button.primary {
-  background-color: var(--color-indigo-500);
+  background-color: var(--color-primary);
   color: var(--color-grey-100);
 }
 button.primary:focus:not(:disabled),
 button.primary:hover:not(:disabled) {
-  background-color: var(--color-indigo-700);
+  background-color: var(--color-primary-700);
 }
 button.primary:disabled {
-  background-color: var(--color-indigo-300);
+  background-color: var(--color-primary-300);
 }
 button.secondary:disabled {
-  background-color: var(--color-teal-300);
+  background-color: var(--color-secondary-300);
 }
 button.secondary {
-  background-color: var(--color-teal-500);
+  background-color: var(--color-secondary);
   color: var(--color-grey-100);
 }
 button.secondary:focus:not(:disabled),
 button.secondary:hover:not(:disabled) {
-  background-color: var(--color-teal-700);
+  background-color: var(--color-secondary-700);
 }
 
 .icon-button {

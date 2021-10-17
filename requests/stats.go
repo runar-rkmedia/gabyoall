@@ -1,53 +1,65 @@
 package requests
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/runar-rkmedia/gabyoall/utils"
 )
 
 type RequestStat struct {
-	ErrorType `json:",omitempty"`
-	Response  map[string]interface{} `json:",omitempty"`
-	// deprecated, will by replaced by a []byte-slice
-	RawResponse  string `json:",omitempty"`
-	StatusCode   int    `json:",omitempty"`
-	Error        error  `json:",omitempty"`
-	Duration     time.Duration
-	DurationText string
-	RequestID    string
-	Start        time.Time
-	EndTime      time.Time
+	ErrorType   `json:"errorType,omitempty"`
+	RawResponse []byte    `json:"rawResponse,omitempty"`
+	ContentType string    `json:"-"`
+	Start       time.Time `json:"-"`
+	CompactStat
 }
 
-func (r *RequestStat) End(errorType ErrorType, err error) RequestStat {
+func (r *RequestStat) End(body []byte, errorType ErrorType, err error) RequestStat {
 	r.ErrorType = errorType
-	r.EndTime = time.Now()
-	r.Duration = r.EndTime.Sub(r.Start)
-	r.DurationText = r.Duration.String()
+	endTime := time.Now()
+	r.Duration = endTime.Sub(r.Start)
+	r.RawResponse = body
 	if err != nil {
-		r.Error = err
+		r.Error = err.Error()
 	}
 	return *r
 }
 
+type Durationable time.Duration
+
 type Stats struct {
-	Total       time.Duration
-	Min         time.Duration
-	Max         time.Duration
-	Average     time.Duration
-	TotalText   string
-	MinText     string
-	MaxText     string
-	AverageText string
+	Total   time.Duration
+	Min     time.Duration
+	Max     time.Duration
+	Average time.Duration
 }
 
-func NewStat() RequestStat {
+func NewStat(offset time.Duration) RequestStat {
 	id, _ := utils.ForceCreateUniqueId()
 	return RequestStat{
-		RequestID: "srv-test-" + id,
-		Start:     time.Now(),
+		CompactStat: CompactStat{
+			RequestID: "srv-test-" + id,
+			Offset:    offset,
+		},
+		Start: time.Now(),
 	}
+}
+
+func (c *Stats) MarshalJSON() ([]byte, error) {
+	t := struct {
+		Total   int64 `json:"total,omitempty"`
+		Min     int64 `json:"min,omitempty"`
+		Max     int64 `json:"max,omitempty"`
+		Average int64 `json:"average,omitempty"`
+	}{
+		Total:   c.Total.Milliseconds(),
+		Min:     c.Min.Milliseconds(),
+		Max:     c.Max.Milliseconds(),
+		Average: c.Average.Milliseconds(),
+	}
+	return json.Marshal(t)
+
 }
 
 type GqlResponse struct {
@@ -76,10 +88,6 @@ func (r RequestStats) Calculate() Stats {
 		s.Total += r[i].Duration
 	}
 	s.Average = s.Total / time.Duration(len(r))
-	s.TotalText = s.Total.String()
-	s.MinText = s.Min.String()
-	s.MaxText = s.Max.String()
-	s.AverageText = s.Average.String()
 	return s
 
 }

@@ -47,6 +47,11 @@ type ScheduleEntity struct {
 	Entity
 	Schedule
 }
+type StatEntity struct {
+	Entity
+	requests.CompactRequestStatistics
+}
+type StatPayload = requests.CompactRequestStatistics
 
 type Schedule struct {
 	// These are calculated in create/update. These are used for faster lookups.

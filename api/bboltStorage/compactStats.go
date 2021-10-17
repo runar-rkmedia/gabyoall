@@ -7,9 +7,9 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-func (s *BBolter) UpdateCompactStats(id string, createdAt time.Time, p types.CompactRequestStatistics) error {
+func (s *BBolter) UpdateCompactStats(id string, createdAt time.Time, p types.StatPayload) error {
 	now := time.Now()
-	e := types.CompactRequestStatisticsEntity{
+	e := types.StatEntity{
 		Entity: types.Entity{
 			ID:        id,
 			CreatedAt: createdAt,
@@ -20,9 +20,9 @@ func (s *BBolter) UpdateCompactStats(id string, createdAt time.Time, p types.Com
 	return s.writeCompactStats(id, e)
 }
 
-func (s *BBolter) CreateCompactStats(id string, createAt time.Time, p types.CompactRequestStatistics) error {
+func (s *BBolter) CreateCompactStats(id string, createAt time.Time, p types.StatPayload) error {
 	now := time.Now()
-	e := types.CompactRequestStatisticsEntity{
+	e := types.StatEntity{
 		Entity: types.Entity{
 			ID:        id,
 			CreatedAt: now,
@@ -31,7 +31,7 @@ func (s *BBolter) CreateCompactStats(id string, createAt time.Time, p types.Comp
 	}
 	return s.writeCompactStats(id, e)
 }
-func (s *BBolter) writeCompactStats(id string, e types.CompactRequestStatisticsEntity) error {
+func (s *BBolter) writeCompactStats(id string, e types.StatEntity) error {
 	err := s.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(BucketStats)
 		bytes, err := s.Marshal(e)
@@ -46,8 +46,8 @@ func (s *BBolter) writeCompactStats(id string, e types.CompactRequestStatisticsE
 	return err
 }
 
-func (s *BBolter) CompactStats() (es map[string]types.CompactRequestStatisticsEntity, err error) {
-	es = map[string]types.CompactRequestStatisticsEntity{}
+func (s *BBolter) CompactStats() (es map[string]types.StatEntity, err error) {
+	es = map[string]types.StatEntity{}
 	err = s.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
 		b := tx.Bucket(BucketStats)
@@ -55,7 +55,7 @@ func (s *BBolter) CompactStats() (es map[string]types.CompactRequestStatisticsEn
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var e types.CompactRequestStatisticsEntity
+			var e types.StatEntity
 			err := s.Unmarshal(v, &e)
 			if err != nil {
 				return err

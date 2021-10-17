@@ -70,9 +70,6 @@
   li:nth-child(even) {
     background-color: var(--color-grey-300);
   }
-  .fa-exclamation-triangle {
-    color: var(--color-orange-700);
-  }
   .item-header {
     font-size: large;
   }

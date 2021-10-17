@@ -12,7 +12,7 @@ export type DB = {
   endpoint: Record<string, ApiDef.EndpointEntity>
   request: Record<string, ApiDef.RequestEntity>
   schedule: Record<string, ApiDef.ScheduleEntity>
-  stat: Record<string, ApiDef.CompactRequestStatisticsEntity>
+  stat: Record<string, ApiDef.StatEntity>
   serverInfo: ApiDef.ServerInfo
 }
 

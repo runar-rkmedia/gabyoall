@@ -5,7 +5,7 @@
 </script>
 
 <div class={`alert ${kind}`}>
-  <Icon icon={kind} class={kind} />
+  <Icon icon={kind} class="kind alert-icon" />
   <div class="content">
     <div class="title">
       <slot name="title" />
@@ -29,7 +29,7 @@
     margin-block-end: var(--size-2);
     margin-block-start: -2px;
   }
-  .alert .fas {
+  .alert-icon {
     min-width: var(--size-4);
     margin-inline-end: var(--size-3);
     margin-block-start: 7px;

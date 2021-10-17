@@ -20,6 +20,7 @@
   api.stat.list()
 </script>
 
+<div class="wrapper">
 <header>
   <img src="/android-chrome-192x192.png" alt="Logo" />
   <h1>Gobyoall - Stress tester</h1>
@@ -27,7 +28,6 @@
 </header>
 <div />
 
-<div class="wrapper">
   <main>
     {#if $state.tab === 'schedule'}
       <h2>Schedules</h2>

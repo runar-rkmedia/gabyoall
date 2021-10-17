@@ -16,22 +16,22 @@
 
 <nav>
   <Tab active={value === 'endpoint'} on:click={onClick('endpoint')}>
-    <Icon icon={'gEndpoint'} />
+    <Icon icon={'gEndpoint'} color="tertiary" />
     Endpoints ({endpointCount})
   </Tab>
   <Tab active={value === 'request'} on:click={onClick('request')}>
-    <Icon icon={'gRequest'} />
+    <Icon icon={'gRequest'} color="tertiary" />
     Requests ({requestCount})
   </Tab>
   <Tab
     active={value === 'schedule'}
     on:click={onClick('schedule')}
     disabled={!endpointCount && !requestCount}>
-    <Icon icon={'gSchedula'} />
+    <Icon icon={'gSchedule'} color="tertiary" />
     Schedule ({scheduleCount})
   </Tab>
   <Tab active={value === 'stats'} on:click={onClick('stat')}>
-    <Icon icon={'gStat'} />
+    <Icon icon={'gStat'} color="tertiary" />
     Stats
   </Tab>
 </nav>
@@ -51,8 +51,5 @@
     bottom: var(--size-6);
 
     background-color: var(--color-red-500);
-  }
-  .fas {
-    color: var(--color-red-500);
   }
 </style>

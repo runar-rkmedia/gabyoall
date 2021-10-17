@@ -28,53 +28,6 @@ declare namespace ApiDef {
         token?: Secret;
     }
     export type ByteHashMap = any;
-    export interface CompactRequestStatisticsEntity {
-        Average?: /**
-         * A Duration represents the elapsed time between two instants
-         * as an int64 nanosecond count. The representation limits the
-         * largest representable duration to approximately 290 years.
-         */
-        Duration /* int64 */;
-        AverageText?: string;
-        Max?: /**
-         * A Duration represents the elapsed time between two instants
-         * as an int64 nanosecond count. The representation limits the
-         * largest representable duration to approximately 290 years.
-         */
-        Duration /* int64 */;
-        MaxText?: string;
-        Min?: /**
-         * A Duration represents the elapsed time between two instants
-         * as an int64 nanosecond count. The representation limits the
-         * largest representable duration to approximately 290 years.
-         */
-        Duration /* int64 */;
-        MinText?: string;
-        Requests?: {
-            [name: string]: CompactStat;
-        };
-        ResponseHashMap?: ByteHashMap;
-        StartTime: string; // date-time
-        Total?: /**
-         * A Duration represents the elapsed time between two instants
-         * as an int64 nanosecond count. The representation limits the
-         * largest representable duration to approximately 290 years.
-         */
-        Duration /* int64 */;
-        TotalText?: string;
-        /**
-         * Time of which the entity was created in the database
-         */
-        createdAt: string; // date-time
-        /**
-         * Unique identifier of the entity
-         */
-        id: string;
-        /**
-         * Time of which the entity was updated, if any
-         */
-        updatedAt?: string; // date-time
-    }
     export interface CompactStat {
         duration?: /**
          * A Duration represents the elapsed time between two instants
@@ -320,6 +273,49 @@ declare namespace ApiDef {
          */
         Version?: string;
     }
+    export interface StatEntity {
+        Average?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        Max?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        Min?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        Requests?: {
+            [name: string]: CompactStat;
+        };
+        StartTime: string; // date-time
+        Total?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        /**
+         * Time of which the entity was created in the database
+         */
+        createdAt: string; // date-time
+        /**
+         * Unique identifier of the entity
+         */
+        id: string;
+        response_hash_map?: ByteHashMap;
+        /**
+         * Time of which the entity was updated, if any
+         */
+        updatedAt?: string; // date-time
+    }
 }
 declare namespace ApiPaths {
     namespace CreateEndpoint {
@@ -430,6 +426,6 @@ declare namespace ApiResponses {
     export type ScheduleResponse = ApiDef.ScheduleEntity;
     export type SchedulesResponse = ApiDef.ScheduleEntity[];
     export type ServerInfoResponse = ApiDef.ServerInfo[];
-    export type StatResponse = ApiDef.CompactRequestStatisticsEntity;
-    export type StatsResponse = ApiDef.CompactRequestStatisticsEntity[];
+    export type StatResponse = ApiDef.StatEntity;
+    export type StatsResponse = ApiDef.StatEntity[];
 }

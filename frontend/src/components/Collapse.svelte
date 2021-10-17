@@ -10,11 +10,13 @@
     aria-label="Collapse"
     on:click|preventDefault={() => (show = !show)}>
     <slot name="title" />
-    {#if show}
-      <Icon icon={'collapseUp'} />
-    {:else}
-      <Icon icon={'collapseDown'} />
-    {/if}
+    <div class="icon">
+      {#if show}
+        <Icon icon={'collapseUp'} class="toggle-icon" />
+      {:else}
+        <Icon icon={'collapseDown'} class="toggle-icon" />
+      {/if}
+    </div>
   </button>
   {#if show}
     <slot />
@@ -28,10 +30,8 @@
     align-items: center;
     width: 100%;
   }
-  button.toggle .fas {
+
+  .icon {
     font-size: 1.4rem;
-    /* position: absolute;
-    right: var(--size-4);
-    /* top: var(--size-2); */
   }
 </style>

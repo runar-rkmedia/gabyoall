@@ -196,7 +196,7 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	}
 	ch := wt.Run(endpoint, *config, rq.Request)
 	successes := 0
-	stats := types.NewCompactRequestStatistics()
+	stats := requests.NewCompactRequestStatistics()
 	lastSave := time.Now()
 	debug := s.l.HasDebug()
 	didSave := false
@@ -218,6 +218,7 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 			} else {
 				s.db.CreateCompactStats(runId, startedAt, stats)
 			}
+			didSave = true
 		}
 	}
 	l.Info().
@@ -230,12 +231,12 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	return nil
 }
 
-func NewScheduler(l logger.AppLogger, db types.Storage, config *cmd.Config) Scheduler {
+func NewScheduler(l logger.AppLogger, db types.Storage, config *cmd.Config) *Scheduler {
 	s := Scheduler{
 		l:        l,
 		interval: 500 * time.Millisecond,
 		db:       db,
 		config:   config,
 	}
-	return s
+	return &s
 }

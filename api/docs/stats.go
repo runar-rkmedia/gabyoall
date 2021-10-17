@@ -21,14 +21,14 @@ import (
 // swagger:response statsResponse
 type statsResponse struct {
 	// in:body
-	Body []types.CompactRequestStatisticsEntity
+	Body []types.StatEntity
 }
 
 // Returns single stat
 // swagger:response statResponse
 type statResponse struct {
 	// in:body
-	Body types.CompactRequestStatisticsEntity
+	Body types.StatEntity
 }
 
 // swagger:parameters getStat

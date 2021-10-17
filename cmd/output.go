@@ -12,21 +12,27 @@ import (
 )
 
 type Output struct {
-	l          logger.AppLogger
-	Url        string
-	Query      queries.Request
-	Details    map[requests.ErrorType]requests.RequestStats
-	JwtPayload map[string]interface{}
-	Count      map[requests.ErrorType]int
-	Stats      map[requests.ErrorType]requests.Stats
-	path       string
+	l               logger.AppLogger
+	Url             string                                        `json:"url,omitempty"`
+	Query           queries.Request                               `json:"query,omitempty"`
+	Details         map[requests.ErrorType][]requests.CompactStat `json:"details,omitempty"`
+	JwtPayload      map[string]interface{}                        `json:"jwt_payload,omitempty"`
+	Count           map[requests.ErrorType]int                    `json:"count,omitempty"`
+	Stats           map[requests.ErrorType]requests.Stats         `json:"stats,omitempty"`
+	AllRequests     map[requests.ErrorType][]queries.RequestStat  `json:"-"`
+	ResponseHashMap requests.ByteHashMap                          `json:"responseHashMap,omitempty"`
+	path            string
 }
 
 type Marshal func(j interface{}) ([]byte, error)
 
 func (o *Output) AddStat(stat requests.RequestStat) *Output {
-	o.Details[stat.ErrorType] = append(o.Details[stat.ErrorType], stat)
 	o.Count[stat.ErrorType]++
+	hash := o.ResponseHashMap.Add(stat.ContentType, stat.RawResponse)
+	if hash != nil {
+		stat.CompactStat.ResponseHash = hash
+	}
+	o.Details[stat.ErrorType] = append(o.Details[stat.ErrorType], stat.CompactStat)
 	return o
 }
 func (o *Output) Write() error {
@@ -42,10 +48,10 @@ func (o *Output) Write() error {
 }
 
 func (o *Output) CalculateStats() {
-	for errorType, r := range o.Details {
-		s := r.Calculate()
-		o.Stats[errorType] = s
-	}
+	// TODO: ???
+	// for errorType, r := range o.Details {
+	// 	// o.Stats[errorType] = r
+	// }
 }
 func (o *Output) GetPath() string {
 	return o.path
@@ -72,7 +78,7 @@ func (out *Output) PrintTable() {
 	out.CalculateStats()
 	for _, c := range countSort {
 		s := out.Stats[c.ErrorType]
-		fmt.Fprintf(totals, "%d\t%s\t%s\t%s\t%s\t%s\n", c.Count, c.ErrorType, s.MinText, s.AverageText, s.MaxText, s.TotalText)
+		fmt.Fprintf(totals, "%d\t%s\t%s\t%s\t%s\t%s\n", c.Count, c.ErrorType, s.Min.String(), s.Average.String(), s.Max.String(), s.Total.String())
 	}
 	tm.Println(totals)
 }
@@ -88,13 +94,14 @@ func NewOutput(l logger.AppLogger, path, url string, query queries.Request, JwtP
 		abs = _abs
 	}
 	return Output{
-		l:          l,
-		path:       abs,
-		Url:        url,
-		Query:      query,
-		JwtPayload: JwtPayload,
-		Details:    map[requests.ErrorType]requests.RequestStats{},
-		Count:      map[requests.ErrorType]int{},
-		Stats:      map[requests.ErrorType]requests.Stats{},
+		l:               l,
+		path:            abs,
+		Url:             url,
+		Query:           query,
+		JwtPayload:      JwtPayload,
+		Details:         map[requests.ErrorType][]requests.CompactStat{},
+		Count:           map[requests.ErrorType]int{},
+		Stats:           map[requests.ErrorType]requests.Stats{},
+		ResponseHashMap: queries.ByteHashMap{},
 	}, nil
 }

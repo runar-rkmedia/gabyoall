@@ -7,13 +7,13 @@
 </script>
 
 <span class="count">
-  min: {stat.MinText}
+  min: {stat.Min}
 </span>
 <span class="count">
-  avg: {stat.AverageText}
+  avg: {stat.Average}
 </span>
 <span class="count">
-  max: {stat.MaxText}
+  max: {stat.Max}
 </span>
 <span class="count">
   count: {Object.keys(stat.Requests || {}).length}

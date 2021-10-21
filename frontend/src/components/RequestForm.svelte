@@ -1,5 +1,8 @@
 <script lang="ts">
   import { api } from '../api'
+  import Collapse from './Collapse.svelte'
+  import ConfigForm from './ConfigForm.svelte'
+  import configStore from './configStore'
   import Spinner from './Spinner.svelte'
 
   let query = 'query {galaxies}'
@@ -12,7 +15,7 @@
   let loading = false
   async function endpointCreate() {
     loading = true
-    createResponse = api.request.create({
+    const payload: ApiDef.RequestPayload = {
       method,
       operationName,
       ...(isGraphql
@@ -23,7 +26,18 @@
         : {
             body,
           }),
-    })
+    }
+    if ($configStore.__validationMessage) {
+      console.error(
+        'There was an error with validation of config',
+        $configStore.__validationMessage
+      )
+      return
+    }
+    if ($configStore.__validationPayload) {
+      payload.config = $configStore.__validationPayload
+    }
+    createResponse = api.request.create(payload)
     await createResponse
     loading = false
   }
@@ -58,10 +72,16 @@
     </label>
   {/if}
   <button
-    disabled={loading}
+    disabled={loading || !!$configStore.__validationMessage}
     type="submit"
     on:click|preventDefault={endpointCreate}>Create request</button>
   <div class="spinner"><Spinner active={loading} /></div>
+  <div class="paper">
+    <Collapse>
+      <h3 slot="title">Config</h3>
+      <ConfigForm />
+    </Collapse>
+  </div>
   {#if createResponse}
     {#await createResponse then [_, err]}
       {#if err}

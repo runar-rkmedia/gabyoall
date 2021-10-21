@@ -15,7 +15,7 @@ const (
 
 func WriteAuto(output interface{}, err error, errCode ErrorCodes, r *http.Request, rw http.ResponseWriter) error {
 	if err != nil {
-		return WriteError(err.Error(), CodeErrEndpoint, r, rw)
+		return WriteError(err.Error(), errCode, r, rw)
 	}
 
 	return WriteOutput(false, http.StatusOK, output, r, rw)

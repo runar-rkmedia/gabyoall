@@ -4,6 +4,9 @@
   import { objectKeys } from 'simplytyped'
 
   import { api, db } from '../api'
+  import Collapse from './Collapse.svelte'
+  import ConfigForm from './ConfigForm.svelte'
+  import configStore from './configStore'
   import Spinner from './Spinner.svelte'
 
   let createResponse: ReturnType<typeof api.schedule.create> | undefined
@@ -101,7 +104,15 @@
   }
   $: errors = validate()
   $: valid = !errors
-  $: disabled = loading || !valid
+  $: disabled = loading || !valid || !!$configStore.__validationMessage
+  $: {
+    console.log({
+      loading,
+      valid,
+      vp: $configStore.__validationMessage,
+      disabled,
+    })
+  }
   async function scheduleCreate() {
     loading = true
     const d = deserializeInputDate(start_date_str)
@@ -116,6 +127,16 @@
         start_date: serializeDate(d),
       }),
       label,
+    }
+    if ($configStore.__validationMessage) {
+      console.error(
+        'There was an error with validation of config',
+        $configStore.__validationMessage
+      )
+      return
+    }
+    if ($configStore.__validationPayload) {
+      payload.config = $configStore.__validationPayload
     }
 
     createResponse = !!editID
@@ -172,6 +193,12 @@
       <div class="error">{err}</div>
     {/each}
   {/if}
+  <div class="paper">
+    <Collapse>
+      <h3 slot="title">Config</h3>
+      <ConfigForm />
+    </Collapse>
+  </div>
   <button {disabled} type="submit" on:click|preventDefault={scheduleCreate}>
     {!!editID ? 'Update' : 'Create'}
   </button>

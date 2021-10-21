@@ -1,6 +1,11 @@
 import { deserializeDate } from 'apiFetcher'
 import { format, isToday, formatDistanceToNow } from 'date-fns'
+import nb from 'date-fns/locale/nb'
 
+function getLocale() {
+  // TODO: detect users preferred language / settting etc.
+  return nb
+}
 type DateType = Date | string | undefined | null
 
 /** Formats the date for human consumption */
@@ -14,6 +19,9 @@ const formatDate = (
   const d = parseDate(date)
   if (!d) {
     return null
+  }
+  if (!rest.locale) {
+    rest.locale = getLocale()
   }
   if (formatStr === 'short' && isToday(d)) {
     return formatDistanceToNow(d, {

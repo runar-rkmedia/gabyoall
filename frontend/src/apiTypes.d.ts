@@ -160,6 +160,7 @@ declare namespace ApiDef {
         body?: {
             [key: string]: any;
         };
+        config?: Config;
         /**
          * Time of which the entity was created in the database
          */
@@ -186,6 +187,7 @@ declare namespace ApiDef {
     }
     export interface RequestPayload {
         body?: string;
+        config?: Config;
         headers?: {
             [name: string]: string;
         };
@@ -199,6 +201,7 @@ declare namespace ApiDef {
         };
     }
     export interface ScheduleEntity {
+        config?: Config;
         /**
          * Time of which the entity was created in the database
          */
@@ -216,6 +219,9 @@ declare namespace ApiDef {
         id: string;
         label?: string;
         lastError?: string;
+        /**
+         * From these, the dates above can be calculated
+         */
         lastRun?: string; // date-time
         /**
          * If set to a positive value, the scheduler will not schedule more than this total concurrency
@@ -235,6 +241,7 @@ declare namespace ApiDef {
         updatedAt?: string; // date-time
     }
     export interface SchedulePayload {
+        config?: Config;
         endpointID?: string;
         frequency?: Frequency /* int8 */;
         label?: string;

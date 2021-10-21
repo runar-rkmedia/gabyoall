@@ -2,10 +2,9 @@
   import createId from 'createId'
 
   import { api } from '../api'
-  import Alert from './Alert.svelte'
   import Collapse from './Collapse.svelte'
   import ConfigForm from './ConfigForm.svelte'
-  import configStore, { configStoreToConfigPayload } from './configStore'
+  import configStore from './configStore'
   import Icon from './Icon.svelte'
   import Spinner from './Spinner.svelte'
 
@@ -64,7 +63,12 @@
       {/if}
     {/await}
   {/if}
-  <ConfigForm />
+  <div class="paper">
+    <Collapse>
+      <h3 slot="title">Config</h3>
+      <ConfigForm />
+    </Collapse>
+  </div>
   <div class="paper">
     <Collapse>
       <h3 slot="title">Headers</h3>

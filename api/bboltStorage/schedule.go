@@ -41,6 +41,15 @@ func (s *BBolter) UpdateSchedule(id string, p types.Schedule) (types.ScheduleEnt
 		if err != nil {
 			return err
 		}
+		if p.Config != nil {
+			if j.Config == nil {
+				j.Config = &types.Config{}
+			}
+			err = mergo.Merge(j.Config, p.Config, mergo.WithOverride)
+			if err != nil {
+				return err
+			}
+		}
 		now := time.Now()
 		j.UpdatedAt = &now
 		bytes, err := s.Marshal(j)
@@ -58,6 +67,7 @@ func (s *BBolter) UpdateSchedule(id string, p types.Schedule) (types.ScheduleEnt
 func (s *BBolter) CreateSchedule(p types.SchedulePayload) (types.ScheduleEntity, error) {
 	e := types.ScheduleEntity{
 		Entity: s.NewEntity(),
+		Config: p.Config,
 		Schedule: types.Schedule{
 			Dates:           []time.Time{},
 			SchedulePayload: p,

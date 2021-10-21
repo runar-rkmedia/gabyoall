@@ -21,6 +21,7 @@ func (s *BBolter) CreateRequest(p types.RequestPayload) (types.RequestEntity, er
 			OperationName: p.OperationName,
 			Method:        p.Method,
 		},
+		Config: &p.Config,
 		Entity: s.NewEntity(),
 	}
 

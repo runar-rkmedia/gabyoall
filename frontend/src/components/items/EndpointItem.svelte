@@ -1,0 +1,26 @@
+<script lang="ts">
+  import formatDate from 'dates'
+
+  import { slide } from 'svelte/transition'
+  import ConfigItem from './ConfigItem.svelte'
+
+  export let endpoint: ApiDef.EndpointEntity
+</script>
+
+<li transition:slide|local>
+  {endpoint.url}
+  {formatDate(endpoint.createdAt)}
+  {#if endpoint.config}
+    <ConfigItem config={endpoint.config} short={true} />
+  {/if}
+  {#if endpoint.headers}
+    <strong>Headers</strong>
+    <ul>
+      {#each Object.entries(endpoint.headers) as [hKey, hVal]}
+        <li>
+          {hKey} - {hVal.join('; ')}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</li>

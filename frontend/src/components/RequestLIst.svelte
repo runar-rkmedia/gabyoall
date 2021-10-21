@@ -2,6 +2,7 @@
   import { api, db } from '../api'
   import { slide } from 'svelte/transition'
   import Spinner from './Spinner.svelte'
+  import RequestItem from './items/RequestItem.svelte'
   let requests = api.request.list()
   let loading = true
   requests.then(() => (loading = false))
@@ -14,10 +15,10 @@
   {/if}
 {/await}
 <ul>
-  {#each Object.entries($db.request)
+  {#each Object.values($db.request)
     .sort((a, b) => {
-      const A = a[1].createdAt
-      const B = b[1].createdAt
+      const A = a.createdAt
+      const B = b.createdAt
       if (A > B) {
         return 1
       }
@@ -27,15 +28,8 @@
 
       return 0
     })
-    .reverse() as [k, v]}
-    <li id={k} transition:slide|local>
-      {v.method}
-      {v.operationName}
-      {new Date(v.createdAt).toLocaleTimeString()}
-      {v.query}
-      {v.variables}
-      {v.body}
-    </li>
+    .reverse() as v}
+    <RequestItem request={v} />
   {/each}
 </ul>
 

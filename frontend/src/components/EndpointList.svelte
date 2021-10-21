@@ -2,6 +2,9 @@
   import { api, db } from '../api'
   import { slide } from 'svelte/transition'
   import Spinner from './Spinner.svelte'
+  import formatDate from 'dates'
+  import ConfigItem from './items/ConfigItem.svelte'
+  import EndpointItem from './items/EndpointItem.svelte'
   let endpoints = api.endpoint.list()
   let loading = true
   endpoints.then(() => (loading = false))
@@ -14,10 +17,10 @@
   {/if}
 {/await}
 <ul>
-  {#each Object.entries($db.endpoint)
+  {#each Object.values($db.endpoint)
     .sort((a, b) => {
-      const A = a[1].createdAt
-      const B = b[1].createdAt
+      const A = a.createdAt
+      const B = b.createdAt
       if (A > B) {
         return 1
       }
@@ -27,21 +30,8 @@
 
       return 0
     })
-    .reverse() as [k, v]}
-    <li id={k} transition:slide|local>
-      {v.url}
-      {new Date(v.createdAt).toLocaleTimeString()}
-      {#if v.headers}
-        <strong>Headers</strong>
-        <ul>
-          {#each Object.entries(v.headers) as [hKey, hVal]}
-            <li>
-              {hKey} - {hVal.join('; ')}
-            </li>
-          {/each}
-        </ul>
-      {/if}
-    </li>
+    .reverse() as v}
+    <EndpointItem endpoint={v} />
   {/each}
 </ul>
 

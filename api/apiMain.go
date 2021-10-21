@@ -245,7 +245,7 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 					return
 				}
 				e, err := ctx.DB.CreateRequest(input)
-				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateEndpoint)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateRequest)
 				return
 			}
 			// List requests
@@ -275,7 +275,7 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 					return
 				}
 				e, err := ctx.DB.CreateSchedule(input)
-				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateEndpoint)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateSchedule)
 				return
 			}
 			// Update schedule
@@ -285,7 +285,7 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 					return
 				}
 				e, err := ctx.DB.UpdateSchedule(paths[1], types.Schedule{SchedulePayload: input})
-				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateEndpoint)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateSchedule)
 				return
 			}
 			// List schedules

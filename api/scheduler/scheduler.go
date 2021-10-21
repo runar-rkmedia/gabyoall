@@ -98,64 +98,13 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 
 	config := s.config
 	if ep.Config != nil {
-		if ep.Config.Concurrency != nil && *ep.Config.Concurrency > 0 {
-			config.Concurrency = *ep.Config.Concurrency
-		}
-		if ep.Config.RequestCount != nil && *ep.Config.RequestCount > 0 {
-			config.RequestCount = *ep.Config.RequestCount
-		}
-		if ep.Config.OkStatusCodes != nil {
-			config.OkStatusCodes = *ep.Config.OkStatusCodes
-		}
-		if ep.Config.ResponseData != nil {
-			config.ResponseData = *ep.Config.ResponseData
-		}
-		if ep.Config.Auth != nil {
-			if ep.Config.Auth.Endpoint != "" {
-				config.Auth.Endpoint = ep.Config.Auth.Endpoint
-			}
-			if ep.Config.Auth.EndpointType != "" {
-				config.Auth.EndpointType = ep.Config.Auth.EndpointType
-			}
-			if ep.Config.Auth.HeaderKey != "" {
-				config.Auth.HeaderKey = ep.Config.Auth.HeaderKey
-			}
-			if ep.Config.Auth.Kind != "" {
-				config.Auth.Kind = ep.Config.Auth.Kind
-			}
-			if ep.Config.Auth.RedirectUri != "" {
-				config.Auth.RedirectUri = ep.Config.Auth.RedirectUri
-			}
-			if ep.Config.Auth.Token != "" {
-				config.Auth.Token = string(ep.Config.Auth.Token)
-			}
-			if len(ep.Config.Auth.Dynamic.Requests) != 0 {
-				for _, v := range ep.Config.Auth.Dynamic.Requests {
-					config.Auth.Dynamic.Requests = make([]cmd.DynamicRequest, len(ep.Config.Auth.Dynamic.Requests))
-					if vv := cmd.DynamicRequest(v); true {
-						config.Auth.Dynamic.Requests = append(config.Auth.Dynamic.Requests, vv)
-					}
-				}
-			}
-			if ep.Config.Auth.ClientID != "" {
-				config.Auth.ClientID = ep.Config.Auth.ClientID
-			}
-			if ep.Config.Auth.ClientSecret != "" && !types.IsRedacted(string(ep.Config.Auth.ClientSecret)) {
-				config.Auth.ClientSecret = string(ep.Config.Auth.ClientSecret)
-			}
-			if ep.Config.Auth.ImpersionationCredentials.Password != "" && !types.IsRedacted(string(ep.Config.Auth.ImpersionationCredentials.Password)) {
-				config.Auth.ImpersionationCredentials.Password = string(ep.Config.Auth.ImpersionationCredentials.Password)
-			}
-			if ep.Config.Auth.ImpersionationCredentials.UserIDToImpersonate != "" {
-				config.Auth.ImpersionationCredentials.UserIDToImpersonate = ep.Config.Auth.ImpersionationCredentials.UserIDToImpersonate
-			}
-			if ep.Config.Auth.ImpersionationCredentials.UserNameToImpersonate != "" {
-				config.Auth.ImpersionationCredentials.UserNameToImpersonate = ep.Config.Auth.ImpersionationCredentials.UserNameToImpersonate
-			}
-			if ep.Config.Auth.ImpersionationCredentials.Username != "" {
-				config.Auth.ImpersionationCredentials.Username = ep.Config.Auth.ImpersionationCredentials.Username
-			}
-		}
+		*config = ep.Config.MergeInto(*config)
+	}
+	if rq.Config != nil {
+		*config = rq.Config.MergeInto(*config)
+	}
+	if v.Config != nil {
+		*config = v.Config.MergeInto(*config)
 	}
 	if config.Concurrency == 0 {
 		s.l.Error().Msg("Concurrency must be positive")
@@ -176,8 +125,6 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 		startTime,
 	)
 	print.Animate()
-	config.Concurrency = 30
-	config.RequestCount = 1000
 
 	wt := worker.WorkThing{}
 	l = logger.With(s.l.With().

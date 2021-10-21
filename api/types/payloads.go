@@ -31,6 +31,7 @@ type RequestPayload struct {
 	Headers       map[string]string      `json:"headers,omitempty" validate:"dive,max=1000"`
 	OperationName string                 `json:"operationName,required"`
 	Method        string                 `json:"method"`
+	Config        Config                 `json:"config,omitempty"`
 }
 
 type EndpointEntity struct {
@@ -41,11 +42,13 @@ type EndpointEntity struct {
 type RequestEntity struct {
 	requests.Request
 	Entity
+	Config *Config `json:"config,omitempty"`
 }
 
 type ScheduleEntity struct {
 	Entity
 	Schedule
+	Config *Config `json:"config,omitempty"`
 }
 type StatEntity struct {
 	Entity
@@ -57,8 +60,9 @@ type Schedule struct {
 	// These are calculated in create/update. These are used for faster lookups.
 	// Should be ordered Ascending, e.g. the first element
 	Dates []time.Time `json:"dates"`
-	// From these, the dates above can be calculated
+	// FIXME: Should not use schedulePaylaod directly here.
 	SchedulePayload
+	// From these, the dates above can be calculated
 	LastRun   *time.Time `json:"lastRun,omitempty"`
 	LastError string     `json:"lastError,omitempty"`
 
@@ -107,6 +111,7 @@ type SchedulePayload struct {
 	Frequency              Frequency `json:"frequency,omitempty"`
 	Multiplier             float64   `json:"multiplier,omitempty"`
 	Offsets                []int     `json:"offsets,omitempty"`
+	Config                 *Config   `json:"config,omitempty"`
 }
 
 type Frequency int8

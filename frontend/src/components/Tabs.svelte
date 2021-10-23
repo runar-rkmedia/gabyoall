@@ -4,11 +4,8 @@
 
   import Tab from './Tab.svelte'
   export let value = 'request'
-  const onClick = (s: keyof typeof api) => (e: MouseEvent) => {
-    value = s
-    console.log('clicking', s)
-    // api[s]?.list?.()
-  }
+  const onClick = (s: keyof typeof api) => (e: MouseEvent) => (value = s)
+
   $: scheduleCount = Object.keys($db.schedule).length
   $: requestCount = Object.keys($db.request).length
   $: endpointCount = Object.keys($db.endpoint).length

@@ -50,11 +50,18 @@
     if (editID && lastEdit !== editID) {
       const s = $db.schedule[editID]
       if (s) {
+        if (s.config) {
+          configStore.restore(s.config)
+        } else {
+          configStore.reset()
+        }
+
         lastEdit = editID
         endpointID = s.endpointID
         requestID = s.requestID
         frequency = s.frequency || 0
         multiplier = s.multiplier || 0
+
         start_date_str = serializeInputDate(s.start_date)
         label = s.label || ''
       }
@@ -105,14 +112,6 @@
   $: errors = validate()
   $: valid = !errors
   $: disabled = loading || !valid || !!$configStore.__validationMessage
-  $: {
-    console.log({
-      loading,
-      valid,
-      vp: $configStore.__validationMessage,
-      disabled,
-    })
-  }
   async function scheduleCreate() {
     loading = true
     const d = deserializeInputDate(start_date_str)

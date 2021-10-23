@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
   import { api, db } from 'api'
 
@@ -21,12 +23,12 @@
 </script>
 
 <div class="wrapper">
-<header>
-  <img src="/android-chrome-192x192.png" alt="Logo" />
-  <h1>Gobyoall - Stress tester</h1>
-  <Tabs bind:value={$state.tab} />
-</header>
-<div />
+  <header>
+    <img src="/android-chrome-192x192.png" alt="Logo" />
+    <h1>Gobyoall - Stress tester</h1>
+    <Tabs bind:value={$state.tab} />
+  </header>
+  <div />
 
   <main>
     {#if $state.tab === 'schedule'}

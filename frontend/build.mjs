@@ -37,7 +37,7 @@ const createTypescriptApiDefinitions = async () => {
   if (err) {
     console.error('🔥 Failed to create typescript-defintitions for api: ', err)
   } else {
-    console.log('🪴 Created typescript-defintions for api', out)
+    console.info('🪴 Created typescript-defintions for api', out)
   }
   console.timeEnd('🌱 creating typescript api defintions...')
 }
@@ -45,7 +45,7 @@ const typecheck = async () => {
   console.time('🦴 typechecking')
   const [res, err] = await execP('yarn tsc --noEmit')
   if (res) {
-    console.log(res)
+    console.info(res)
   }
   if (err && !(res || '').includes('error')) {
     console.error('🔥🦴', err)
@@ -89,9 +89,9 @@ await build({
             return r
           }, {})
           if (Object.keys(reduced).length) {
-            console.log('🎉 watch build succeeded with result:', reduced)
+            console.info('🎉 watch build succeeded with result:', reduced)
           } else {
-            console.log('🎉 watch build succeeded')
+            console.info('🎉 watch build succeeded')
           }
         }
         createTypescriptApiDefinitions()

@@ -1,9 +1,6 @@
 <script lang="ts">
-  import { api, db } from '../api'
-  import { slide } from 'svelte/transition'
+  import { db } from '../api'
   import Spinner from './Spinner.svelte'
-  import formatDate from 'dates'
-  import Icon from './Icon.svelte'
   import ScheduleItem from './items/ScheduleItem.svelte'
   export let selectedID: string = ''
   let loading = true

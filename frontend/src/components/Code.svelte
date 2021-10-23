@@ -26,7 +26,7 @@
       switch (format) {
         case 'yaml':
         case 'yml':
-          return formatterYaml.stringify(obj)
+          return formatterYaml.stringify(obj, { sortMapEntries: true })
         case 'toml':
           return formatterToml.dump(obj)
         case 'json':
@@ -36,7 +36,7 @@
           break
       }
     } catch (error) {
-      console.log('failed to convert to format', { code, format, error })
+      console.error('failed to convert to format', { code, format, error })
       errorMsg = error
     }
     return code

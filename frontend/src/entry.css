@@ -9,6 +9,9 @@
   --color-primary: var(--color-indigo-500);
   --color-primary-300: var(--color-indigo-500);
   --color-primary-700: var(--color-indigo-500);
+  --color-danger-300: var(--color-orange-300);
+  --color-danger:  var(--color-orange-500);
+  --color-danger-700: var(--color-orange-700);
 }
 .color-error {
   color: var(--color-error-icon);
@@ -142,10 +145,12 @@ nav button,
   -webkit-appearance: none;
 }
 button.primary,
+button.danger,
 button.secondary {
   padding-inline: var(--size-4);
   padding-block: var(--size-2);
 }
+
 button.primary {
   background-color: var(--color-primary);
   color: var(--color-grey-100);
@@ -157,6 +162,19 @@ button.primary:hover:not(:disabled) {
 button.primary:disabled {
   background-color: var(--color-primary-300);
 }
+
+button.danger {
+  background-color: var(--color-danger);
+  color: var(--color-grey-100);
+}
+button.danger:focus:not(:disabled),
+button.danger:hover:not(:disabled) {
+  background-color: var(--color-danger-700);
+}
+button.danger:disabled {
+  background-color: var(--color-danger-300);
+}
+
 button.secondary:disabled {
   background-color: var(--color-secondary-300);
 }

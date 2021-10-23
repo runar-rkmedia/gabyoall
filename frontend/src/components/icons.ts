@@ -12,6 +12,7 @@ export const iconMap = {
   warning: 'fa-exclamation-triangle',
   info: 'fa-info',
   success: 'fa-check',
+  delete: 'fa-trash',
 } as const
 
 export type Icon = keyof typeof iconMap

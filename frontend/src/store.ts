@@ -2,7 +2,7 @@ import { Updater, writable } from 'svelte/store'
 import merge from 'lodash.merge'
 import debounce from 'lodash.debounce'
 import cloneDeep from 'lodash.clonedeep'
-import type { Paths } from 'types'
+import deepEqual from 'lodash.isequal'
 
 const parseStrOrObject = <T extends {}>(s: string | T | null | undefined) => {
   if (!s) {
@@ -98,7 +98,6 @@ const _redacter = <T extends {}>(
           default:
             break
         }
-        console.log('redactor replaced', key, obj[key], replacement)
         obj[key] = replacement
       }
       continue
@@ -110,12 +109,20 @@ const _redacter = <T extends {}>(
   return obj
 }
 
-export type Store<T extends {}, V = null, VK extends string = string> = T & {
+export type StoreState<V = null, VK extends string = string> = {
   __didChange?: boolean
   __validationMessage?: Partial<Record<VK, string>>
   __validationPayload?: V
 }
 
+export type Store<T extends {}, V = null, VK extends string = string> = T &
+  StoreState
+
+/* 
+TODO: use a form-library instead. 
+  This turned out too complex. 
+  Keep this store simple, and only use it only for the api, and perhaps some state.
+ */
 function createStore<T extends {}, V = null, VK extends string = string>({
   storage: _storage,
   initialValue,
@@ -130,6 +137,8 @@ function createStore<T extends {}, V = null, VK extends string = string>({
   initialValue?: T
 } = {}) {
   type S = Store<T, V, VK>
+  let fromStorageValue: T | null = null
+  let restoreValue = initialValue
   const storage: AppStorage<T> | null = _storage?.key
     ? {
         getItem: (key) => localStorage.getItem(key),
@@ -148,28 +157,29 @@ function createStore<T extends {}, V = null, VK extends string = string>({
     if (err) {
       console.error(err)
     } else if (parsed) {
-      initialValue = initialValue ? merge(initialValue, parsed) : parsed
+      fromStorageValue = initialValue ? merge({}, initialValue, parsed) : parsed
     }
   }
-  const { update: _update, subscribe, set: _set } = writable<S>(initialValue)
+  const {
+    update: _update,
+    subscribe,
+    set: _set,
+  } = writable<S>(fromStorageValue ?? initialValue)
+  const _saveToStorageNow = (value: T) => {
+    if (!storage || !_storage?.key) {
+      return
+    }
+    if (_storage.redactKeys && !!value) {
+      value = redactor(value, _storage.redactKeys)
+    }
+    storage?.setItem(_storage.key, value)
+  }
   const saveToStorage =
     !!storage &&
-    debounce(
-      (value: T) => {
-        if (!storage || !_storage?.key) {
-          return
-        }
-        if (_storage.redactKeys) {
-          value = redactor(value, _storage.redactKeys)
-        }
-        storage?.setItem(_storage.key, value)
-      },
-      2000,
-      {
-        leading: true,
-        maxWait: 5000,
-      }
-    )
+    debounce(_saveToStorageNow, 2000, {
+      leading: true,
+      maxWait: 5000,
+    })
 
   const validate =
     !!validator &&
@@ -191,30 +201,85 @@ function createStore<T extends {}, V = null, VK extends string = string>({
       { leading: true, maxWait: 2000 }
     )
 
-  const update = (updater: Updater<S>) => {
+  function didChange(existing) {
+    const {
+      __didChange: _,
+      __validationMessage: _2,
+      __validationPayload: _3,
+      storeState,
+      ...restNs
+    } = existing
+    const changed = !deepEqual(restNs, restoreValue)
+    return changed
+  }
+
+  const update = (updater: Updater<S>, storeState?: StoreState) => {
     _update((s) => {
-      const ns = updater(s)
+      const ns = storeState ? { ...updater(s), storeState } : updater(s)
+
       if (ns === s) {
         return ns
       }
       validate && validate(s)
-      ;(ns as any).__didChange = true
+
+      // If there is no validator, we assume we dont care about changes.
+      if (!storeState && validator) {
+        if (restoreValue) {
+          ns.__didChange = didChange(ns)
+        }
+      }
+
       if (saveToStorage) {
-        saveToStorage(ns)
+        storeState ? _saveToStorageNow(ns) : saveToStorage(ns)
       }
       return ns
     })
+  }
+
+  /** Like update, but also resets all store-state  */
+  const restore = (state?: S) => {
+    const s = update(
+      () => {
+        if (!state) {
+          return merge({}, restoreValue)
+        }
+        const ns = merge({}, initialValue, state)
+        restoreValue = ns
+        return ns
+      },
+      {
+        __didChange: false,
+        __validationMessage: undefined,
+        __validationPayload: undefined,
+      }
+    )
+    return s
   }
   const set = (s: S) => {
     if (saveToStorage) {
       saveToStorage(s)
     }
     validate && validate(s)
-    s.__didChange = true
+    s.__didChange = didChange(s)
+    _set(merge({}, s))
+  }
+  const reset = () => {
+    const s = {
+      __didChange: false,
+      __validationMessage: undefined,
+      __validationPayload: undefined,
+      ...(initialValue as any),
+      // ...(initialValue as any),
+    }
     _set(s)
+    if (storage && _storage) {
+      _saveToStorageNow(s)
+    }
   }
 
   return {
+    restore,
+    reset,
     subscribe,
     update,
     set,

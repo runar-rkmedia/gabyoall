@@ -744,6 +744,7 @@ fsevents@~2.3.2:
     esbuild-svelte: ^0.5.6
     lodash.clonedeep: ^4.5.0
     lodash.debounce: ^4.0.8
+    lodash.isequal: ^4.5.0
     lodash.merge: ^4.6.2
     nanoid: ^3.1.29
     pollen-css: ^2.1.0
@@ -975,6 +976,13 @@ fsevents@~2.3.2:
   version: 4.0.8
   resolution: "lodash.debounce@npm:4.0.8"
   checksum: a3f527d22c548f43ae31c861ada88b2637eb48ac6aa3eb56e82d44917971b8aa96fbb37aa60efea674dc4ee8c42074f90f7b1f772e9db375435f6c83a19b3bc6
+  languageName: node
+  linkType: hard
+
+"lodash.isequal@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.isequal@npm:4.5.0"
+  checksum: da27515dc5230eb1140ba65ff8de3613649620e8656b19a6270afe4866b7bd461d9ba2ac8a48dcc57f7adac4ee80e1de9f965d89d4d81a0ad52bb3eec2609644
   languageName: node
   linkType: hard
 

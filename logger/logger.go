@@ -2,9 +2,11 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -104,7 +106,15 @@ func (al *AppLogger) ErrWarn(err error) *zerolog.Event {
 func (al *AppLogger) WithStringPairs(pairs ...string) AppLogger {
 	l := al.With()
 	for i := 0; i < len(pairs)-1; i += 2 {
-		l.Str(pairs[i], pairs[i+1])
+		l = l.Str(pairs[i], pairs[i+1])
 	}
 	return AppLogger{l.Logger()}
+}
+
+func Debug(s string, js ...interface{}) {
+	fmt.Println("\n\n\t\t", s)
+	for _, j := range js {
+		v, _ := yaml.Marshal(j)
+		fmt.Println(string(v))
+	}
 }

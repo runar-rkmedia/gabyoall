@@ -2,6 +2,7 @@ package bboltStorage
 
 import (
 	"errors"
+	"os"
 	"time"
 
 	"github.com/runar-rkmedia/gabyoall/api/types"
@@ -66,6 +67,16 @@ func (s *BBolter) NewEntity() types.Entity {
 		s.l.Error().Err(err).Str("id", e.ID).Msg("An error occured while creating entity. ")
 	}
 	return e
+}
+
+func (s *BBolter) Size() (int64, error) {
+	s.l.Info().Interface("stats", s.Stats()).Msg("DB-stats")
+
+	stat, err := os.Stat(s.Path())
+	if err != nil {
+		return 0, err
+	}
+	return int64(stat.Size()), err
 }
 
 type BBolter struct {

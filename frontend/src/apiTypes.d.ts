@@ -77,6 +77,7 @@ declare namespace ApiDef {
      */
     export type Duration = number; // int64
     export interface DynamicAuth {
+        headerKey?: string;
         requests?: DynamicRequest[];
     }
     export interface DynamicRequest {
@@ -98,6 +99,11 @@ declare namespace ApiDef {
          * Time of which the entity was created in the database
          */
         createdAt: string; // date-time
+        /**
+         * If set, the item is considered deleted. The item will normally not get deleted from the database,
+         * but it may if cleanup is required.
+         */
+        deleted?: string; // date-time
         headers?: /**
          * A Header represents the key-value pairs in an HTTP header.
          * The keys should be in canonical form, as returned by
@@ -166,6 +172,11 @@ declare namespace ApiDef {
          */
         createdAt: string; // date-time
         /**
+         * If set, the item is considered deleted. The item will normally not get deleted from the database,
+         * but it may if cleanup is required.
+         */
+        deleted?: string; // date-time
+        /**
          * Unique identifier of the entity
          */
         id: string;
@@ -211,6 +222,11 @@ declare namespace ApiDef {
          * Should be ordered Ascending, e.g. the first element
          */
         dates?: string /* date-time */[];
+        /**
+         * If set, the item is considered deleted. The item will normally not get deleted from the database,
+         * but it may if cleanup is required.
+         */
+        deleted?: string; // date-time
         endpointID?: string;
         frequency?: Frequency /* int8 */;
         /**
@@ -268,6 +284,11 @@ declare namespace ApiDef {
          */
         BuildDate?: string; // date-time
         /**
+         * Size of database.
+         */
+        DatabaseSize?: number; // int64
+        DatabaseSizeStr?: string;
+        /**
          * Short githash for current commit
          */
         GitHash?: string;
@@ -314,6 +335,11 @@ declare namespace ApiDef {
          */
         createdAt: string; // date-time
         /**
+         * If set, the item is considered deleted. The item will normally not get deleted from the database,
+         * but it may if cleanup is required.
+         */
+        deleted?: string; // date-time
+        /**
          * Unique identifier of the entity
          */
         id: string;
@@ -347,6 +373,14 @@ declare namespace ApiPaths {
         }
         namespace Parameters {
             export type Body = ApiDef.SchedulePayload;
+        }
+    }
+    namespace DryDynamic {
+        export interface BodyParameters {
+            Body?: Parameters.Body;
+        }
+        namespace Parameters {
+            export type Body = ApiDef.DynamicAuth;
         }
     }
     namespace GetEndpoint {
@@ -425,6 +459,10 @@ declare namespace ApiPaths {
 declare namespace ApiResponses {
     export type ApiError = ApiDef.ApiError;
     export type CreateResponse = ApiDef.CreateResponse;
+    export interface DryDynamicResponse {
+        error?: string;
+        result?: ApiDef.DynamicAuth;
+    }
     export type EndpointResponse = ApiDef.EndpointEntity;
     export type EndpointsResponse = ApiDef.EndpointEntity[];
     export type OkResponse = ApiDef.OkResponse;

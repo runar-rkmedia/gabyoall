@@ -8,38 +8,54 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jmespath/go-jmespath"
+	"github.com/runar-rkmedia/gabyoall/logger"
+	"github.com/runar-rkmedia/gabyoall/utils"
 )
 
 type DynamicAuth struct {
-	Requests  []DynamicRequest
-	HeaderKey string
+	Requests  []DynamicRequest `json:"requests" validate:"required,min=1,max=100"`
+	HeaderKey string           `json:"headerKey"`
 }
 
 type DynamicRequest struct {
-	Method         string
-	Uri            string
-	Headers        map[string]string
-	JsonRequest    bool
-	JsonResponse   bool
-	ResultJmesPath string
-	Body           interface{}
+	Method         string            `json:"method,omitempty" validate:"required"`
+	Uri            string            `json:"uri,omitempty" validate:"required"`
+	Headers        map[string]string `json:"headers,omitempty"`
+	JsonRequest    bool              `json:"json_request,omitempty"`
+	JsonResponse   bool              `json:"json_response,omitempty"`
+	ResultJmesPath string            `json:"result_jmes_path,omitempty"`
+	Body           interface{}       `json:"body,omitempty"`
 }
 type DynamicResponse struct {
 	result   interface{}
-	response *http.Response
+	response *DynamicHttpResponse
+}
+
+type DynamicHttpResponse struct {
+	Headers    http.Header
+	StatusCode int
+	BodyRaw    []byte
+	BodyJson   map[string]interface{}
 }
 type DynamicAuthResult struct {
 	Token     string
 	HeaderKey string
+	Responses []*DynamicHttpResponse
 }
 
 func (da *DynamicAuth) Retrieve() (DynamicAuthResult, error) {
-	results := make([]DynamicResponse, len(da.Requests))
 	var dyn DynamicAuthResult
+	if len(da.Requests) == 0 {
+		return dyn, fmt.Errorf("a minimum of one requests are required for dynamicAuth")
+	}
+	results := make([]DynamicResponse, len(da.Requests))
+	dyn.Responses = make([]*DynamicHttpResponse, len(da.Requests))
 	// TODO: these should be piped into eachother somehow, so that the response and result can be used in templating or something.
 	for i := 0; i < len(da.Requests); i++ {
 		dynRes, err := da.Requests[i].Do()
+		if dynRes != nil && dynRes.response != nil {
+			dyn.Responses[i] = dynRes.response
+		}
 		if err != nil {
 			return dyn, err
 		}
@@ -49,14 +65,23 @@ func (da *DynamicAuth) Retrieve() (DynamicAuthResult, error) {
 	if last.result == nil {
 		return dyn, fmt.Errorf("result was nil")
 	}
-	if str, ok := last.result.(string); ok {
-		dyn = DynamicAuthResult{
-			HeaderKey: da.HeaderKey,
-			Token:     str,
-		}
-		return dyn, nil
+	switch last.result.(type) {
+	case string:
+		dyn.Token = last.result.(string)
+	case []byte:
+		dyn.Token = string(last.result.([]byte))
+	case int:
+		dyn.Token = fmt.Sprintf("%d", last.result.(int))
+	case float64:
+		dyn.Token = fmt.Sprintf("%f", last.result.(float64))
+	default:
+		return dyn, fmt.Errorf("Unhandled result in dynamic auth: %#v", last.result)
 	}
-	return dyn, fmt.Errorf("Unhandled result in dynamic auth")
+	dyn.HeaderKey = da.HeaderKey
+	if dyn.Token == "" {
+		return dyn, fmt.Errorf("result was empty")
+	}
+	return dyn, nil
 }
 
 func (dr DynamicRequest) Do() (*DynamicResponse, error) {
@@ -68,11 +93,16 @@ func (dr DynamicRequest) Do() (*DynamicResponse, error) {
 		return nil, fmt.Errorf("missing field uri")
 	}
 	if dr.JsonRequest && dr.Body != nil {
-		JSON, ok := dr.Body.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("failed to convert body to map[string]interface: %s", dr.Body)
+		var b []byte
+		var err error
+		switch dr.Body.(type) {
+		case string:
+			b = []byte(dr.Body.(string))
+		case map[string]interface{}:
+			b, err = json.Marshal(dr.Body)
+		default:
+			fmt.Println("type")
 		}
-		b, err := json.Marshal(JSON)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal body: %w", err)
 		}
@@ -90,7 +120,10 @@ func (dr DynamicRequest) Do() (*DynamicResponse, error) {
 	defer res.Body.Close()
 	contentType := res.Header.Get("Content-Type")
 	dyn := DynamicResponse{
-		response: res,
+		response: &DynamicHttpResponse{
+			Headers:    res.Header,
+			StatusCode: res.StatusCode,
+		},
 	}
 	if res.StatusCode >= 400 {
 		return &dyn, fmt.Errorf("%d %s %s", res.StatusCode, res.Status, contentType)
@@ -100,18 +133,21 @@ func (dr DynamicRequest) Do() (*DynamicResponse, error) {
 	if err != nil {
 		return &dyn, fmt.Errorf("failed to read body of request: %w", err)
 	}
-	var JSON map[string]interface{}
+	defer res.Body.Close()
+	dyn.response.BodyRaw = body
 	if strings.Contains(contentType, "json") {
-		if err := json.Unmarshal(body, &JSON); err != nil {
+		if err := json.Unmarshal(body, &dyn.response.BodyJson); err != nil {
 			return &dyn, fmt.Errorf("failed to unmarshal json %w", err)
 		}
 	}
 	if dr.ResultJmesPath != "" {
-		result, err := jmespath.Search(dr.ResultJmesPath, JSON)
-		if err != nil {
-			return &dyn, fmt.Errorf("failed to perform jmesPath %s: %w", dr.ResultJmesPath, err)
+		vars := struct {
+			Response DynamicHttpResponse
+		}{
+			Response: *dyn.response,
 		}
-		dyn.result = result
+		templateResult := utils.RunTemplating(logger.GetLogger("dynamic-request-templating"), dr.ResultJmesPath, "jmes-path", vars)
+		dyn.result = templateResult
 	}
 	return &dyn, nil
 

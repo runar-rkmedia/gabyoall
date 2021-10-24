@@ -10,14 +10,18 @@ import (
 	"time"
 
 	_ "embed"
+	"net/http/pprof"
 
 	"github.com/NYTimes/gziphandler"
+	"github.com/dustin/go-humanize"
 	"github.com/go-playground/validator/v10"
 	"github.com/runar-rkmedia/gabyoall/api/bboltStorage"
 	_ "github.com/runar-rkmedia/gabyoall/api/docs"
 	"github.com/runar-rkmedia/gabyoall/api/requestContext"
 	"github.com/runar-rkmedia/gabyoall/api/scheduler"
 	"github.com/runar-rkmedia/gabyoall/api/types"
+	"github.com/runar-rkmedia/gabyoall/api/utils"
+	"github.com/runar-rkmedia/gabyoall/auth"
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/frontend"
 	"github.com/runar-rkmedia/gabyoall/logger"
@@ -90,12 +94,26 @@ func main() {
 		DB:              &db,
 		StructValidater: validator.New(),
 	}
+	go utils.SelfCheck(utils.SelfCheckLimit{
+		MemoryMB:   1000,
+		GoRoutines: 10000,
+		Streaks:    5,
+		Interval:   time.Second * 15,
+	}, logger.GetLogger("self-check"), 0)
 
-	s := scheduler.NewScheduler(l, &db, cmd.GetConfig(l))
+	if true {
 
-	s.Run()
+		s := scheduler.NewScheduler(l, &db, cmd.GetConfig(l))
+
+		s.Run()
+	}
 	address := fmt.Sprintf("%s:%d", cfg.Address, cfg.Port)
 	handler := http.NewServeMux()
+	handler.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	handler.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	handler.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	handler.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	handler.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 	// http.Handle("/api/", http.StripPrefix("/api/", EndpointsHandler(ctx)))
 	handler.Handle("/api/",
 		gziphandler.GzipHandler(
@@ -186,6 +204,7 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 		var err error
 		isGet := r.Method == http.MethodGet
 		isPost := r.Method == http.MethodPost
+		isDelete := r.Method == http.MethodDelete
 		isPut := r.Method == http.MethodPut
 		path := r.URL.Path
 		paths := strings.Split(strings.TrimSuffix(path, "/"), "/")
@@ -211,6 +230,14 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 					Version:         Version,
 					BuildDate:       BuildDate,
 				}
+				size, sizeErr := ctx.DB.Size()
+				if sizeErr != nil {
+					ctx.L.Warn().Err(sizeErr).Msg("Failed to retrieve size of database")
+				} else {
+					info.DatabaseSize = size
+					info.DatabaseSizeStr = humanize.Bytes(uint64(size))
+				}
+
 				rc.WriteAuto(info, err, "serverInfo")
 				return
 			}
@@ -235,6 +262,39 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 			if isGet && len(paths) == 2 {
 				es, err := ctx.DB.Endpoint(paths[1])
 				rc.WriteAuto(es, err, requestContext.CodeErrEndpoint)
+				return
+			}
+			// Update endpoint
+			if isPut && len(paths) == 2 {
+				var input types.EndpointPayload
+				if err := rc.ValidateBytes(body, &input); err != nil {
+					return
+				}
+				e, err := ctx.DB.UpdateEndpoint(paths[1], input)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBUpdateEndpoint)
+				return
+			}
+			// Delete endpoint
+			if isDelete && len(paths) == 2 {
+				e, err := ctx.DB.SoftDeleteEndpoint(paths[1])
+				rc.WriteAuto(e, err, requestContext.CodeErrDBDeleteEndpoint)
+				return
+			}
+		case "dryDynamic":
+			if isPost {
+				var input auth.DynamicAuth
+				if err := rc.ValidateBytes(body, &input); err != nil {
+					return
+				}
+				res, err := input.Retrieve()
+				result := struct {
+					Error  string                 `json:"error"`
+					Result auth.DynamicAuthResult `json:"result"`
+				}{Result: res}
+				if err != nil {
+					result.Error = err.Error()
+				}
+				rc.WriteAuto(result, nil, "err-dry-dynamic")
 				return
 			}
 		case "request":
@@ -267,6 +327,13 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
 				return
 			}
+			if isDelete && len(paths) == 1 {
+				err := ctx.DB.CleanCompactStats()
+				rc.WriteAuto(struct {
+					Error error `json:"error"`
+				}{err}, err, requestContext.CodeErrRequest)
+				return
+			}
 		case "schedule":
 			// Create schedule
 			if isPost && len(paths) == 1 {
@@ -285,7 +352,7 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 					return
 				}
 				e, err := ctx.DB.UpdateSchedule(paths[1], types.Schedule{SchedulePayload: input})
-				rc.WriteAuto(e, err, requestContext.CodeErrDBCreateSchedule)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBUpdateSchedule)
 				return
 			}
 			// List schedules

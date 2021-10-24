@@ -14,6 +14,7 @@ export type DB = {
   schedule: Record<string, ApiDef.ScheduleEntity>
   stat: Record<string, ApiDef.StatEntity>
   serverInfo: ApiDef.ServerInfo
+  dryDynamic: ApiResponses.DryDynamicResponse
 }
 
 export const api = {
@@ -23,18 +24,34 @@ export const api = {
       (e) => db.update((s) => ({ ...s, serverInfo: e })),
       options
     ),
+  dryDynamic: (
+    body: ApiDef.DynamicAuth,
+    options?: Omit<ApiFetchOptions, 'body'>
+  ) =>
+    fetchApi<ApiResponses.DryDynamicResponse>(
+      'dryDynamic',
+      (e) => db.update((s) => ({ ...s, dryDynamic: e })),
+      { body, method: methods.POST, ...options }
+    ),
   request: CrudFactory<ApiDef.RequestPayload, 'request'>('request'),
   endpoint: CrudFactory<ApiDef.EndpointPayload, 'endpoint'>('endpoint'),
   stat: {
     list: apiGetListFactory<'stat'>('stat', 'stat'),
+    clean: () =>
+      fetchApi(
+        'stat',
+        () => {
+          db.update((s) => {
+            return {
+              ...s,
+              stat: {},
+            }
+          })
+        },
+        { method: methods.DELETE }
+      ),
   },
-  schedule: {
-    ...CrudFactory<ApiDef.SchedulePayload, 'schedule'>('schedule'),
-    update: apiUpdateFactory<ApiDef.SchedulePayload, 'schedule'>(
-      'schedule',
-      'schedule'
-    ),
-  },
+  schedule: CrudFactory<ApiDef.SchedulePayload, 'schedule'>('schedule'),
 } as const
 
 export const db = createStore<DB, null>({
@@ -65,23 +82,23 @@ const mergeMap = <K extends DBKeyValue, V extends DB[K]>(key: K, value: V) => {
 }
 
 // Keys in in that are of type Record<string, T>
-type DBKeyValue = keyof Omit<DB, 'serverInfo'>
+type DBKeyValue = keyof Omit<DB, 'serverInfo' | 'dryDynamic'>
 
-const mergeField = <K extends DBKeyValue, V extends DB[K]['s']>(
+const replaceField = <K extends DBKeyValue, V extends DB[K]['s']>(
   key: K,
   value: V,
   id: string
 ) => {
   if (!key) {
-    console.error('key is required in mergeField')
+    console.error('key is required in replaceField')
     return
   }
   if (!value) {
-    console.error('value is required in mergeField')
+    console.error('value is required in replaceField')
     return
   }
   if (!id) {
-    console.error('id is required in mergeField')
+    console.error('id is required in replaceField')
     return
   }
   db.update((s) => {
@@ -89,10 +106,7 @@ const mergeField = <K extends DBKeyValue, V extends DB[K]['s']>(
       ...s,
       [key]: {
         ...s[key],
-        [id]: {
-          ...s[key]?.[id],
-          ...value,
-        },
+        [id]: value,
       },
     }
   })
@@ -114,6 +128,8 @@ function CrudFactory<Payload extends {}, K extends DBKeyValue>(
     get: apiGetFactory(subPath || storeKey, storeKey),
     list: apiGetListFactory(subPath || storeKey, storeKey),
     create: apiCreateFactory<Payload, K>(subPath || storeKey, storeKey),
+    update: apiUpdateFactory<Payload, K>(subPath || storeKey, storeKey),
+    delete: apiDeleteFactory<K>(subPath || storeKey, storeKey),
   }
 }
 
@@ -140,7 +156,7 @@ function apiGetFactory<K extends DBKeyValue>(subPath: string, storeKey: K) {
   return (id: string, options?: ApiFetchOptions) =>
     fetchApi<DB[K]>(
       subPath + id,
-      (e: any) => mergeField(storeKey, e, e.id),
+      (e: any) => replaceField(storeKey, e, e.id),
       options
     )
 }
@@ -149,7 +165,7 @@ function apiCreateFactory<Payload extends {}, K extends DBKeyValue>(
   storeKey: K
 ) {
   return (body: Payload, options?: ApiFetchOptions) =>
-    fetchApi<DB[K]['s']>(subPath, (e) => mergeField(storeKey, e, e.id), {
+    fetchApi<DB[K]['s']>(subPath, (e) => replaceField(storeKey, e, e.id), {
       method: methods.POST,
       body,
       ...options,
@@ -166,10 +182,25 @@ function apiUpdateFactory<Payload extends {}, K extends DBKeyValue>(
   return (id: string, body: Payload, options?: ApiFetchOptions) =>
     fetchApi<DB[K]['s']>(
       subPath + '/' + id,
-      (e) => mergeField(storeKey, e, e.id),
+      (e) => replaceField(storeKey, e, e.id),
       {
         method: methods.PUT,
         body,
+        ...options,
+      }
+    )
+}
+
+function apiDeleteFactory<K extends DBKeyValue>(subPath: string, storeKey: K) {
+  if (!subPath) {
+    subPath = storeKey
+  }
+  return (id: string, options?: ApiFetchOptions) =>
+    fetchApi<DB[K]['s']>(
+      subPath + '/' + id,
+      (e) => replaceField(storeKey, e, e.id),
+      {
+        method: methods.DELETE,
         ...options,
       }
     )

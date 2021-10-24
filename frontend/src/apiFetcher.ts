@@ -8,6 +8,7 @@ export const methods = {
   POST: 'POST',
   GET: 'GET',
   PUT: 'PUT',
+  DELETE: 'DELETE',
 } as const
 
 export const baseUrl = `${window.location.protocol}//localhost/api`

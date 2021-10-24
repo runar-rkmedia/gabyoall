@@ -163,8 +163,8 @@
   <label>
     Endpint:
     <select bind:value={endpointID}>
-      {#each Object.entries($db.endpoint) as [id, v]}
-        <option value={id}>{v.url}</option>
+      {#each Object.values($db.endpoint).filter((e) => !e.deleted) as v}
+        <option value={v.id}>{v.url}</option>
       {/each}
     </select>
   </label>
@@ -192,12 +192,12 @@
       <div class="error">{err}</div>
     {/each}
   {/if}
-  <div class="paper">
-    <Collapse>
+  <paper>
+    <Collapse key="schedule-config">
       <h3 slot="title">Config</h3>
       <ConfigForm />
     </Collapse>
-  </div>
+  </paper>
   <button {disabled} type="submit" on:click|preventDefault={scheduleCreate}>
     {!!editID ? 'Update' : 'Create'}
   </button>

@@ -5,7 +5,7 @@
   --color-success-icon: hsl(122.4, 39.4%, 49.2%);
   --color-secondary: var(--color-teal-500);
   --color-secondary-300: var(--color-teal-500);
-  --color-secondary-700: var(--color-teal-500);
+  --color-secondary-700: var(--color-teal-700);
   --color-primary: var(--color-indigo-500);
   --color-primary-300: var(--color-indigo-500);
   --color-primary-700: var(--color-indigo-500);
@@ -58,7 +58,8 @@ body {
   color: var(--color-success-icon);
 }
 
-.paper {
+paper {
+  display: block;
   box-shadow: var(--elevation-4);
   border-radius: var(--radius-2xl);
   background-color: var(--color-grey-100);
@@ -67,10 +68,10 @@ body {
   margin-block-end: var(--size-8);
   position: relative;
 }
-.paper .collapse h3 {
+paper .collapse h3 {
   margin-block: var(--size-1);
 }
-.paper .paper {
+paper paper {
   border: 1px solid var(--color-black);
   box-shadow: var(--elevation-6);
 }
@@ -85,8 +86,8 @@ label.checkbox {
 }
 label.checkbox input {
   order: -1;
-  height: var(--size-10);
-  width: var(--size-10);
+  height: var(--size-6);
+  width: var(--size-6);
   margin-inline-end: var(--size-4);
 }
 
@@ -144,6 +145,10 @@ nav button,
   /* Corrects inability to style clickable `input` types in iOS */
   -webkit-appearance: none;
 }
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 button.primary,
 button.danger,
 button.secondary {
@@ -193,12 +198,12 @@ button.secondary:hover:not(:disabled) {
 
 code {
   background-color: var(--color-grey-300);
-  padding-inline: var(--size-4);
+  padding-inline: var(--size-2);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   padding-block: 4px;
   margin-block: -4px;
-  margin-inline: 1ch;
+  margin-inline: var(--size-2);
 }
 
 .label-group {
@@ -210,4 +215,15 @@ code {
 }
 .label-group label:not(:last-of-type) {
   margin-inline-end: var(--size-4);
+}
+
+table {
+  width: 100%;
+}
+
+table * {
+  text-align: left;
+}
+table tr:nth-child(odd) {
+  background-color: var(--color-grey-300);
 }

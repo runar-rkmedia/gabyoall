@@ -1,13 +1,15 @@
 <script lang="ts">
   import createId from 'createId'
 
-  import { api } from '../api'
+  import { api, db } from '../api'
+  import Code from './Code.svelte'
   import Collapse from './Collapse.svelte'
   import ConfigForm from './ConfigForm.svelte'
   import configStore from './configStore'
   import Icon from './Icon.svelte'
   import Spinner from './Spinner.svelte'
 
+  export let editID = ''
   let createResponse: ReturnType<typeof api.endpoint.create> | undefined
   let loading = false
   let url = 'https://'
@@ -17,6 +19,36 @@
     /** Used internally wihtin the form to keep track of items*/
     id: string
   }> = []
+  let lastEdit = ''
+  $: {
+    if (editID && lastEdit !== editID) {
+      const e = $db.endpoint[editID]
+      if (e) {
+        if (e.config) {
+          configStore.restore(e.config)
+          console.debug(e.config)
+        } else {
+          configStore.reset()
+        }
+
+        lastEdit = editID
+        url = e.url
+        if (e.headers) {
+          headers = Object.entries(e.headers).reduce((r, [k, v]) => {
+            if (Array.isArray(v)) {
+              for (const val of v) {
+                // TODO: we should probably support multiple headers. (altough, where is this really needed in practice?)
+                r[k] = v
+              }
+            } else {
+              r[k] = v
+            }
+            return r
+          }, {} as typeof headers)
+        }
+      }
+    }
+  }
 
   async function endpointCreate() {
     // TODO: use validation in store
@@ -42,10 +74,14 @@
     }
     if ($configStore.__validationPayload) {
       payload.config = $configStore.__validationPayload
+      console.debug('payload-config', payload.config)
     }
-    console.log('payload', payload)
+    console.log('payload', payload, payload.config?.auth)
     loading = true
-    createResponse = api.endpoint.create(payload)
+    createResponse = !!editID
+      ? api.endpoint.update(editID, payload)
+      : api.endpoint.create(payload)
+    // createResponse = api.endpoint.create(payload)
     await createResponse
     loading = false
   }
@@ -63,14 +99,14 @@
       {/if}
     {/await}
   {/if}
-  <div class="paper">
-    <Collapse>
+  <paper>
+    <Collapse key="endpoint-config">
       <h3 slot="title">Config</h3>
       <ConfigForm />
     </Collapse>
-  </div>
-  <div class="paper">
-    <Collapse>
+  </paper>
+  <paper>
+    <Collapse key="endpoint-headers">
       <h3 slot="title">Headers</h3>
 
       {#each headers as h, i}
@@ -99,15 +135,22 @@
         Add header
       </button>
     </Collapse>
-  </div>
+  </paper>
 
   <button
     class="primary"
     disabled={loading || !!$configStore.__validationMessage}
     type="submit"
     on:click|preventDefault={endpointCreate}>
-    Create endpoint
+    {!!editID ? 'Update' : 'Create'}{' '}
+    endpoint
   </button>
+  <Code
+    code={JSON.stringify($configStore.__validationPayload)}
+    convert={true} />
+  <Code
+    code={JSON.stringify($configStore.__validationMessage)}
+    convert={true} />
 </form>
 
 <style>

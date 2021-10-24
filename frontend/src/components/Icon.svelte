@@ -1,18 +1,11 @@
 <script type="ts">
+  import type { Colors } from 'appTypes'
+
   import { Icon, iconMap } from './icons'
 
   export let icon: Icon
   export let kind = 'fas'
-  export let color:
-    | 'success'
-    | 'warning'
-    | 'error'
-    | 'primary'
-    | 'info'
-    | 'secondary'
-    | 'tertiary'
-    | 'inherit'
-    | '' = ''
+  export let color: Colors = ''
   const colorMap = {
     error: 'color-error',
     warning: 'color-warning',

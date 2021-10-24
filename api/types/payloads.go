@@ -15,6 +15,9 @@ type Entity struct {
 	// Unique identifier of the entity
 	// Required: true
 	ID string `json:"id,omitempty"`
+	// If set, the item is considered deleted. The item will normally not get deleted from the database,
+	// but it may if cleanup is required.
+	Deleted *time.Time `json:"deleted,omitempty"`
 }
 
 type EndpointPayload struct {
@@ -22,7 +25,7 @@ type EndpointPayload struct {
 	// example: https://example.com
 	Url     string              `json:"url,omitempty" validate:"required,uri"`
 	Headers map[string][]string `json:"headers,omitempty" validate:"dive,max=1000"`
-	Config  Config              `json:"config,omitempty"`
+	Config  *Config             `json:"config,omitempty"`
 }
 type RequestPayload struct {
 	Body          string                 `json:"body,omitempty"`
@@ -35,8 +38,11 @@ type RequestPayload struct {
 }
 
 type EndpointEntity struct {
-	requests.Endpoint
 	Entity
+	Endpoint
+}
+type Endpoint struct {
+	requests.Endpoint
 	Config *Config `json:"config,omitempty"`
 }
 type RequestEntity struct {
@@ -74,9 +80,18 @@ type Schedule struct {
 }
 
 func (s Schedule) NextRun() *time.Time {
+	backOffTime := 1 * time.Minute
 	// TODO: this should calculate based on other parameters
 	t := s.StartDate
-	if s.LastRun != nil && s.LastRun.After(t) {
+	now := time.Now()
+	if s.LastRun.After(t) {
+		if s.LastError != "" {
+			if now.Sub(*s.LastRun) < backOffTime {
+				return nil
+			}
+		} else {
+			// TODO: make sure this logic works before attempting retries
+		}
 		return nil
 	}
 	return &t
@@ -84,17 +99,16 @@ func (s Schedule) NextRun() *time.Time {
 
 // Indicates whether this schedule should be run based on run-parameters
 func (s Schedule) ShouldRun() bool {
-	t := s.NextRun()
-	if t == nil {
+	nextRun := s.NextRun()
+
+	if nextRun == nil {
 		return false
 	}
 
-	now := time.Now()
-	if s.LastError != "" {
-		// If there was an error, we postpone the run a bit.
-		now = now.Add(-time.Minute)
-	}
-	return t.Before(now)
+	sh := time.Now().After(*nextRun)
+	// fmt.Println("should run", sh, s.Label, nextRun.String())
+	// return false
+	return sh
 }
 
 type SchedulePayload struct {
@@ -134,4 +148,8 @@ type ServerInfo struct {
 	Version string
 	// Date of build
 	BuildDate time.Time
+
+	// Size of database.
+	DatabaseSize    int64
+	DatabaseSizeStr string
 }

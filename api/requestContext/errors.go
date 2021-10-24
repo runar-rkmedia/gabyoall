@@ -23,23 +23,28 @@ var (
 )
 
 const (
-	CodeErrEndpoint         ErrorCodes = "ErrEndpoint"
-	CodeErrRequest          ErrorCodes = "ErrRequest"
-	CodeErrMethodNotAllowed ErrorCodes = "ErrMethodNotAllowed"
-	CodeErrNoRoute          ErrorCodes = "ErrNoRoute"
-	CodeErrReadBody         ErrorCodes = "ErrReadBody"
-	CodeErrMarhal           ErrorCodes = "ErrMarshal"
-	CodeErrUnmarshal        ErrorCodes = "ErrUnmarshal"
-	CodeErrJmesPath         ErrorCodes = "ErrJmesPath"
-	CodeErrJmesPathMarshal  ErrorCodes = "ErrJmesPathMarshal"
-	CodeErrDBCreateEndpoint ErrorCodes = "ErrDBCreateEndpoint"
-	CodeErrSchedule         ErrorCodes = "ErrDBCreateSchedule"
-	CodeErrDBCreateRequest  ErrorCodes = "ErrDBCreateRequest"
-	CodeErrDBCreateSchedule ErrorCodes = "ErrDBCreateSchedule"
-	CodeErrInputValidation  ErrorCodes = "ErrInputValidation"
-	CodeErrIDNonValid       ErrorCodes = "ErrIDNonValid"
-	CodeErrIDTooLong        ErrorCodes = "ErrIDTooLong"
-	CodeErrIDEmpty          ErrorCodes = "ErrIDEmpty"
+	CodeErrEndpoint         ErrorCodes = "Error: Regarding type Endpoint"
+	CodeErrRequest          ErrorCodes = "Error: Regarding type Request"
+	CodeErrMethodNotAllowed ErrorCodes = "Error: HTTP-Method is not allowed"
+	CodeErrNoRoute          ErrorCodes = "Error: No route matched for this http-path"
+	CodeErrReadBody         ErrorCodes = "Error: Failed to read body"
+	CodeErrMarhal           ErrorCodes = "Error: Failed to marshal"
+	CodeErrUnmarshal        ErrorCodes = "Error: Failed to unmarshal"
+	CodeErrJmesPath         ErrorCodes = "Error: JmesPath"
+	CodeErrJmesPathMarshal  ErrorCodes = "Error: JmesPathMarshal"
+
+	CodeErrInputValidation ErrorCodes = "Error: General input validation"
+	CodeErrIDNonValid      ErrorCodes = "Error: ID not valid"
+	CodeErrIDTooLong       ErrorCodes = "Error: ID is too long"
+	CodeErrIDEmpty         ErrorCodes = "Error: ID was Empty"
+
+	CodeErrDBUpdateSchedule ErrorCodes = "Error: Database Update Schedule"
+	CodeErrDBUpdateEndpoint ErrorCodes = "Error: Database Update Endpoint"
+	CodeErrDBDeleteEndpoint ErrorCodes = "Error: Database Delete Endpoint"
+	CodeErrDBCreateEndpoint ErrorCodes = "Error: Database Create Endpoint"
+	CodeErrSchedule         ErrorCodes = "Error: Database Create Schedule"
+	CodeErrDBCreateRequest  ErrorCodes = "Error: Database Create Request"
+	CodeErrDBCreateSchedule ErrorCodes = "Error: Database Create Schedule"
 )
 
 type ApiError struct {

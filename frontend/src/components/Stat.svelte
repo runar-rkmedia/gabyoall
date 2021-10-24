@@ -1,19 +1,30 @@
 <script type="ts">
   import formatDate from 'dates'
 
-  import { LinkedChart } from 'svelte-tiny-linked-charts'
+  export let stat: ApiDef.StatEntity
+  function formatDuration(duration: number | undefined | null) {
+    if (!duration) {
+      return ''
+    }
+    const ms = Math.floor(duration / 1e6)
 
-  export let stat: ApiDef.CompactRequestStatisticsEntity
+    if (ms > 1500) {
+      const s = Math.floor(ms / 1e3)
+      const msRest = ms - s * 1e3
+      return `${s}s ${msRest}ms`
+    }
+    return ms + 'ms'
+  }
 </script>
 
 <span class="count">
-  min: {stat.Min}
+  min: {formatDuration(stat.Min)}
 </span>
 <span class="count">
-  avg: {stat.Average}
+  avg: {formatDuration(stat.Average)}
 </span>
 <span class="count">
-  max: {stat.Max}
+  max: {formatDuration(stat.Max)}
 </span>
 <span class="count">
   count: {Object.keys(stat.Requests || {}).length}
@@ -27,16 +38,4 @@
       </li>
     {/each}
   </ul>
-  <LinkedChart
-    showValue={true}
-    width="500px"
-    grow={true}
-    barMinWidth="1"
-    data={Object.values(stat.Requests).reduce((r, req, i) => {
-      if (!req.offset) {
-        return r
-      }
-      r[req.offset] = req.duration
-      return r
-    }, {})} />
 {/if}

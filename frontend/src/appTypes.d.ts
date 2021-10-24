@@ -1,0 +1,10 @@
+export type Colors =
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'primary'
+  | 'info'
+  | 'secondary'
+  | 'tertiary'
+  | 'inherit'
+  | ''

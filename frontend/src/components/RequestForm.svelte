@@ -76,12 +76,12 @@
     type="submit"
     on:click|preventDefault={endpointCreate}>Create request</button>
   <div class="spinner"><Spinner active={loading} /></div>
-  <div class="paper">
-    <Collapse>
+  <paper>
+    <Collapse key="request-config">
       <h3 slot="title">Config</h3>
       <ConfigForm />
     </Collapse>
-  </div>
+  </paper>
   {#if createResponse}
     {#await createResponse then [_, err]}
       {#if err}

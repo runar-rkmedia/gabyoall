@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -45,7 +44,6 @@ func hash256(content []byte) *[32]byte {
 	normalized := requestIdRegex.ReplaceAll(content, []byte("__UID__"))
 	s.Write([]byte(normalized))
 	sum := s.Sum(nil)
-	fmt.Println("hash256", len(sum), string(sum), string(content))
 	c := (*[32]byte)(sum)
 	return c
 }
@@ -116,11 +114,9 @@ func (bm ByteHashMap) Add(contentType string, body []byte) *Hash {
 	}
 
 	bodyHash := hash256(body)
-	b := *bodyHash
 	if bodyHash == nil {
 		return nil
 	}
-	fmt.Println("\n\nhashy Add", string(body), string(b[:]))
 	bm[*bodyHash] = ByteContent{
 		Content:     body,
 		ContentType: contentType,

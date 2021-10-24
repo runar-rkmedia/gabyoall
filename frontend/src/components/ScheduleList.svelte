@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { db } from '../api'
+  import { api, db } from '../api'
   import Spinner from './Spinner.svelte'
   import ScheduleItem from './items/ScheduleItem.svelte'
   export let selectedID: string = ''
@@ -22,7 +22,11 @@
       return 0
     })
     .reverse() as schedule}
-    <ScheduleItem {schedule} on:click={() => (selectedID = schedule.id)} />
+    <ScheduleItem
+      {selectedID}
+      {schedule}
+      onEdit={(id) => (selectedID = id)}
+      onDelete={(id) => api.schedule.delete(id)} />
   {/each}
 </ul>
 

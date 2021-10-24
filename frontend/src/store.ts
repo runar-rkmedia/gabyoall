@@ -160,11 +160,25 @@ function createStore<T extends {}, V = null, VK extends string = string>({
       fromStorageValue = initialValue ? merge({}, initialValue, parsed) : parsed
     }
   }
+  const validate = (value: S): S => {
+    if (!value) {
+      return value
+    }
+    if (!validator) {
+      return value
+    }
+    const [v, errMsg] = validator(value)
+    return {
+      ...value,
+      __validationMessage: errMsg,
+      __validationPayload: v,
+    } as any
+  }
   const {
     update: _update,
     subscribe,
     set: _set,
-  } = writable<S>(fromStorageValue ?? initialValue)
+  } = writable<S>(fromStorageValue ?? (initialValue as any))
   const _saveToStorageNow = (value: T) => {
     if (!storage || !_storage?.key) {
       return
@@ -181,26 +195,6 @@ function createStore<T extends {}, V = null, VK extends string = string>({
       maxWait: 5000,
     })
 
-  const validate =
-    !!validator &&
-    debounce(
-      (value: S) => {
-        const [v, errMsg] = validator(value)
-        if (errMsg !== value.__validationMessage) {
-          update(
-            ({ __validationMessage, __validationPayload, ...f }) =>
-              ({
-                ...f,
-                __validationPayload: v,
-                __validationMessage: errMsg,
-              } as any)
-          )
-        }
-      },
-      150,
-      { leading: true, maxWait: 2000 }
-    )
-
   function didChange(existing) {
     const {
       __didChange: _,
@@ -215,12 +209,12 @@ function createStore<T extends {}, V = null, VK extends string = string>({
 
   const update = (updater: Updater<S>, storeState?: StoreState) => {
     _update((s) => {
-      const ns = storeState ? { ...updater(s), storeState } : updater(s)
+      let ns = storeState ? { ...updater(s), storeState } : updater(s)
 
       if (ns === s) {
         return ns
       }
-      validate && validate(s)
+      ns = validate(ns)
 
       // If there is no validator, we assume we dont care about changes.
       if (!storeState && validator) {
@@ -259,18 +253,19 @@ function createStore<T extends {}, V = null, VK extends string = string>({
     if (saveToStorage) {
       saveToStorage(s)
     }
-    validate && validate(s)
+    s = validate(s)
     s.__didChange = didChange(s)
     _set(merge({}, s))
   }
   const reset = () => {
-    const s = {
+    const s = validate({
       __didChange: false,
       __validationMessage: undefined,
       __validationPayload: undefined,
       ...(initialValue as any),
       // ...(initialValue as any),
-    }
+    })
+
     _set(s)
     if (storage && _storage) {
       _saveToStorageNow(s)

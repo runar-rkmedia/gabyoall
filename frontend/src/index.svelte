@@ -8,18 +8,23 @@
   import ServerInfo from 'components/ServerInfo.svelte'
   import Stats from 'components/Stats.svelte'
   import Tabs from 'components/Tabs.svelte'
+  import Alert from 'components/Alert.svelte'
   import formatDate from 'dates'
   import { state } from 'state'
   import EndpointForm from './components/EndpointForm.svelte'
   import EndpointList from './components/EndpointList.svelte'
   import RequestForm from './components/RequestForm.svelte'
   import RequestLIst from './components/RequestLIst.svelte'
+  import Button from 'components/Button.svelte'
   let scheduleID = ''
+  let endpointID = ''
   api.endpoint.list()
   api.request.list()
   api.schedule.list()
   api.serverInfo()
   api.stat.list()
+  const dbWarnSizeGB = 0.5
+  const dbWarnSize = dbWarnSizeGB * 1e9
 </script>
 
 <div class="wrapper">
@@ -31,33 +36,45 @@
   <div />
 
   <main>
+    {#if ($db.serverInfo?.DatabaseSize || 0) > dbWarnSize}
+      <Alert kind="warning">
+        <div slot="title">The servers database has grown a bit big.</div>
+
+        <p>It is currently {$db.serverInfo.DatabaseSizeStr}</p>
+        <p>This may affect performance.</p>
+        <p>Some functionality may have been disabled.</p>
+        <p>It is adviced to clean the database</p>
+        <Button icon="delete" color="danger" on:click={() => api.stat.clean()}
+          >Click to remove Stats</Button>
+      </Alert>
+    {/if}
     {#if $state.tab === 'schedule'}
       <h2>Schedules</h2>
-      <div class="paper">
+      <paper>
         <ScheduleForm endpointID="" requestID="" bind:editID={scheduleID} />
-      </div>
+      </paper>
       <ScheduleList bind:selectedID={scheduleID} />
     {:else if $state.tab === 'endpoint'}
       <h2>Endpoints</h2>
-      <div class="paper">
-        <EndpointForm />
-      </div>
-      <div class="paper">
-        <EndpointList />
-      </div>
+      <paper>
+        <EndpointForm bind:editID={endpointID} />
+      </paper>
+      <paper>
+        <EndpointList bind:selectedID={endpointID} />
+      </paper>
     {:else if $state.tab === 'stat'}
       <h2>Statistics</h2>
-      <div class="paper">
+      <paper>
         <Stats />
-      </div>
+      </paper>
     {:else}
       <h2>Request</h2>
-      <div class="paper">
+      <paper>
         <RequestForm />
-      </div>
-      <div class="paper">
+      </paper>
+      <paper>
         <RequestLIst />
-      </div>
+      </paper>
     {/if}
   </main>
 

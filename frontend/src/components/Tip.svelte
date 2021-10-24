@@ -32,8 +32,10 @@
   <slot />
   <button
     class="icon-button secondary"
-    on:click|preventDefault={() =>
-      ($state.seenHints[key] = [version, new Date()])}>
+    on:click|preventDefault={() => {
+      $state.seenHints[key] = [version, new Date()]
+      read = false
+    }}>
     <Icon icon={'success'} />
     Got it
   </button>

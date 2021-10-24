@@ -2,10 +2,12 @@ package scheduler
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/runar-rkmedia/gabyoall/api/types"
+	"github.com/runar-rkmedia/gabyoall/auth"
 	"github.com/runar-rkmedia/gabyoall/cmd"
 	"github.com/runar-rkmedia/gabyoall/logger"
 	"github.com/runar-rkmedia/gabyoall/printer"
@@ -60,6 +62,8 @@ func (s *Scheduler) Run() {
 					err := s.RunSchedule(v)
 					if err != nil {
 						v.Schedule.LastError = err.Error()
+					} else {
+						v.Schedule.LastError = ""
 					}
 					now := time.Now()
 					v.LastRun = &now
@@ -82,6 +86,7 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	l := logger.With(s.l.With().
 		Str("RequestID", v.RequestID).
 		Str("EndpointID", v.EndpointID).
+		Str("EndpointLabel", v.Label).
 		Logger())
 
 	// TODO: Check further to see if we really are scheduled to run.
@@ -115,11 +120,31 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 		return fmt.Errorf("RequestCount must be positive")
 	}
 	endpoint := requests.NewEndpoint(s.l, ep.Url)
+	var token string
+	// TODO: renew the tokenPayload as needed
+	// var tokenPayload *auth.TokenPayload
+	var validityStringer printer.ValidityStringer
+	if token == "" {
+		err, token, _, validityStringer = auth.Retrieve(l, config.Auth)
+		if err != nil {
+			return fmt.Errorf("failed to perform authentication: %w", err)
+		}
+	}
+	if token != "" {
+		authPrefix := ""
+		if strings.ToLower(config.Auth.Kind) == "bearer" {
+			authPrefix = "Bearer "
+		}
+		if config.Auth.HeaderKey == "" {
+			config.Auth.HeaderKey = "Authorization"
+		}
+		endpoint.Headers.Add(config.Auth.HeaderKey, authPrefix+token)
+	}
 	out, _ := cmd.NewOutput(l, "", config.Url, rq.Request, nil)
 	startTime := time.Now()
 	print := printer.NewPrinter(
 		*config,
-		nil,
+		validityStringer,
 		rq.OperationName,
 		out,
 		startTime,

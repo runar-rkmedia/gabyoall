@@ -1,14 +1,30 @@
 <script lang="ts">
+  import { state } from 'state'
+
+  import { onMount } from 'svelte'
   import Icon from './Icon.svelte'
 
   export let show = false
+  export let key: string
+  onMount(() => {
+    if (!key) {
+      return
+    }
+    show = $state.collapse[key]
+  })
 </script>
 
 <div class="collapse">
   <button
     class="btn-reset toggle"
     aria-label="Collapse"
-    on:click|preventDefault={() => (show = !show)}>
+    on:click|preventDefault={() => {
+      show = !show
+      if (!key) {
+        return
+      }
+      $state.collapse[key] = show
+    }}>
     <slot name="title" />
     <div class="icon">
       {#if show}

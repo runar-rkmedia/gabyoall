@@ -1,13 +1,20 @@
 <script lang="ts">
+  import { api, db } from 'api'
+
+  import Button from 'components/Button.svelte'
+
   import formatDate from 'dates'
 
   import { slide } from 'svelte/transition'
   import ConfigItem from './ConfigItem.svelte'
 
   export let endpoint: ApiDef.EndpointEntity
+  $: {
+    console.log($db.endpoint[endpoint.id].deleted)
+  }
 </script>
 
-<li transition:slide|local>
+<li transition:slide|local class:deleted={!!endpoint.deleted}>
   {endpoint.url}
   {formatDate(endpoint.createdAt)}
   {#if endpoint.config}
@@ -23,4 +30,13 @@
       {/each}
     </ul>
   {/if}
+  <Button icon="delete" on:click={() => api.endpoint.delete(endpoint.id)}>
+    Delete
+  </Button>
 </li>
+
+<style>
+  .deleted {
+    text-decoration: line-through;
+  }
+</style>

@@ -1,6 +1,8 @@
 package types
 
-import "github.com/runar-rkmedia/gabyoall/cmd"
+import (
+	"github.com/runar-rkmedia/gabyoall/cmd"
+)
 
 type DynamicAuth struct {
 	Requests []DynamicRequest `json:"requests,omitempty"`
@@ -108,11 +110,11 @@ func (c Config) MergeInto(config cmd.Config) cmd.Config {
 			config.Auth.Token = string(c.Auth.Token)
 		}
 		if len(c.Auth.Dynamic.Requests) != 0 {
+			config.Auth.Dynamic.Requests = make([]cmd.DynamicRequest, len(c.Auth.Dynamic.Requests))
+			i := -1
 			for _, v := range c.Auth.Dynamic.Requests {
-				config.Auth.Dynamic.Requests = make([]cmd.DynamicRequest, len(c.Auth.Dynamic.Requests))
-				if vv := cmd.DynamicRequest(v); true {
-					config.Auth.Dynamic.Requests = append(config.Auth.Dynamic.Requests, vv)
-				}
+				i++
+				config.Auth.Dynamic.Requests[i] = cmd.DynamicRequest(v)
 			}
 		}
 		if c.Auth.ClientID != "" {

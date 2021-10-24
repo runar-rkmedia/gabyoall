@@ -9,7 +9,7 @@ import (
 
 type WorkThing struct{}
 
-func (w WorkThing) Run(endpoint requests.Endpoint, config cmd.Config, query requests.Request) chan requests.RequestStat {
+func (w WorkThing) Run(endpoint requests.Endpoint, config cmd.Config, query requests.Request) (chan requests.RequestStat, chan Job) {
 	jobCh := make(chan Job, config.RequestCount)
 	resultCh := make(chan requests.RequestStat, config.RequestCount)
 	startTime := time.Now()
@@ -30,7 +30,7 @@ func (w WorkThing) Run(endpoint requests.Endpoint, config cmd.Config, query requ
 			jobCh <- job
 		}(job)
 	}
-	return resultCh
+	return resultCh, jobCh
 }
 
 type Job struct {

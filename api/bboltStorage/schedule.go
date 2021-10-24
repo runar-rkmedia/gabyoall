@@ -52,6 +52,13 @@ func (s *BBolter) UpdateSchedule(id string, p types.Schedule) (types.ScheduleEnt
 		}
 		now := time.Now()
 		j.UpdatedAt = &now
+		// TODO: fix this hack.
+		// Why it is here: When merging, it does not replace non-null-values with null-values.
+		// The scheduler wants to clear the LastError-field if the run was successful,
+		// but supplying "" wont work when using the merge-function.
+		if p.LastError == "__CLEAR__" {
+			j.LastError = ""
+		}
 		bytes, err := s.Marshal(j)
 		if err != nil {
 			return err

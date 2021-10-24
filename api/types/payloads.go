@@ -84,7 +84,7 @@ func (s Schedule) NextRun() *time.Time {
 	// TODO: this should calculate based on other parameters
 	t := s.StartDate
 	now := time.Now()
-	if s.LastRun.After(t) {
+	if s.LastRun != nil && s.LastRun.After(t) {
 		if s.LastError != "" {
 			if now.Sub(*s.LastRun) < backOffTime {
 				return nil

@@ -63,7 +63,8 @@ func (s *Scheduler) Run() {
 					if err != nil {
 						v.Schedule.LastError = err.Error()
 					} else {
-						v.Schedule.LastError = ""
+						// TODO: fix this hack
+						v.Schedule.LastError = "__CLEAR__"
 					}
 					now := time.Now()
 					v.LastRun = &now
@@ -101,15 +102,18 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 		return err
 	}
 
-	config := s.config
-	if ep.Config != nil {
-		*config = ep.Config.MergeInto(*config)
+	config := cmd.Config{}
+	// order matters
+	configs := []*types.Config{
+		ep.Config,
+		rq.Config,
+		v.Config,
 	}
-	if rq.Config != nil {
-		*config = rq.Config.MergeInto(*config)
-	}
-	if v.Config != nil {
-		*config = v.Config.MergeInto(*config)
+	for i := 0; i < len(configs); i++ {
+		if configs[i] == nil {
+			continue
+		}
+		config = configs[i].MergeInto(config)
 	}
 	if config.Concurrency == 0 {
 		s.l.Error().Msg("Concurrency must be positive")
@@ -143,7 +147,7 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	out, _ := cmd.NewOutput(l, "", config.Url, rq.Request, nil)
 	startTime := time.Now()
 	print := printer.NewPrinter(
-		*config,
+		config,
 		validityStringer,
 		rq.OperationName,
 		out,
@@ -166,7 +170,9 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	if warn != nil {
 		l.Warn().Err(warn).Str("ID", runId).Msg("Failed to create id, used fallback-method instead")
 	}
-	ch := wt.Run(endpoint, *config, rq.Request)
+	ch, jobCh := wt.Run(endpoint, config, rq.Request)
+	defer close(jobCh)
+	defer close(ch)
 	successes := 0
 	stats := requests.NewCompactRequestStatistics()
 	lastSave := time.Now()

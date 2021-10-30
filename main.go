@@ -104,7 +104,7 @@ func main() {
 	})
 
 	wt := worker.WorkThing{}
-	ch := wt.Run(endpoint, *config, query)
+	ch, quit := wt.Run(endpoint, *config, query)
 
 	successes := 0
 	startTime := time.Now()
@@ -133,6 +133,7 @@ func main() {
 	if err != nil {
 		l.Fatal().Err(errors.Unwrap(err)).Msg("Failed to write output")
 	}
+	close(quit)
 	l.Info().Msg("All done")
 }
 

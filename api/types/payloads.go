@@ -126,6 +126,74 @@ type SchedulePayload struct {
 	Multiplier             float64   `json:"multiplier,omitempty"`
 	Offsets                []int     `json:"offsets,omitempty"`
 	Config                 *Config   `json:"config,omitempty"`
+	ScheduleWeek
+}
+
+func (sp SchedulePayload) Prepare() (SchedulePayload, error) {
+	if sp.location == nil {
+		if sp.Location != "" {
+			l, err := time.LoadLocation(sp.Location)
+			if err != nil {
+				return sp, fmt.Errorf("Location was incorrect: %w", err)
+			}
+			sp.location = l
+		} else {
+			sp.location = sp.StartDate.Location()
+		}
+	}
+	if sp.Location == "" {
+		sp.Location = fmt.Sprintf("%s", sp.location)
+	}
+	return sp, nil
+}
+
+type ScheduleWeek struct {
+	location  *time.Location
+	Location  string    `json:"location"`
+	Monday    *Duration `json:"monday,omitempty"`
+	Tuesday   *Duration `json:"tuesday,omitempty"`
+	Wednesday *Duration `json:"wednesday,omitempty"`
+	Thursday  *Duration `json:"thursday,omitempty"`
+	Friday    *Duration `json:"friday,omitempty"`
+	Saturday  *Duration `json:"saturday,omitempty"`
+	Sunday    *Duration `json:"sunday,omitempty"`
+}
+
+func (sw ScheduleWeek) NextRun(now time.Time) *time.Time {
+	t := now.In(sw.location)
+	dow := t.Weekday()
+	var d *Duration
+	switch dow {
+	case time.Monday:
+		d = sw.Monday
+	case time.Tuesday:
+		d = sw.Tuesday
+	case time.Wednesday:
+		d = sw.Wednesday
+	case time.Thursday:
+		d = sw.Thursday
+	case time.Friday:
+		d = sw.Friday
+	case time.Saturday:
+		d = sw.Saturday
+	case time.Sunday:
+		d = sw.Sunday
+	}
+	if d == nil {
+		return nil
+	}
+	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, sw.location)
+	n := midnight.Add(*d)
+	if n.Before(t) {
+		fmt.Printf("%v is before %v (%s) %v \n\n", n, t, dow, midnight)
+		// fmt.Printf("midnight: %v  \n", midnight, n, t, dow, sw.Location)
+		return nil
+	}
+	return &n
+}
+
+type Duration = time.Duration
+
 }
 
 type Frequency int8

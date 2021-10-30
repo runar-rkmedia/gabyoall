@@ -15,7 +15,7 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 	github.com/tj/go-spin v1.1.0
-	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
+	golang.org/x/sys v0.0.0-20211029165221-6e7872819dc8 // indirect
 )
 
 require (
@@ -45,11 +45,11 @@ require (
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
+	github.com/dustin/go-humanize v1.0.0
 	github.com/r3labs/diff/v2 v2.14.0
 )
 
 require (
-	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

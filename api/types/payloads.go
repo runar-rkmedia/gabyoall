@@ -199,6 +199,7 @@ type Duration = time.Duration
 type Frequency int8
 
 const (
+	FrequencyNull   Frequency = iota
 	FrequencySecond Frequency = iota
 	FrequencyMinute Frequency = iota
 	FrequencyHour   Frequency = iota

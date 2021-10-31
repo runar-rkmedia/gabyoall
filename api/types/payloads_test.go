@@ -50,7 +50,8 @@ func TestScheduleWeek_NextRun(t *testing.T) {
 	}
 
 	type args struct {
-		now time.Time
+		start time.Time
+		end   *time.Time
 	}
 	tests := []struct {
 		name   string
@@ -64,7 +65,7 @@ func TestScheduleWeek_NextRun(t *testing.T) {
 				Location: locOslo,
 				Friday:   ParseDurationOrDie("19h30m"),
 			},
-			args{*now},
+			args{*now, nil},
 			ParseTimeOrDie("2021-10-29T19:30:00+0200"),
 		},
 		{
@@ -73,18 +74,30 @@ func TestScheduleWeek_NextRun(t *testing.T) {
 				Location: locOslo,
 				Friday:   ParseDurationOrDie("13h30m"),
 			},
-			args{*now},
+			args{*now, nil},
 			nil,
 		},
 		{
-			"should return work correcgtly with other timezone",
+			"should return nil if endTime is passed",
+			fields{
+				Location: locOslo,
+				Friday:   ParseDurationOrDie("19h30m"),
+			},
+			args{
+				start: *now,
+				end:   ParseTimeOrDie("2021-10-29T18:58:10+0200"),
+			},
+			nil,
+		},
+		{
+			"should return work correctly with other timezone",
 			fields{
 				Location: locHobart,
 				Thursday: ParseDurationOrDie("21h30m"),
 				Friday:   ParseDurationOrDie("20h30m"),
 				Saturday: ParseDurationOrDie("19h30m"), // This should be the one that is "picked"
 			},
-			args{*now},
+			args{*now, nil},
 			ParseTimeOrDie("2021-10-30T19:30:00+1100"),
 		},
 	}
@@ -100,7 +113,7 @@ func TestScheduleWeek_NextRun(t *testing.T) {
 				Saturday:  tt.fields.Saturday,
 				Sunday:    tt.fields.Sunday,
 			}
-			if got := sw.NextRun(tt.args.now); !reflect.DeepEqual(nilTimeString(got), nilTimeString(tt.want)) {
+			if got := sw.NextRun(tt.args.start, tt.args.end); !reflect.DeepEqual(nilTimeString(got), nilTimeString(tt.want)) {
 				t.Errorf("ScheduleWeek.NextRun() = %v (%v), want %v (%v)", got, nilTimeString(got), tt.want, nilTimeString(tt.want))
 			}
 		})

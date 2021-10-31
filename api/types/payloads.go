@@ -126,6 +126,7 @@ type SchedulePayload struct {
 	Multiplier             float64   `json:"multiplier,omitempty"`
 	Offsets                []int     `json:"offsets,omitempty"`
 	Config                 *Config   `json:"config,omitempty"`
+	EndDate                *time.Time `json:"end_date"`
 	ScheduleWeek
 }
 
@@ -159,8 +160,8 @@ type ScheduleWeek struct {
 	Sunday    *Duration `json:"sunday,omitempty"`
 }
 
-func (sw ScheduleWeek) NextRun(now time.Time) *time.Time {
-	t := now.In(sw.location)
+func (sw ScheduleWeek) NextRun(start time.Time, end *time.Time) *time.Time {
+	t := start.In(sw.location)
 	dow := t.Weekday()
 	var d *Duration
 	switch dow {
@@ -187,6 +188,9 @@ func (sw ScheduleWeek) NextRun(now time.Time) *time.Time {
 	if n.Before(t) {
 		fmt.Printf("%v is before %v (%s) %v \n\n", n, t, dow, midnight)
 		// fmt.Printf("midnight: %v  \n", midnight, n, t, dow, sw.Location)
+		return nil
+	}
+	if end != nil && n.After(*end) {
 		return nil
 	}
 	return &n

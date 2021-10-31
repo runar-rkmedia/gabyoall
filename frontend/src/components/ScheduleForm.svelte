@@ -4,33 +4,36 @@
   import { objectKeys } from 'simplytyped'
 
   import { api, db } from '../api'
+  import Button from './Button.svelte'
   import Collapse from './Collapse.svelte'
   import ConfigForm from './ConfigForm.svelte'
   import configStore from './configStore'
+  import ScheduleItem from './items/ScheduleItem.svelte'
   import Spinner from './Spinner.svelte'
+  import Tip from './Tip.svelte'
 
   let createResponse: ReturnType<typeof api.schedule.create> | undefined
   let loading = false
   let frequency = 0
   let label = ''
   // let maxInterJobConcurrency = 0
+
   let multiplier = 1
   // let offsets = 0
   let start_date_str = ''
-  // onMount(() => {
-  //   start_date_str = new Date().
-  // })
+  let end_date_str = ''
   /** set if this should be an edit to an existing route*/
   export let editID = ''
-  export let endpointID
-  export let requestID
+  export let endpointID: string | undefined = ''
+  export let requestID: string | undefined = ''
 
   function serializeInputDate(date: Date | string | undefined) {
     if (!date) {
       return ''
     }
     const s = typeof date == 'string' ? date : date.toISOString()
-    return s.split('Z')[0]
+    console.log(s)
+    return s.split('.')[0]
   }
   function deserializeInputDate(s: string) {
     if (!s) {
@@ -63,6 +66,7 @@
         multiplier = s.multiplier || 0
 
         start_date_str = serializeInputDate(s.start_date)
+        end_date_str = serializeInputDate(s.start_date)
         label = s.label || ''
       }
     }
@@ -148,6 +152,31 @@
   setInterval(() => {
     errors = validate()
   }, 100)
+  const scheduleAsWeek = true
+  const localTimeSone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  let scheduleLocale = localTimeSone
+  const weekDays: Record<
+    keyof Pick<
+      ApiDef.SchedulePayload,
+      | 'monday'
+      | 'tuesday'
+      | 'wednesday'
+      | 'thursday'
+      | 'friday'
+      | 'saturday'
+      | 'sunday'
+    >,
+    string
+  > = {
+    monday: '',
+    tuesday: '',
+    wednesday: '',
+    thursday: '',
+    friday: '',
+    saturday: '',
+    sunday: '',
+  }
+  $: hasScheduleValue = Object.values(weekDays).some(Boolean)
 </script>
 
 <h3>
@@ -155,7 +184,7 @@
     ? `Editing schedule ${$db.schedule[editID]?.label}`
     : 'Creating schedule'}
 </h3>
-<form>
+<form on:submit|preventDefault>
   <label>
     Label
     <input type="text" name="label" bind:value={label} />
@@ -176,17 +205,94 @@
       {/each}
     </select>
   </label>
+  {#if scheduleAsWeek}
+    <paper class="weekdays">
+      <Collapse key="weekdays">
+        <h3 slot="title">Weekly schedule</h3>
+        <Tip key="schedule-weekdays">
+          <p>
+            The schedule can be set to run on specific weekdays. You may
+            additionally set a TimeZone of which these should run.
+          </p>
+        </Tip>
+        {#each Object.keys(weekDays) as weekday}
+          <label for={weekday} class="weekday">
+            {weekday}
+            <div>
+              <Button
+                color="secondary"
+                icon="copy"
+                disabled={!weekDays[weekday]}
+                on:click={() => {
+                  for (const w of Object.keys(weekDays)) {
+                    if (w === weekday) {
+                      continue
+                    }
+                    if (weekDays[w]) {
+                      continue
+                    }
+                    weekDays[w] = weekDays[weekday]
+                  }
+                }}>Copy to all unset</Button>
+              <input
+                id={weekday}
+                placeholder="19:30m"
+                type="time"
+                bind:value={weekDays[weekday]} />
+            </div>
+          </label>
+        {/each}
+        <hr />
+        <label>
+          TimeZone.
+          <input type="text" bind:value={scheduleLocale} />
+        </label>
+        {#if scheduleLocale !== localTimeSone}
+          <Button
+            color="secondary"
+            on:click={() => {
+              scheduleLocale = localTimeSone
+            }}>
+            Set to '{localTimeSone}'
+          </Button>
+        {/if}
+
+        {#if scheduleLocale !== 'Local'}
+          <Button
+            color="secondary"
+            on:click={() => {
+              scheduleLocale = 'Local'
+            }}>
+            Set to servers local time
+          </Button>
+        {/if}
+        {#if hasScheduleValue}
+          <Button
+            color="danger"
+            on:click={() => {
+              for (const w of Object.keys(weekDays)) {
+                weekDays[w] = ''
+              }
+            }}>
+            Clear schedule
+          </Button>
+        {/if}
+      </Collapse>
+    </paper>
+  {/if}
   <label>
-    Start-time {start_date_str}
-    {start_date_str ? new Date(start_date_str) : 'no'}
+    Start-time
     <input
       type="datetime-local"
       name="start_date"
       bind:value={start_date_str} />
   </label>
-  <button
-    on:click|preventDefault={() =>
-      (start_date_str = serializeInputDate(new Date()))}>Now</button>
+  <Button on:click={() => (start_date_str = serializeInputDate(new Date()))}
+    >Now</Button>
+  <label>
+    End-time
+    <input type="datetime-local" name="end_date" bind:value={end_date_str} />
+  </label>
   {#if errors}
     {#each Object.values(errors) as err}
       <div class="error">{err}</div>
@@ -198,9 +304,9 @@
       <ConfigForm />
     </Collapse>
   </paper>
-  <button {disabled} type="submit" on:click|preventDefault={scheduleCreate}>
+  <Button {disabled} type="submit" on:click={scheduleCreate}>
     {!!editID ? 'Update' : 'Create'}
-  </button>
+  </Button>
 
   <div class="spinner"><Spinner active={loading} /></div>
   {#if createResponse}
@@ -216,5 +322,12 @@
   .error::before {
     content: 'ERR: ';
     color: var(--color-red-700);
+  }
+  label.weekday {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-transform: capitalize;
   }
 </style>

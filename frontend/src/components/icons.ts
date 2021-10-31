@@ -13,6 +13,7 @@ export const iconMap = {
   info: 'fa-info',
   success: 'fa-check',
   delete: 'fa-trash',
+  copy: 'fa-copy',
 } as const
 
 export type Icon = keyof typeof iconMap

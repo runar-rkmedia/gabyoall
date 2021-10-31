@@ -25,7 +25,7 @@
       }
       $state.collapse[key] = show
     }}>
-    <slot name="title" />
+    <slot name="title" class="title" />
     <div class="icon">
       {#if show}
         <Icon icon={'collapseUp'} class="toggle-icon" />

@@ -9,9 +9,6 @@
   import ConfigItem from './ConfigItem.svelte'
 
   export let endpoint: ApiDef.EndpointEntity
-  $: {
-    console.log($db.endpoint[endpoint.id].deleted)
-  }
 </script>
 
 <li transition:slide|local class:deleted={!!endpoint.deleted}>

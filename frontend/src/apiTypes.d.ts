@@ -227,8 +227,15 @@ declare namespace ApiDef {
          * but it may if cleanup is required.
          */
         deleted?: string; // date-time
+        end_date?: string; // date-time
         endpointID?: string;
         frequency?: Frequency /* int8 */;
+        friday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
         /**
          * Unique identifier of the entity
          */
@@ -239,6 +246,7 @@ declare namespace ApiDef {
          * From these, the dates above can be calculated
          */
         lastRun?: string; // date-time
+        location?: string;
         /**
          * If set to a positive value, the scheduler will not schedule more than this total concurrency
          * when starting this job, and when it is running.
@@ -247,20 +255,68 @@ declare namespace ApiDef {
          * high wait-times and can therefore run alongside other such jobs.
          */
         maxInterJobConcurrency?: boolean;
+        monday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
         multiplier?: number; // double
+        /**
+         * TODO: either document what this value is or drop it. I dont remember why I added this.
+         * I am sure there was a reason, though...
+         */
         offsets?: number /* int64 */[];
         requestID?: string;
+        saturday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
         start_date?: string; // date-time
+        sunday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        thursday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        tuesday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
         /**
          * Time of which the entity was updated, if any
          */
         updatedAt?: string; // date-time
+        wednesday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
     }
     export interface SchedulePayload {
         config?: Config;
+        end_date?: string; // date-time
         endpointID?: string;
         frequency?: Frequency /* int8 */;
+        friday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
         label?: string;
+        location?: string;
         /**
          * If set to a positive value, the scheduler will not schedule more than this total concurrency
          * when starting this job, and when it is running.
@@ -269,10 +325,50 @@ declare namespace ApiDef {
          * high wait-times and can therefore run alongside other such jobs.
          */
         maxInterJobConcurrency?: boolean;
+        monday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
         multiplier?: number; // double
+        /**
+         * TODO: either document what this value is or drop it. I dont remember why I added this.
+         * I am sure there was a reason, though...
+         */
         offsets?: number /* int64 */[];
         requestID?: string;
+        saturday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
         start_date?: string; // date-time
+        sunday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        thursday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        tuesday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
+        wednesday?: /**
+         * A Duration represents the elapsed time between two instants
+         * as an int64 nanosecond count. The representation limits the
+         * largest representable duration to approximately 290 years.
+         */
+        Duration /* int64 */;
     }
     export type Secret = string;
     export interface Secrets {

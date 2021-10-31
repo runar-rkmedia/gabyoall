@@ -15,7 +15,9 @@
     "build": "node build.mjs"
   },
   "dependencies": {
+    "@felte/reporter-tippy": "^0.3.9",
     "date-fns": "^2.25.0",
+    "felte": "^0.8.5",
     "lodash.clonedeep": "^4.5.0",
     "lodash.debounce": "^4.0.8",
     "lodash.isequal": "^4.5.0",
@@ -24,6 +26,7 @@
     "svelte": "^3.43.1",
     "svelte-highlight": "^5.0.0",
     "svelte-tiny-linked-charts": "^1.0.6",
+    "tippy.js": "^6.3.3",
     "toml-js": "^0.0.8",
     "yaml": "^1.10.2"
   },

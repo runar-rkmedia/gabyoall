@@ -2,12 +2,15 @@
   import type { Icon as IconType } from './icons'
   import Icon from './Icon.svelte'
   import type { Colors } from 'appTypes'
+  import { createEventDispatcher } from 'svelte'
+  export let preventDefault = true
 
   export let icon: IconType | undefined = undefined
   // TODO: support all colors
   export let color: Colors | 'danger' = ''
   export let disabled: boolean = false
   export let type: string = ''
+  const dispatch = createEventDispatcher()
 </script>
 
 <button
@@ -16,7 +19,12 @@
   {type}
   class:icon-button={!!icon}
   {disabled}
-  on:click>
+  on:click={(e) => {
+    if (preventDefault) {
+      e.preventDefault()
+    }
+    dispatch('click', e)
+  }}>
   {#if icon}
     <Icon {icon} />
   {/if}

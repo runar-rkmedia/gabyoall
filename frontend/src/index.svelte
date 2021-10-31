@@ -1,6 +1,7 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
+  import 'tippy.js/dist/tippy.css' // Tooltips popover
   import { api, db } from 'api'
 
   import ScheduleForm from 'components/ScheduleForm.svelte'
@@ -9,7 +10,6 @@
   import Stats from 'components/Stats.svelte'
   import Tabs from 'components/Tabs.svelte'
   import Alert from 'components/Alert.svelte'
-  import formatDate from 'dates'
   import { state } from 'state'
   import EndpointForm from './components/EndpointForm.svelte'
   import EndpointList from './components/EndpointList.svelte'
@@ -51,7 +51,13 @@
     {#if $state.tab === 'schedule'}
       <h2>Schedules</h2>
       <paper>
-        <ScheduleForm endpointID="" requestID="" bind:editID={scheduleID} />
+        {#if !Object.keys($db.endpoint).length}
+          <p>You must first create Endpoint to be able to create a Schedule.</p>
+        {:else if !Object.keys($db.request).length}
+          <p>You must first create Request to be able to create a Schedule.</p>
+        {:else}
+          <ScheduleForm bind:editID={scheduleID} />
+        {/if}
       </paper>
       <ScheduleList bind:selectedID={scheduleID} />
     {:else if $state.tab === 'endpoint'}

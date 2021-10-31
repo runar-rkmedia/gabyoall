@@ -208,11 +208,22 @@ code {
 
 .label-group {
   display: flex;
+  flex-direction: column;
 }
+
 .label-group label {
-  flex: 1;
-  min-width: 22ch;
+  width: 100%;
 }
+@media screen and (min-width: var(--width-md)) {
+  .label-group {
+    flex-direction: row;
+  }
+  .label-group label {
+    flex: 1;
+    min-width: 22ch;
+  }
+}
+
 .label-group label:not(:last-of-type) {
   margin-inline-end: var(--size-4);
 }
@@ -221,9 +232,42 @@ table {
   width: 100%;
 }
 
+label .required::after {
+  content: " (Required)";
+  opacity: 0.7;
+}
+
 table * {
   text-align: left;
 }
 table tr:nth-child(odd) {
   background-color: var(--color-grey-300);
+}
+
+input:invalid, input[aria-invalid]
+textarea:invalid, textarea[aria-invalid]
+select:invalid, select[aria-invalid]
+  {
+  color: var(--color-error-icon);
+}
+.validation-error-msg {
+  color: var(--color-error-icon)
+}
+.input-button {
+  position: relative;
+}
+.input-button input {
+  width: 100%;
+  border-inline-end: unset;
+  border-bottom-right-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+.input-button button:last-of-type {
+  position: absolute;
+  right:0;
+  height: 100%;
+  border-bottom-right-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+  border: 1px solid var(--color-black);
+
 }

@@ -16,12 +16,12 @@ func ParseTimeOrDie(s string) *time.Time {
 	}
 	return &n
 }
-func ParseDurationOrDie(s string) *time.Duration {
+func ParseDurationOrDie(s string) *Duration {
 	d, err := time.ParseDuration(s)
 	if err != nil {
 		panic(err)
 	}
-	return &d
+	return &Duration{d}
 }
 func ParseLocationOrDie(s string) *time.Location {
 	d, err := time.LoadLocation(s)

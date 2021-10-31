@@ -15,6 +15,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@felte/common@npm:0.5.2":
+  version: 0.5.2
+  resolution: "@felte/common@npm:0.5.2"
+  checksum: 8252658d0bfc69c5180f06c4fcf383d4a9a0d7ffb55b1b02f36093ce8369692570fdf42bea28d30b8fd5c54547e2e93252c8a688c73da28afc6b7ece6e04ed29
+  languageName: node
+  linkType: hard
+
+"@felte/core@npm:0.2.5":
+  version: 0.2.5
+  resolution: "@felte/core@npm:0.2.5"
+  dependencies:
+    "@felte/common": 0.5.2
+  checksum: 3d13ade13203aecf36c42f42113b62ea037d4ebc4d55358692dcc48a87bacddbf4ef65fd6522e69cd9f691f722eed333b90bf1cf583f1f006cca6c6425e717de
+  languageName: node
+  linkType: hard
+
+"@felte/reporter-tippy@npm:^0.3.9":
+  version: 0.3.9
+  resolution: "@felte/reporter-tippy@npm:0.3.9"
+  dependencies:
+    "@felte/common": 0.5.2
+  peerDependencies:
+    tippy.js: ^6.0.0
+  checksum: f49a40851bd1d1ac1b4ee8d48b4bcbba08c8494923e47bb7774aa22e9816babf44a03a8f0905e64723f488d6995bdb3e70b9a97861400c1a3032a13ffd58c47b
+  languageName: node
+  linkType: hard
+
 "@gar/promisify@npm:^1.0.1":
   version: 1.1.2
   resolution: "@gar/promisify@npm:1.1.2"
@@ -39,6 +66,13 @@ __metadata:
     mkdirp: ^1.0.4
     rimraf: ^3.0.2
   checksum: c96381d4a37448ea280951e46233f7e541058cf57a57d4094dd4bdcaae43fa5872b5f2eb6bfb004591a68e29c5877abe3cdc210cb3588cbf20ab2877f31a7de7
+  languageName: node
+  linkType: hard
+
+"@popperjs/core@npm:^2.9.0":
+  version: 2.10.2
+  resolution: "@popperjs/core@npm:2.10.2"
+  checksum: 43c189e3eb6d032433512d94761b54fc7cae15957ca5528008813f887a67b5760b949f30a5141b476be2ba5a6c677c91def150f603d2d3e30b5e97a5ae51474e
   languageName: node
   linkType: hard
 
@@ -639,6 +673,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"felte@npm:^0.8.5":
+  version: 0.8.5
+  resolution: "felte@npm:0.8.5"
+  dependencies:
+    "@felte/core": 0.2.5
+  peerDependencies:
+    svelte: ^3.31.0
+  checksum: 466efbea175022a09fc554a63ab9f4fda73f2f37c03103afe25d723654a182ee3dce34f38e568442b38dca4d780f4a907d8bd099ae87805b44e052ccdfd95ac7
+  languageName: node
+  linkType: hard
+
 "fill-range@npm:^7.0.1":
   version: 7.0.1
   resolution: "fill-range@npm:7.0.1"
@@ -733,6 +778,7 @@ fsevents@~2.3.2:
   resolution: "gobyoall-svelte@workspace:."
   dependencies:
     "@dtsgenerator/replace-namespace": ^1.5.1
+    "@felte/reporter-tippy": ^0.3.9
     "@tsconfig/svelte": ^2.0.1
     "@types/lodash.debounce": ^4.0.6
     "@types/lodash.merge": ^4.6.6
@@ -742,6 +788,7 @@ fsevents@~2.3.2:
     dtsgenerator: ^3.13.1
     esbuild: ^0.13.3
     esbuild-svelte: ^0.5.6
+    felte: ^0.8.5
     lodash.clonedeep: ^4.5.0
     lodash.debounce: ^4.0.8
     lodash.isequal: ^4.5.0
@@ -757,6 +804,7 @@ fsevents@~2.3.2:
     svelte-preprocess: ^4.9.8
     svelte-preprocess-sass: ^2.0.1
     svelte-tiny-linked-charts: ^1.0.6
+    tippy.js: ^6.3.3
     toml-js: ^0.0.8
     ts-essentials: ^9.0.0
     typescript: ^4.4.3
@@ -1681,6 +1729,15 @@ fsevents@~2.3.2:
     mkdirp: ^1.0.3
     yallist: ^4.0.0
   checksum: a04c07bb9e2d8f46776517d4618f2406fb977a74d914ad98b264fc3db0fe8224da5bec11e5f8902c5b9bcb8ace22d95fbe3c7b36b8593b7dfc8391a25898f32f
+  languageName: node
+  linkType: hard
+
+"tippy.js@npm:^6.3.3":
+  version: 6.3.3
+  resolution: "tippy.js@npm:6.3.3"
+  dependencies:
+    "@popperjs/core": ^2.9.0
+  checksum: 0f659c50db3aa8a5547addffd6c5d1a6fc4953bfa12512c13462d1ff91a399aa0bf85a726f0e6ec923b369405abd9a17a0fba5bbc09548472edc9895fb6c51ba
   languageName: node
   linkType: hard
 

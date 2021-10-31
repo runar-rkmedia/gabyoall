@@ -1,6 +1,9 @@
 package types
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/runar-rkmedia/gabyoall/requests"
@@ -119,14 +122,16 @@ type SchedulePayload struct {
 	//
 	// Some jobs might have been configured to run very slowly, with low concurrency,
 	// high wait-times and can therefore run alongside other such jobs.
-	MaxInterJobConcurrency bool      `json:"maxInterJobConcurrency"`
-	Label                  string    `json:"label" validate:"required"`
-	StartDate              time.Time `json:"start_date" validate:"required"`
-	Frequency              Frequency `json:"frequency,omitempty"`
-	Multiplier             float64   `json:"multiplier,omitempty"`
-	Offsets                []int     `json:"offsets,omitempty"`
-	Config                 *Config   `json:"config,omitempty"`
+	MaxInterJobConcurrency bool       `json:"maxInterJobConcurrency"`
+	Label                  string     `json:"label" validate:"required"`
+	StartDate              time.Time  `json:"start_date" validate:"required"`
 	EndDate                *time.Time `json:"end_date"`
+	Frequency              Frequency  `json:"frequency,omitempty"`
+	Multiplier             float64    `json:"multiplier,omitempty"`
+	// TODO: either document what this value is or drop it. I dont remember why I added this.
+	// I am sure there was a reason, though...
+	Offsets []int   `json:"offsets,omitempty"`
+	Config  *Config `json:"config,omitempty"`
 	ScheduleWeek
 }
 
@@ -184,10 +189,8 @@ func (sw ScheduleWeek) NextRun(start time.Time, end *time.Time) *time.Time {
 		return nil
 	}
 	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, sw.location)
-	n := midnight.Add(*d)
+	n := midnight.Add(d.Duration)
 	if n.Before(t) {
-		fmt.Printf("%v is before %v (%s) %v \n\n", n, t, dow, midnight)
-		// fmt.Printf("midnight: %v  \n", midnight, n, t, dow, sw.Location)
 		return nil
 	}
 	if end != nil && n.After(*end) {
@@ -196,8 +199,89 @@ func (sw ScheduleWeek) NextRun(start time.Time, end *time.Time) *time.Time {
 	return &n
 }
 
-type Duration = time.Duration
+type Duration struct{ time.Duration }
 
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		d.Duration = time.Duration(value)
+		return nil
+	case string:
+		var err error
+		d.Duration, err = time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.New("invalid duration")
+	}
+}
+
+func (s SchedulePayload) nextRun(startTime time.Time, x time.Duration) (ts []time.Time) {
+	switch s.Frequency {
+	// TODO: Up until and uncluding HOUR, we can use modulo
+	case FrequencySecond:
+		ts = append(ts, startTime.Add(time.Second*x))
+	case FrequencyMinute:
+		ts = append(ts, startTime.Add(time.Minute*x))
+	case FrequencyHour:
+		ts = append(ts, startTime.Add(time.Hour*x))
+	case FrequencyDay:
+		// TODO: For these, I think we need to use an actual calendar, and loop through them from the start-date until we get to somewhere next week.
+		ts = append(ts, startTime.Add(time.Hour*x*24))
+	case FrequencyWeek:
+		// TODO: this should be mapped by a real week
+		ts = append(ts, startTime.Add(time.Hour*x*24*7))
+	case FrequencyMonth:
+		// TODO: this should be mapped by a real month
+		ts = append(ts, startTime.Add(time.Hour*x*24*30))
+	}
+	return
+}
+func (s SchedulePayload) CalculateNextRuns(maxCount int) (ts []time.Time) {
+
+	if s.Frequency == FrequencyNull {
+		return ts
+	}
+	x := time.Duration(s.Multiplier)
+	if x == 0 {
+		x = 1
+	}
+	// TODO: this value should be calculated after last run
+	startTime := s.StartDate
+	for i := 0; i < maxCount; i++ {
+
+		switch s.Frequency {
+		case FrequencySecond:
+			ts = append(ts, startTime.Add(time.Second*x))
+		case FrequencyMinute:
+			ts = append(ts, startTime.Add(time.Minute*x))
+		case FrequencyHour:
+			ts = append(ts, startTime.Add(time.Hour*x))
+		case FrequencyDay:
+			ts = append(ts, startTime.Add(time.Hour*x*24))
+		case FrequencyWeek:
+			// TODO: this should be mapped by a real week
+			ts = append(ts, startTime.Add(time.Hour*x*24*7))
+		case FrequencyMonth:
+			// TODO: this should be mapped by a real month
+			ts = append(ts, startTime.Add(time.Hour*x*24*30))
+		}
+		//if s.Multiplier != 0 {
+		//	// Don't really care much if we round a microsecond off.
+		//	d = time.Duration(s.Multiplier * float64(d))
+		//}
+	}
+	return ts
 }
 
 type Frequency int8

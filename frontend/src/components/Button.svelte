@@ -22,3 +22,13 @@
   {/if}
   <slot />
 </button>
+
+<style>
+  button.focus:not(:disabled),
+  button:hover:not(:disabled) {
+    /* TODO: move to psudo-element and transition opacity for perf. */
+    box-shadow: 0 8px 16px -2px rgba(0, 32, 128, 0.25);
+    transform: scale(1.05);
+    transition: all 120ms ease-in-out;
+  }
+</style>

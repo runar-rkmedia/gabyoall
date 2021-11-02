@@ -17,6 +17,8 @@ clean:
 	rm -rf dist
 test:
 	go test ./...
+lint:
+	golangci-lint run
 test-watch:
 	fd -e go | entr -r sh -c 'printf "%*s\n" "${COLUMNS:-$(tput cols)}" "" | tr " " - && gotest ./... | grep -v "no test files"'
 build:

@@ -35,14 +35,10 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-  go-linter:
-    name: Go Linter
+  golangci:
+    name: lint
     runs-on: ubuntu-latest
     steps:
-    - name: go1.17 linter
-      uses: shoukoo/golang-pipeline/go1.17/linter@master
-      with:
-        GOLINT: on
-        GOLINTPATH: .
-        MISSPELL: off
-
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2

@@ -9,7 +9,7 @@
   import json from 'svelte-highlight/src/languages/json'
   import toml from 'svelte-highlight/src/languages/ini'
   import atomOneDark from 'svelte-highlight/src/styles/atom-one-dark'
-  import { state } from 'state'
+  import { state } from '../state'
   import Alert from './Alert.svelte'
   import Icon from './Icon.svelte'
   let errorMsg = ''

@@ -1,9 +1,9 @@
 <script lang="ts">
   import { api } from '../../api'
 
-  import Button from 'components/Button.svelte'
+  import Button from '../../components/Button.svelte'
 
-  import formatDate from 'dates'
+  import formatDate from '../../dates'
 
   import { slide } from 'svelte/transition'
   import ConfigItem from './ConfigItem.svelte'

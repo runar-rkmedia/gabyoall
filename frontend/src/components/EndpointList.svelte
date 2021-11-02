@@ -4,7 +4,7 @@
   import EndpointItem from './items/EndpointItem.svelte'
   import Button from './Button.svelte'
   import Alert from './Alert.svelte'
-  import { state } from 'state'
+  import { state } from '../state'
   export let selectedID = ''
   let endpoints = api.endpoint.list()
   let loading = true

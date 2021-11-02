@@ -1,5 +1,5 @@
 <script lang="ts">
-  import createId from 'createId'
+  import createId from '../createId'
 
   import { api, db } from '../api'
   import Code from './Code.svelte'

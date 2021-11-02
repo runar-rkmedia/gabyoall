@@ -1,5 +1,5 @@
 <script lang="ts">
-  import getParentUntil from 'util/getParentUntil'
+  import getParentUntil from '../util/getParentUntil'
 
   type Obj = Record<string, unknown>
   type Errors<Data extends Obj | Obj[]> = {

@@ -1,4 +1,4 @@
-import createStore from 'store'
+import createStore from './store'
 
 export const state = createStore({
   initialValue: {

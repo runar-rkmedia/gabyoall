@@ -1,5 +1,5 @@
 <script type="ts">
-  import Button from 'components/Button.svelte'
+  import Button from '../components/Button.svelte'
 
   import { slide } from 'svelte/transition'
   export let ID: string

@@ -5,19 +5,22 @@ import sveltePreprocess from 'svelte-preprocess'
 import fs from 'fs'
 import path from 'path'
 import { exec } from 'child_process'
-import { stdout } from 'process'
 
 const args = process.argv.slice(2)
 const srcDir = './src/'
 const outDir = './dist/'
 const staticDir = './static/'
+console.log('CWD:', process.cwd(), process.env.PWD)
 
-const execP = (args) =>
-  new Promise((res) =>
+const execP = (args) => {
+
+  console.debug('executing: ', args)
+  return new Promise((res) =>
     exec(args, (err, out, stdErr) =>
       res([out, (err || stdErr) && { err, stdErr }])
     )
   )
+}
 
 const isDev =
   args.includes('dev') || args.includes('-d') || args.includes('development')

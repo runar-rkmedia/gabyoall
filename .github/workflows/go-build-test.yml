@@ -20,6 +20,17 @@ jobs:
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(cd frontend && yarn config get cacheFolder)"
+
+    - uses: actions/cache@v2
+      id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
     - name: Fetch Go-Swagger
       run: |
         download_url=$(curl -s https://api.github.com/repos/go-swagger/go-swagger/releases/latest | \
@@ -27,18 +38,15 @@ jobs:
         curl -o /usr/local/bin/swagger -L'#' "$download_url"
         chmod +x /usr/local/bin/swagger
     - name: Yarn (frontend)
-      run: (cd frontend && yarn)
+      run: cd frontend && yarn
     - name: Generate
       run: go generate -v ./...
+    - name: Build frontend
+      run: cd frontend && ls -R && GODEBUG=asyncpreemptoff=1 yarn build
     - name: Build
       run: go build -v ./...
     - name: Test
       run: go test -v ./...
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v2
 
-  golangci:
-    name: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2

@@ -42,7 +42,8 @@ jobs:
     - name: Generate
       run: go generate -v ./...
     - name: Build frontend
-      run: cd frontend && ls -R && GODEBUG=asyncpreemptoff=1 yarn build
+      # See https://github.com/evanw/esbuild/issues/1101
+      run: cd frontend && ls -R src && GODEBUG=asyncpreemptoff=1 yarn build
     - name: Build
       run: go build -v ./...
     - name: Test

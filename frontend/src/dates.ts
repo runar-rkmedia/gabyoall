@@ -1,4 +1,4 @@
-import { deserializeDate } from 'apiFetcher'
+import { deserializeDate } from './apiFetcher'
 import { format, isToday, formatDistanceToNow } from 'date-fns'
 import nb from 'date-fns/locale/nb'
 

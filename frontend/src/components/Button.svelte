@@ -1,7 +1,7 @@
 <script type="ts">
   import type { Icon as IconType } from './icons'
   import Icon from './Icon.svelte'
-  import type { Colors } from 'appTypes'
+  import type { Colors } from '../appTypes'
   import { createEventDispatcher } from 'svelte'
   export let preventDefault = true
 

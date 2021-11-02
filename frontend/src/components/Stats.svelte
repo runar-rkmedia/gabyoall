@@ -1,5 +1,5 @@
 <script type="ts">
-  import { db } from 'api'
+  import { db } from '../api'
   import Stat from './Stat.svelte'
 </script>
 

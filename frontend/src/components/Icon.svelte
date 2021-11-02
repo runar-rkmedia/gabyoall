@@ -1,5 +1,5 @@
 <script type="ts">
-  import type { Colors } from 'appTypes'
+  import type { Colors } from '../appTypes'
 
   import { Icon, iconMap } from './icons'
 

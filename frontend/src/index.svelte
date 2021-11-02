@@ -2,14 +2,14 @@
 
 <script lang="ts">
   import 'tippy.js/dist/tippy.css' // Tooltips popover
-  import { api, db } from 'api'
+  import { api, db } from './api'
 
-  import ScheduleForm from 'components/ScheduleForm.svelte'
-  import ScheduleList from 'components/ScheduleList.svelte'
-  import ServerInfo from 'components/ServerInfo.svelte'
-  import Stats from 'components/Stats.svelte'
-  import Tabs from 'components/Tabs.svelte'
-  import Alert from 'components/Alert.svelte'
+  import ScheduleForm from './components/ScheduleForm.svelte'
+  import ScheduleList from './components/ScheduleList.svelte'
+  import ServerInfo from './components/ServerInfo.svelte'
+  import Stats from './components/Stats.svelte'
+  import Tabs from './components/Tabs.svelte'
+  import Alert from './components/Alert.svelte'
   import { state } from 'state'
   import EndpointForm from './components/EndpointForm.svelte'
   import EndpointList from './components/EndpointList.svelte'

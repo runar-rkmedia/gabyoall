@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, db } from 'api'
+  import { api } from '../../api'
 
   import Button from 'components/Button.svelte'
 

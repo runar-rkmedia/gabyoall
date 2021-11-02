@@ -1,5 +1,5 @@
 <script type="ts">
-  import formatDate from 'dates'
+  import formatDate from '../dates'
 
   export let stat: ApiDef.StatEntity
   function formatDuration(duration: number | undefined | null) {

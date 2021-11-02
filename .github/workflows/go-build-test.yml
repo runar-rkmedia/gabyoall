@@ -33,6 +33,15 @@ jobs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
+    - name: Setup Golang caches
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-golang${{ inputs.cache-key-suffix }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-golang${{ inputs.cache-key-suffix }}-
     - name: Fetch Go-Swagger
       run: |
         download_url=$(curl -s https://api.github.com/repos/go-swagger/go-swagger/releases/latest | \

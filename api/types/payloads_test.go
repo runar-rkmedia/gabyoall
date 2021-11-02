@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -33,13 +32,13 @@ func ParseLocationOrDie(s string) *time.Location {
 
 var (
 	now       = ParseTimeOrDie("2021-10-29T15:58:10+0200")
-	locOslo   = ParseLocationOrDie("Europe/Oslo")      // +02:00
-	locHobart = ParseLocationOrDie("Australia/Hobart") // +11:00
+	locOslo   = "Europe/Oslo"      // +02:00
+	locHobart = "Australia/Hobart" // +11:00
 )
 
 func TestScheduleWeek_NextRun(t *testing.T) {
 	type fields struct {
-		Location  *time.Location
+		Location  string
 		Monday    *Duration
 		Tuesday   *Duration
 		Wednesday *Duration
@@ -104,14 +103,14 @@ func TestScheduleWeek_NextRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sw := ScheduleWeek{
-				location:  tt.fields.Location,
-				Monday:    tt.fields.Monday,
-				Tuesday:   tt.fields.Tuesday,
-				Wednesday: tt.fields.Wednesday,
-				Thursday:  tt.fields.Thursday,
-				Friday:    tt.fields.Friday,
-				Saturday:  tt.fields.Saturday,
-				Sunday:    tt.fields.Sunday,
+				LocationStr: tt.fields.Location,
+				Monday:      tt.fields.Monday,
+				Tuesday:     tt.fields.Tuesday,
+				Wednesday:   tt.fields.Wednesday,
+				Thursday:    tt.fields.Thursday,
+				Friday:      tt.fields.Friday,
+				Saturday:    tt.fields.Saturday,
+				Sunday:      tt.fields.Sunday,
 			}
 			if got := sw.NextRun(tt.args.start, tt.args.end); !reflect.DeepEqual(nilTimeString(got), nilTimeString(tt.want)) {
 				t.Errorf("ScheduleWeek.NextRun() = %v (%v), want %v (%v)", got, nilTimeString(got), tt.want, nilTimeString(tt.want))
@@ -131,109 +130,6 @@ func nilErrString(err error) string {
 		return ""
 	}
 	return err.Error()
-}
-
-func TestSchedulePayload_Prepare(t *testing.T) {
-	type fields struct {
-		RequestID              string
-		EndpointID             string
-		MaxInterJobConcurrency bool
-		Label                  string
-		StartDate              time.Time
-		EndDate                *time.Time
-		Frequency              Frequency
-		Multiplier             float64
-		Offsets                []int
-		Config                 *Config
-		ScheduleWeek           ScheduleWeek
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    SchedulePayload
-		wantErr error
-	}{
-		{
-			"should set location to Local of no location-data is present from start-date",
-			fields{StartDate: *now},
-			SchedulePayload{
-				ScheduleWeek: ScheduleWeek{
-					location: ParseLocationOrDie("Local"),
-					Location: "Local",
-				},
-				StartDate: *now,
-			},
-			nil,
-		},
-		{
-			"should fill location correctly from location-object",
-			fields{StartDate: *now, ScheduleWeek: ScheduleWeek{location: ParseLocationOrDie("Europe/Oslo")}},
-			SchedulePayload{
-				ScheduleWeek: ScheduleWeek{
-					location: ParseLocationOrDie("Europe/Oslo"),
-					Location: "Europe/Oslo",
-				},
-				StartDate: *now,
-			},
-			nil,
-		},
-		{
-			"should fill location correctly from Location-string",
-			fields{StartDate: *now, ScheduleWeek: ScheduleWeek{Location: "Europe/Oslo"}},
-			SchedulePayload{
-				ScheduleWeek: ScheduleWeek{
-					location: ParseLocationOrDie("Europe/Oslo"),
-					Location: "Europe/Oslo",
-				},
-				StartDate: *now,
-			},
-			nil,
-		},
-		{
-			"should err on invalid Location-string",
-			fields{StartDate: *now, ScheduleWeek: ScheduleWeek{Location: "Haua"}},
-			SchedulePayload{
-				ScheduleWeek: ScheduleWeek{
-					location: ParseLocationOrDie("Europe/Oslo"),
-					Location: "Europe/Oslo",
-				},
-				StartDate: *now,
-			},
-			errors.New("Location was incorrect: unknown time zone Haua"),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sp := SchedulePayload{
-				RequestID:              tt.fields.RequestID,
-				EndpointID:             tt.fields.EndpointID,
-				MaxInterJobConcurrency: tt.fields.MaxInterJobConcurrency,
-				Label:                  tt.fields.Label,
-				StartDate:              tt.fields.StartDate,
-				EndDate:                tt.fields.EndDate,
-				Frequency:              tt.fields.Frequency,
-				Multiplier:             tt.fields.Multiplier,
-				Offsets:                tt.fields.Offsets,
-				Config:                 tt.fields.Config,
-				ScheduleWeek:           tt.fields.ScheduleWeek,
-			}
-			got, err := sp.Prepare()
-			errStr := nilErrString(err)
-			wantErrStr := nilErrString(tt.wantErr)
-			if errStr != wantErrStr {
-				t.Errorf("Mismatched error: \ngot:  %s\nwant: %s", errStr, wantErrStr)
-			}
-			if tt.wantErr != nil {
-				return
-			}
-			gotStr := yamlString(got)
-			wantStr := yamlString(tt.want)
-			t.Log(got.location, tt.want.location)
-			if gotStr != wantStr {
-				t.Errorf("SchedulePayload.Prepare() = \n\tgot\n%v \n\twant\n%v", gotStr, wantStr)
-			}
-		})
-	}
 }
 
 func yamlString(j interface{}) string {

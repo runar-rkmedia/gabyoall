@@ -214,7 +214,7 @@ code {
 .label-group label {
   width: 100%;
 }
-@media screen and (min-width: var(--width-md)) {
+@media screen and (min-width: 576px) {
   .label-group {
     flex-direction: row;
   }

@@ -3,9 +3,9 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
+	"github.com/runar-rkmedia/gabyoall/logger"
 	"github.com/runar-rkmedia/gabyoall/requests"
 )
 
@@ -83,6 +83,13 @@ type Schedule struct {
 }
 
 func (s Schedule) NextRun() *time.Time {
+	lastRun := s.LastRun
+	if lastRun == nil {
+		lastRun = &s.StartDate
+	}
+	if n := s.ScheduleWeek.NextRun(*lastRun, s.EndDate); n != nil {
+		return n
+	}
 	backOffTime := 1 * time.Minute
 	// TODO: this should calculate based on other parameters
 	t := s.StartDate
@@ -135,38 +142,28 @@ type SchedulePayload struct {
 	ScheduleWeek
 }
 
-func (sp SchedulePayload) Prepare() (SchedulePayload, error) {
-	if sp.location == nil {
-		if sp.Location != "" {
-			l, err := time.LoadLocation(sp.Location)
-			if err != nil {
-				return sp, fmt.Errorf("Location was incorrect: %w", err)
-			}
-			sp.location = l
-		} else {
-			sp.location = sp.StartDate.Location()
-		}
-	}
-	if sp.Location == "" {
-		sp.Location = fmt.Sprintf("%s", sp.location)
-	}
-	return sp, nil
-}
-
 type ScheduleWeek struct {
-	location  *time.Location
-	Location  string    `json:"location"`
-	Monday    *Duration `json:"monday,omitempty"`
-	Tuesday   *Duration `json:"tuesday,omitempty"`
-	Wednesday *Duration `json:"wednesday,omitempty"`
-	Thursday  *Duration `json:"thursday,omitempty"`
-	Friday    *Duration `json:"friday,omitempty"`
-	Saturday  *Duration `json:"saturday,omitempty"`
-	Sunday    *Duration `json:"sunday,omitempty"`
+	LocationStr string    `json:"location"`
+	Monday      *Duration `json:"monday,omitempty"`
+	Tuesday     *Duration `json:"tuesday,omitempty"`
+	Wednesday   *Duration `json:"wednesday,omitempty"`
+	Thursday    *Duration `json:"thursday,omitempty"`
+	Friday      *Duration `json:"friday,omitempty"`
+	Saturday    *Duration `json:"saturday,omitempty"`
+	Sunday      *Duration `json:"sunday,omitempty"`
 }
 
 func (sw ScheduleWeek) NextRun(start time.Time, end *time.Time) *time.Time {
-	t := start.In(sw.location)
+	if sw.Monday == nil && sw.Tuesday == nil && sw.Wednesday == nil && sw.Thursday == nil && sw.Friday == nil && sw.Saturday == nil && sw.Sunday == nil {
+		return nil
+	}
+	loc, err := time.LoadLocation(sw.LocationStr)
+	if err != nil {
+		l := logger.GetLogger("schedule-week")
+		l.Error().Str("location-string", sw.LocationStr).Err(err).Msg("failed to load location-string")
+		return nil
+	}
+	t := start.In(loc)
 	dow := t.Weekday()
 	var d *Duration
 	switch dow {
@@ -188,7 +185,7 @@ func (sw ScheduleWeek) NextRun(start time.Time, end *time.Time) *time.Time {
 	if d == nil {
 		return nil
 	}
-	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, sw.location)
+	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
 	n := midnight.Add(d.Duration)
 	if n.Before(t) {
 		return nil

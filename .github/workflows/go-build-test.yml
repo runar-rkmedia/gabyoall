@@ -42,12 +42,10 @@ jobs:
     - name: Generate
       run: go generate -v ./...
     - name: Build frontend
-      # See https://github.com/evanw/esbuild/issues/1101
-      run: cd frontend && ls -R src && GODEBUG=asyncpreemptoff=1 yarn build
-    - name: Build
-      run: go build -v ./...
+      run: cd frontend && yarn build
     - name: Test
       run: go test -v ./...
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v2
+    - name: Build
+      run: make build
+    
 

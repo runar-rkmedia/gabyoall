@@ -26,6 +26,8 @@ jobs:
         jq -r '.assets[] | select(.name | contains("'"$(uname | tr '[:upper:]' '[:lower:]')"'_amd64")) | .browser_download_url')
         curl -o /usr/local/bin/swagger -L'#' "$download_url"
         chmod +x /usr/local/bin/swagger
+    - name: Yarn (frontend)
+      run: (cd frontend && yarn)
     - name: Generate
       run: go generate -v ./...
     - name: Build

@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* import { serializeDate } from 'apiFetcher' */
   import reporter from '@felte/reporter-tippy'
 
   import { api, db } from '../api'

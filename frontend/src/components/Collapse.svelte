@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { state } from 'state'
+  import { state } from '../state'
 
   import { onMount } from 'svelte'
   import Icon from './Icon.svelte'

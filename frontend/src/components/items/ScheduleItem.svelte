@@ -1,10 +1,10 @@
 <script type="ts">
-  import { db } from 'api'
-  import Collapse from 'components/Collapse.svelte'
+  import { db } from '../../api'
+  import Collapse from '../../components/Collapse.svelte'
 
-  import Icon from 'components/Icon.svelte'
-  import ListItem from 'components/ListItem.svelte'
-  import formatDate from 'dates'
+  import Icon from '../../components/Icon.svelte'
+  import ListItem from '../../components/ListItem.svelte'
+  import formatDate from '../../dates'
 
   import ConfigItem from './ConfigItem.svelte'
   import EndpointItem from './EndpointItem.svelte'

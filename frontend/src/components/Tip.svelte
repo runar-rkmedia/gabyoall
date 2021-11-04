@@ -1,5 +1,5 @@
 <script type="ts">
-  import { state } from 'state'
+  import { state } from '../state'
 
   import Alert from './Alert.svelte'
   import Icon from './Icon.svelte'

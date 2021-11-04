@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, db } from 'api'
+  import { api, db } from '../api'
   import Icon from './Icon.svelte'
 
   import Tab from './Tab.svelte'

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { db } from 'api'
+  import { db } from '../api'
 
-  import formatDate, { isValidDate } from 'dates'
+  import formatDate, { isValidDate } from '../dates'
 
   $: serverStartedAt = isValidDate($db.serverInfo.ServerStartedAt)
   $: buildDate = isValidDate($db.serverInfo.BuildDate)

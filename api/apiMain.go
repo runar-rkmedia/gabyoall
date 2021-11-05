@@ -13,6 +13,7 @@ import (
 	"net/http/pprof"
 
 	"github.com/NYTimes/gziphandler"
+	"github.com/arl/statsviz"
 	"github.com/dustin/go-humanize"
 	"github.com/go-playground/validator/v10"
 	"github.com/runar-rkmedia/gabyoall/api/bboltStorage"
@@ -109,6 +110,7 @@ func main() {
 	}
 	address := fmt.Sprintf("%s:%d", cfg.Address, cfg.Port)
 	handler := http.NewServeMux()
+	statsviz.Register(handler)
 	handler.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
 	handler.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
 	handler.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))

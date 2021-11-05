@@ -83,7 +83,14 @@
       </paper>
     {/if}
   </main>
+  <iframe
+    title="Server Statistics"
+    id="statsviz"
+    height="600"
+    width="100%"
+    src="https://localhost/debug/statsviz/" />
 
+  <a href="https://localhost/debug/statsviz/">Statwiz statistics</a>
   <footer>
     <ServerInfo />
   </footer>

@@ -10,6 +10,7 @@
   import Tip from './Tip.svelte'
   import { createForm } from 'felte'
   import FormErrors from './FormErrors.svelte'
+  import { deserializeDate } from 'apiFetcher'
 
   const {
     form,
@@ -25,6 +26,7 @@
     onSubmit: (_values) => {
       const values = {
         ..._values,
+        forced_start_date: deserializeDate(_values.forced_start_date),
         start_date: deserializeInputDate(_values.start_date),
         end_date: deserializeInputDate(_values.end_date),
         monday: deserilizeInputDuration(_values.monday),
@@ -126,6 +128,7 @@
         lastEdit = editID
         setFields({
           ...s,
+          forced_start_date: serializeInputDate(s.forced_start_date),
           start_date: serializeInputDate(s.start_date),
           end_date: serializeInputDate(s.end_date),
           monday: serializeInputDuration(s.monday),
@@ -252,6 +255,25 @@
       <input type="datetime-local" name="end_date" />
     </label>
   </div>
+
+  <label for="forced_start_date">
+    <span class="required">
+      Forced Start-time. Set if you want to force the run to start at this time,
+      in addition to any schedule set
+    </span>
+    <div class="input-button">
+      <input
+        id="forced_start_date"
+        type="datetime-local"
+        name="forced_start_date" />
+      <Button
+        icon="clock"
+        color="secondary"
+        on:click={() =>
+          setField('forced_start_date', serializeInputDate(new Date()))}
+        >Now</Button>
+    </div>
+  </label>
 
   {#if scheduleAsWeek}
     <paper class="weekdays">

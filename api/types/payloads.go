@@ -82,6 +82,7 @@ type Schedule struct {
 	// RunIDS []string
 }
 
+// Gets the next calculated run. Does not include the ForcedStartDate
 func (s Schedule) NextRun() *time.Time {
 	lastRun := s.LastRun
 	if lastRun == nil {
@@ -109,6 +110,12 @@ func (s Schedule) NextRun() *time.Time {
 
 // Indicates whether this schedule should be run based on run-parameters
 func (s Schedule) ShouldRun() bool {
+	if s.ForcedStartDate != nil && time.Now().After(*s.ForcedStartDate) {
+		if s.LastRun == nil || s.LastRun.Before(*s.ForcedStartDate) {
+
+			return true
+		}
+	}
 	nextRun := s.NextRun()
 
 	if nextRun == nil {
@@ -132,6 +139,7 @@ type SchedulePayload struct {
 	MaxInterJobConcurrency bool       `json:"maxInterJobConcurrency"`
 	Label                  string     `json:"label" validate:"required"`
 	StartDate              time.Time  `json:"start_date" validate:"required"`
+	ForcedStartDate        *time.Time `json:"forced_start_date"`
 	EndDate                *time.Time `json:"end_date"`
 	Frequency              Frequency  `json:"frequency,omitempty"`
 	Multiplier             float64    `json:"multiplier,omitempty"`

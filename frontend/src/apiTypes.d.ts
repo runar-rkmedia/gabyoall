@@ -229,6 +229,7 @@ declare namespace ApiDef {
         deleted?: string; // date-time
         end_date?: string; // date-time
         endpointID?: string;
+        forced_start_date?: string; // date-time
         frequency?: Frequency /* int8 */;
         friday?: /**
          * A Duration represents the elapsed time between two instants
@@ -308,6 +309,7 @@ declare namespace ApiDef {
         config?: Config;
         end_date?: string; // date-time
         endpointID?: string;
+        forced_start_date?: string; // date-time
         frequency?: Frequency /* int8 */;
         friday?: /**
          * A Duration represents the elapsed time between two instants

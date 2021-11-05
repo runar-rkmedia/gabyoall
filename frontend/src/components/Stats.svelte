@@ -1,8 +1,11 @@
 <script type="ts">
-  import { db } from '../api'
+  import { api, db } from '../api'
+  import Button from './Button.svelte'
   import Stat from './Stat.svelte'
 </script>
 
+<Button icon="delete" color="danger" on:click={() => api.stat.clean()}
+  >Click to remove Stats</Button>
 <ol>
   {#each Object.entries($db.stat).sort(([_, a], [__, b]) => {
     const A = a.StartTime

@@ -123,8 +123,6 @@ func (s Schedule) ShouldRun() bool {
 	}
 
 	sh := time.Now().After(*nextRun)
-	// fmt.Println("should run", sh, s.Label, nextRun.String())
-	// return false
 	return sh
 }
 

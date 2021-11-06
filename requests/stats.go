@@ -8,10 +8,13 @@ import (
 )
 
 type RequestStat struct {
+	ts          TimeSeriePusher
 	ErrorType   `json:"errorType,omitempty"`
 	RawResponse []byte    `json:"rawResponse,omitempty"`
 	ContentType string    `json:"-"`
 	Start       time.Time `json:"-"`
+	RequestID   string
+	Duration    time.Duration `json:"duration,omitempty"`
 	CompactStat
 }
 
@@ -19,6 +22,7 @@ func (r *RequestStat) End(body []byte, errorType ErrorType, err error) RequestSt
 	r.ErrorType = errorType
 	endTime := time.Now()
 	r.Duration = endTime.Sub(r.Start)
+	r.ts.Push(string(errorType), endTime, float64(r.Duration))
 	r.RawResponse = body
 	if err != nil {
 		r.Error = err.Error()
@@ -35,14 +39,13 @@ type Stats struct {
 	Average time.Duration
 }
 
-func NewStat(offset time.Duration) RequestStat {
+func NewStat(offset time.Duration, ts TimeSeriePusher) RequestStat {
 	id, _ := utils.ForceCreateUniqueId()
 	return RequestStat{
-		CompactStat: CompactStat{
-			RequestID: "srv-test-" + id,
-			Offset:    offset,
-		},
-		Start: time.Now(),
+		CompactStat: CompactStat{},
+		ts:          ts,
+		Start:       time.Now(),
+		RequestID:   id,
 	}
 }
 

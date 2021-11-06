@@ -123,7 +123,8 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 		s.l.Error().Msg("RequestCount must be positive")
 		return fmt.Errorf("RequestCount must be positive")
 	}
-	endpoint := requests.NewEndpoint(s.l, ep.Url)
+	ts := requests.NewTimeSeriesWithLabel(time.Now())
+	endpoint := requests.NewEndpoint(s.l, ep.Url, &ts)
 	var token string
 	// TODO: renew the tokenPayload as needed
 	// var tokenPayload *auth.TokenPayload
@@ -174,7 +175,7 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	defer close(jobCh)
 	defer close(ch)
 	successes := 0
-	stats := requests.NewCompactRequestStatistics()
+	stats := requests.NewCompactRequestStatistics(runId, &ts)
 	lastSave := time.Now()
 	debug := s.l.HasDebug()
 	didSave := false
@@ -199,6 +200,15 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 			didSave = true
 		}
 	}
+	if didSave {
+		s.db.UpdateCompactStats(runId, startedAt, stats)
+	} else {
+		s.db.CreateCompactStats(runId, startedAt, stats)
+	}
+	fmt.Println(didSave)
+
+	// logger.Debug("timeseries", stats.TimeSeries)
+
 	l.Info().
 		Msg("Completed scheduled request")
 	if didSave {

@@ -3,7 +3,13 @@ package bboltStorage
 import (
 	"bytes"
 	"encoding/gob"
+
+	"github.com/tsenart/go-tsz"
 )
+
+func init() {
+	gob.Register(tsz.Series{})
+}
 
 func (g Gob) Marshal(j interface{}) ([]byte, error) {
 	b := new(bytes.Buffer)

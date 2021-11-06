@@ -11,6 +11,7 @@
   import { createForm } from 'felte'
   import FormErrors from './FormErrors.svelte'
   import { deserializeDate } from 'apiFetcher'
+  import { format } from 'date-fns'
 
   const {
     form,
@@ -92,8 +93,11 @@
     if (!date) {
       return ''
     }
-    const s = typeof date == 'string' ? date : date.toISOString()
-    return s.slice(0, 16)
+    const s = typeof date == 'string' ? new Date(date) : date
+
+    const str = format(s, "yyyy-MM-dd'T'HH:mm")
+    console.log('date', date, s, str, s.toISOString().slice(0, 16))
+    return str
   }
   function deserializeInputDate(s: string | undefined) {
     if (!s) {

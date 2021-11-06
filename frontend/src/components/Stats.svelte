@@ -5,7 +5,11 @@
 </script>
 
 <Button icon="delete" color="danger" on:click={() => api.stat.clean()}
-  >Click to remove Stats</Button>
+  >Click to remove Stats
+</Button>
+<Button icon="refresh" color="primary" on:click={() => api.stat.list()}>
+  Refresh
+</Button>
 <ol>
   {#each Object.entries($db.stat).sort(([_, a], [__, b]) => {
     const A = a.StartTime
@@ -18,9 +22,11 @@
     }
 
     return 0
-  }) as [key, stat]}
+  }) as [key, stat], i}
     <li>
-      <Stat {stat} />
+      {#key stat.updatedAt}
+        <Stat stat={$db.stat[key]} showChart={!i} />
+      {/key}
     </li>
   {/each}
 </ol>

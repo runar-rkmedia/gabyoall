@@ -18,11 +18,12 @@ type Endpoint struct {
 	// Required: true
 	Url     string      `json:"url,omitempty"`
 	Headers http.Header `json:"headers,omitempty"`
+	ts      TimeSeriePusher
 	l       logger.AppLogger
 	client  HttpClient
 }
 
-func NewEndpoint(l logger.AppLogger, url string) Endpoint {
+func NewEndpoint(l logger.AppLogger, url string, ts TimeSeriePusher) Endpoint {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
@@ -43,10 +44,10 @@ func NewEndpoint(l logger.AppLogger, url string) Endpoint {
 		// intentionally long timeout
 		Timeout: time.Minute * 30,
 	}
-	return NewEndpointWithClient(l, url, client)
+	return NewEndpointWithClient(l, url, ts, client)
 }
 
-func NewEndpointWithClient(l logger.AppLogger, url string, client HttpClient) Endpoint {
+func NewEndpointWithClient(l logger.AppLogger, url string, ts TimeSeriePusher, client HttpClient) Endpoint {
 	if url == "" {
 		l.Fatal().Str("url", url).Msg("Got empty url")
 		return Endpoint{}
@@ -61,6 +62,7 @@ func NewEndpointWithClient(l logger.AppLogger, url string, client HttpClient) En
 	return Endpoint{
 		l:       l,
 		Url:     url,
+		ts:      ts,
 		Headers: http.Header{},
 		client:  client,
 	}
@@ -71,7 +73,7 @@ type HttpClient interface {
 }
 
 func (g *Endpoint) RunQuery(startTime time.Time, query Request, okStatusCodes []int) (*http.Response, RequestStat, error) {
-	stat := NewStat(time.Now().Sub(startTime))
+	stat := NewStat(time.Now().Sub(startTime), g.ts)
 	l := logger.AppLogger{Logger: g.l.With().Str("operationName", query.OperationName).Str("endpoint", g.Url).Str("requestId", stat.RequestID).Logger()}
 	var b []byte
 	var err error

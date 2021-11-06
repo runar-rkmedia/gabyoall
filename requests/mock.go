@@ -11,7 +11,8 @@ import (
 )
 
 func NewMockedEndpoint(l logger.AppLogger, url string) Endpoint {
-	return NewEndpointWithClient(l, url, MockHttpClient{})
+	ts := NewTimeSeriesWithLabel(time.Now())
+	return NewEndpointWithClient(l, url, &ts, MockHttpClient{})
 }
 
 type MockHttpClient struct{}

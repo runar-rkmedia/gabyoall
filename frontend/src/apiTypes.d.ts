@@ -29,20 +29,7 @@ declare namespace ApiDef {
     }
     export type ByteHashMap = any;
     export interface CompactStat {
-        duration?: /**
-         * A Duration represents the elapsed time between two instants
-         * as an int64 nanosecond count. The representation limits the
-         * largest representable duration to approximately 290 years.
-         */
-        Duration /* int64 */;
         error?: string;
-        offset?: /**
-         * A Duration represents the elapsed time between two instants
-         * as an int64 nanosecond count. The representation limits the
-         * largest representable duration to approximately 290 years.
-         */
-        Duration /* int64 */;
-        request_id?: string;
         response_hash?: Hash;
         status_code?: number; // int16
     }
@@ -421,7 +408,9 @@ declare namespace ApiDef {
         Requests?: {
             [name: string]: CompactStat;
         };
+        RunID?: string;
         StartTime: string; // date-time
+        TimeSeries?: TimeSeriesMap;
         Total?: /**
          * A Duration represents the elapsed time between two instants
          * as an int64 nanosecond count. The representation limits the
@@ -446,6 +435,15 @@ declare namespace ApiDef {
          * Time of which the entity was updated, if any
          */
         updatedAt?: string; // date-time
+    }
+    export interface TimeSeries {
+        T0?: number; // uint64
+    }
+    export interface TimeSeriesMap {
+        Map?: {
+            [name: string]: TimeSeries;
+        };
+        StartTime?: string; // date-time
     }
 }
 declare namespace ApiPaths {

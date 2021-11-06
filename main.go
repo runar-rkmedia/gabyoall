@@ -91,7 +91,8 @@ func main() {
 		l.Fatal().Err(err).Msg("Failed to set up output")
 	}
 	l.Info().Str("path", out.GetPath()).Msg("Will write output to path:")
-	endpoint := requests.NewEndpoint(logger.GetLogger("gql"), config.Url)
+	ts := requests.NewTimeSeriesWithLabel(time.Now())
+	endpoint := requests.NewEndpoint(logger.GetLogger("gql"), config.Url, &ts)
 	authPrefix := ""
 	if strings.ToLower(config.Auth.Kind) == "bearer" {
 		authPrefix = "Bearer "

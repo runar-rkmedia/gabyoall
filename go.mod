@@ -45,12 +45,13 @@ require (
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
+	github.com/arl/statsviz v0.4.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/r3labs/diff/v2 v2.14.0
+	github.com/tsenart/go-tsz v0.0.0-20180814235614-0bd30b3df1c3
 )
 
 require (
-	github.com/arl/statsviz v0.4.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

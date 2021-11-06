@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@felte/reporter-tippy": "^0.3.9",
+    "chart.js": "^3.6.0",
     "date-fns": "^2.25.0",
     "felte": "^0.8.5",
     "lodash.clonedeep": "^4.5.0",
@@ -23,6 +24,7 @@
     "lodash.isequal": "^4.5.0",
     "lodash.merge": "^4.6.2",
     "nanoid": "^3.1.29",
+    "plotly.js": "^2.6.2",
     "svelte": "^3.43.1",
     "svelte-highlight": "^5.0.0",
     "svelte-tiny-linked-charts": "^1.0.6",
@@ -36,6 +38,7 @@
     "@types/lodash.debounce": "^4.0.6",
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^16.10.2",
+    "@types/plotly.js": "^1.54.16",
     "@yarnpkg/esbuild-plugin-pnp": "^2.0.0-rc.1",
     "dtsgenerator": "^3.13.1",
     "esbuild": "^0.13.3",

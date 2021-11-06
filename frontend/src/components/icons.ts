@@ -15,6 +15,7 @@ export const iconMap = {
   delete: 'fa-trash',
   copy: 'fa-copy',
   clock: 'fa-clock',
+  refresh: 'fa-sync',
 } as const
 
 export type Icon = keyof typeof iconMap

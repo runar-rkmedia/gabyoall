@@ -16,18 +16,22 @@ type CompactRequestStatistics struct {
 	Stats
 	// required: true
 	StartTime       time.Time
+	RunID           string
+	TimeSeries      *TimeSeriesMap
 	ResponseHashMap ByteHashMap `json:"response_hash_map,omitempty"`
-	Requests        map[string]CompactStat
+	Requests        map[ErrorType]CompactStat
+	// TODO: Implement streaming Average,p99 etc
 }
 
+type TimeSeriePusher interface {
+	Push(label string, t time.Time, v float64)
+}
 type CompactStat struct {
 	ErrorType    `json:"errorType,omitempty"`
-	ResponseHash *Hash         `json:"response_hash,omitempty"`
-	StatusCode   int16         `json:"status_code,omitempty"`
-	Error        string        `json:"error,omitempty"`
-	RequestID    string        `json:"request_id,omitempty"`
-	Offset       time.Duration `json:"offset,omitempty"`
-	Duration     time.Duration `json:"duration,omitempty"`
+	ResponseHash *Hash  `json:"response_hash,omitempty"`
+	StatusCode   int16  `json:"status_code,omitempty"`
+	Error        string `json:"error,omitempty"`
+	// TODO: make requestIDS just a range like 'gobyoall-<RunID>-<WORKER#1>'
 }
 
 // should match uuids, and the request-id that this project creates for each request.
@@ -53,10 +57,8 @@ func (rs *CompactRequestStatistics) AddStat(stat RequestStat) {
 	s := CompactStat{
 		ErrorType:  stat.ErrorType,
 		StatusCode: int16(stat.StatusCode),
-		RequestID:  stat.RequestID,
-		Offset:     stat.Start.Sub(rs.StartTime),
-		Duration:   stat.Duration,
 	}
+
 	if len(stat.RawResponse) > 0 {
 		body := stat.RawResponse
 		bodyHash := hash256(body)
@@ -76,20 +78,20 @@ func (rs *CompactRequestStatistics) AddStat(stat RequestStat) {
 		rs.Min = stat.Duration
 	}
 	rs.Total += stat.Duration
-	rs.Requests[stat.RequestID] = s
+	// rs.Requests[stat.RequestID] = s
 }
 func (rs *CompactRequestStatistics) RecalculateAll() {
 	// to offset the min-calculation
-	rs.Min = 100 * time.Hour
-	for _, req := range rs.Requests {
-		if req.Duration > rs.Max {
-			rs.Max = req.Duration
-		}
-		if req.Duration < rs.Min {
-			rs.Min = req.Duration
-		}
-		rs.Total += req.Duration
-	}
+	// rs.Min = 100 * time.Hour
+	// for _, req := range rs.Requests {
+	// 	if req.Duration > rs.Max {
+	// 		rs.Max = req.Duration
+	// 	}
+	// 	if req.Duration < rs.Min {
+	// 		rs.Min = req.Duration
+	// 	}
+	// 	rs.Total += req.Duration
+	// }
 	rs.Calculate()
 }
 func (rs *CompactRequestStatistics) Calculate() {
@@ -125,14 +127,16 @@ func (bm ByteHashMap) Add(contentType string, body []byte) *Hash {
 	return &h
 }
 
-func NewCompactRequestStatistics() CompactRequestStatistics {
+func NewCompactRequestStatistics(runID string, ts *TimeSeriesMap) CompactRequestStatistics {
 	return CompactRequestStatistics{
 		StartTime: time.Now(),
+		RunID:     runID,
 		Stats: Stats{
 			Min: time.Hour * 100,
 		},
+		TimeSeries:      ts,
 		ResponseHashMap: ByteHashMap{},
-		Requests:        map[string]CompactStat{},
+		Requests:        map[ErrorType]CompactStat{},
 	}
 }
 

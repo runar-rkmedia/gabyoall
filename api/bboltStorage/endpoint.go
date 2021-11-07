@@ -36,33 +36,12 @@ func (s *BBolter) CreateEndpoint(p types.EndpointPayload) (types.EndpointEntity,
 		}
 		return bucket.Put([]byte(e.ID), bytes)
 	})
+	if err == nil {
+		s.PublishChange(PubTypeEndpoint, PubVerbCreate, entity)
+	}
 	return e, err
 }
 
-func (s *BBolter) updater(id string, bucket []byte, f func(b []byte) ([]byte, error)) error {
-	if id == "" {
-		return ErrMissingIdArg
-	}
-	if bucket == nil {
-		return ErrMissingIdArg
-	}
-	err := s.Update((func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(bucket)
-		b := bucket.Get([]byte(id))
-		if len(b) == 0 {
-			return ErrNotFound
-		}
-		newBytes, err := f(b)
-		if err != nil {
-			return err
-		}
-
-		return bucket.Put([]byte(id), newBytes)
-	}))
-
-	return err
-
-}
 func (s *BBolter) softDeleteEndpoint(id string, delete *bool) (j types.EndpointEntity, err error) {
 	err = s.updater(id, BucketEndpoints, func(b []byte) ([]byte, error) {
 		if err := s.Unmarshal(b, &j); err != nil {
@@ -83,6 +62,9 @@ func (s *BBolter) softDeleteEndpoint(id string, delete *bool) (j types.EndpointE
 		j.UpdatedAt = &now
 		return s.Marshal(j)
 	})
+	if err == nil {
+		s.PublishChange(PubTypeEndpoint, PubVerbSoftDelete, j)
+	}
 
 	return
 }

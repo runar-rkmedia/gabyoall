@@ -33,6 +33,9 @@ func (s *BBolter) CreateRequest(p types.RequestPayload) (types.RequestEntity, er
 		}
 		return bucket.Put([]byte(e.ID), bytes)
 	})
+	if err == nil {
+		s.PublishChange(PubTypeRequest, PubVerbCreate, e)
+	}
 	return e, err
 }
 

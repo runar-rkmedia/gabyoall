@@ -63,12 +63,18 @@ type TimeSeriesMap struct {
 
 func (tsm *TimeSeriesMap) Push(label string, t time.Time, value float64) {
 
+	// Not really sure if this is beneficial, but the idea is this:
+	// Normally, a new Timeseries with lable x is only created only, but there are lots of .Push'es.
+	// Therefire, we attempt to only use a read-lock and check if we need to add a TimeSeries, which will require locking.
+	// When we issue the write-lock, we must first unlock the read-lock.
 	tsm.lock.RLock()
 	defer tsm.lock.RUnlock()
 	if _, ok := tsm.Map[label]; !ok {
-		tsm.lock.RLock()
-		tsm.Map[label] = NewTimeSeries(tsm.StartTime)
 		tsm.lock.RUnlock()
+		tsm.lock.Lock()
+		tsm.Map[label] = NewTimeSeries(tsm.StartTime)
+		tsm.lock.Unlock()
+		tsm.lock.RLock()
 	}
 	tsm.Map[label].Push(t, value)
 }

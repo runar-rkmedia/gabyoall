@@ -1,4 +1,4 @@
-import { ApiFetchOptions, fetchApi, methods } from './apiFetcher'
+import { ApiFetchOptions, fetchApi, methods, wsSubscribe } from './apiFetcher'
 import createStore from './store'
 import { objectKeys } from 'simplytyped'
 
@@ -61,6 +61,34 @@ export const db = createStore<DB, null>({
   }, {} as DB),
 })
 
+
+wsSubscribe({
+  onMessage: (msg) => {
+    if (msg.variant === 'clean') {
+      if (msg.kind === 'stat') {
+        db.update((s) => ({ ...s, stat: {} }))
+      }
+      return
+    }
+    if (!msg.contents) {
+      console.log("msg has no contents", msg)
+      return
+    }
+    if (typeof msg.contents !== 'object') {
+      console.log("msg has not of type object", msg)
+      return
+
+    }
+
+    if (msg.contents.id) {
+      console.log('replacing field', msg.contents.id, msg)
+      replaceField(msg.kind, msg.contents, msg.contents.id)
+    }
+  },
+  autoReconnect: true,
+
+})
+
 const mergeMap = <K extends DBKeyValue, V extends DB[K]>(key: K, value: V) => {
   if (!key) {
     console.error('key is required in mergeField')
@@ -80,6 +108,7 @@ const mergeMap = <K extends DBKeyValue, V extends DB[K]>(key: K, value: V) => {
     }
   })
 }
+
 
 // Keys in in that are of type Record<string, T>
 type DBKeyValue = keyof Omit<DB, 'serverInfo' | 'dryDynamic'>

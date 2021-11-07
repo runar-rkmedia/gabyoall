@@ -47,6 +47,7 @@ func (s *Scheduler) Run() {
 					if debug {
 						s.l.Debug().Msg("Already running")
 					}
+					s.Unlock()
 					continue
 				}
 				s.Unlock()
@@ -176,17 +177,18 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	defer close(ch)
 	successes := 0
 	stats := requests.NewCompactRequestStatistics(runId, &ts)
+	stats.TotalRequests = config.RequestCount
 	lastSave := time.Now()
 	debug := s.l.HasDebug()
 	didSave := false
-	for i := 0; i < config.RequestCount; i++ {
+	for stats.CompletedRequests = 0; stats.CompletedRequests < config.RequestCount; stats.CompletedRequests++ {
 		stat := <-ch
 		if stat.ErrorType == "" {
 			successes++
 		}
 		stats.AddStat(stat)
 		now := time.Now()
-		if i == config.RequestCount || now.Sub(lastSave) > time.Second {
+		if stats.CompletedRequests == config.RequestCount || now.Sub(lastSave) > time.Second {
 			lastSave = now
 			stats.Calculate()
 			if debug {
@@ -205,7 +207,6 @@ func (s *Scheduler) RunSchedule(v types.ScheduleEntity) error {
 	} else {
 		s.db.CreateCompactStats(runId, startedAt, stats)
 	}
-	fmt.Println(didSave)
 
 	// logger.Debug("timeseries", stats.TimeSeries)
 

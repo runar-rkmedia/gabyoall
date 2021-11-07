@@ -139,13 +139,14 @@ function createStore<T extends {}, V = null, VK extends string = string>({
   type S = Store<T, V, VK>
   let fromStorageValue: T | null = null
   let restoreValue = initialValue
+
   const storage: AppStorage<T> | null = _storage?.key
     ? {
-        getItem: (key) => localStorage.getItem(key),
-        // TODO: throttle saving
-        setItem: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-        ..._storage,
-      }
+      getItem: (key) => localStorage.getItem(key),
+      // TODO: throttle saving
+      setItem: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+      ..._storage,
+    }
     : null
 
   if (storage) {

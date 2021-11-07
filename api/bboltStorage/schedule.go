@@ -69,6 +69,9 @@ func (s *BBolter) UpdateSchedule(id string, p types.Schedule) (types.ScheduleEnt
 	if err != nil {
 		s.l.Error().Err(err).Msg("Failed during UpdateSchedule")
 	}
+	if err == nil {
+		s.PublishChange(PubTypeSchedule, PubVerbUpdate, j)
+	}
 	return j, err
 }
 func (s *BBolter) CreateSchedule(p types.SchedulePayload) (types.ScheduleEntity, error) {
@@ -104,6 +107,9 @@ func (s *BBolter) CreateSchedule(p types.SchedulePayload) (types.ScheduleEntity,
 		}
 		return bucket.Put([]byte(e.ID), bytes)
 	})
+	if err == nil {
+		s.PublishChange(PubTypeSchedule, PubVerbCreate, e)
+	}
 	return e, err
 }
 

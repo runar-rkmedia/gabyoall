@@ -47,6 +47,7 @@ require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/arl/statsviz v0.4.0
 	github.com/dustin/go-humanize v1.0.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/r3labs/diff/v2 v2.14.0
 	github.com/tsenart/go-tsz v0.0.0-20180814235614-0bd30b3df1c3
 )
@@ -55,7 +56,6 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect

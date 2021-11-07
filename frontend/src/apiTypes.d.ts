@@ -393,6 +393,7 @@ declare namespace ApiDef {
          * largest representable duration to approximately 290 years.
          */
         Duration /* int64 */;
+        CompletedRequests?: number; // int64
         Max?: /**
          * A Duration represents the elapsed time between two instants
          * as an int64 nanosecond count. The representation limits the
@@ -431,6 +432,7 @@ declare namespace ApiDef {
          */
         id: string;
         response_hash_map?: ByteHashMap;
+        total_requests?: number; // int64
         /**
          * Time of which the entity was updated, if any
          */

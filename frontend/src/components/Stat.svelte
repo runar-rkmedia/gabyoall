@@ -35,6 +35,15 @@
       <span class="count">
         count: {Object.keys(stat.Requests || {}).length}
       </span>
+      {#if stat.total_requests && stat.CompletedRequests && stat.total_requests !== stat.CompletedRequests}
+        <span class="count">
+          Completed: {(
+            (100 * stat.CompletedRequests) /
+            (stat.total_requests || 0)
+          ).toFixed(1)}% ({stat.CompletedRequests}
+          / {stat.total_requests})
+        </span>
+      {/if}
       {formatDate(stat.StartTime)}
     </div>
     <div class="actions">

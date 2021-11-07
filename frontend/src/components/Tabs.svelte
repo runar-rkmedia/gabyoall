@@ -9,6 +9,9 @@
   $: scheduleCount = Object.keys($db.schedule).length
   $: requestCount = Object.keys($db.request).length
   $: endpointCount = Object.keys($db.endpoint).length
+  $: stat = Object.values($db.stat).find(
+    (s) => s.total_requests && s.CompletedRequests! !== s.total_requests
+  )
 </script>
 
 <nav>
@@ -30,6 +33,16 @@
   <Tab active={value === 'stats'} on:click={onClick('stat')}>
     <Icon icon={'gStat'} color="tertiary" />
     Stats
+    {#if stat && stat.total_requests}
+      <Icon icon="play" />
+      <span class="running-stat">
+        {(
+          (100 * (stat.CompletedRequests || 1)) /
+          (stat.total_requests || 1)
+        ).toFixed(1)}% ({stat.CompletedRequests || 0}
+        / {stat.total_requests || 0})
+      </span>
+    {/if}
   </Tab>
 </nav>
 

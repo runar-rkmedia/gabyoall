@@ -16,6 +16,7 @@ export const iconMap = {
   copy: 'fa-copy',
   clock: 'fa-clock',
   refresh: 'fa-sync',
+  play: 'fa-play',
 } as const
 
 export type Icon = keyof typeof iconMap

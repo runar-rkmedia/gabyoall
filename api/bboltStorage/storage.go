@@ -15,8 +15,12 @@ var (
 	ErrNotFound     = errors.New("Not found")
 )
 
+type PubSubPublisher interface {
+	Publish(kind, variant string, contents interface{})
+}
+
 // Caller must call close when ending
-func NewBbolt(l logger.AppLogger, path string) (bb BBolter, err error) {
+func NewBbolt(l logger.AppLogger, path string, pubsub PubSubPublisher) (bb BBolter, err error) {
 
 	bb.l = l
 	db, err := bolt.Open(path, 0666, &bolt.Options{
@@ -26,6 +30,7 @@ func NewBbolt(l logger.AppLogger, path string) (bb BBolter, err error) {
 		return
 	}
 	bb.DB = db
+	bb.pubsub = pubsub
 	bb.Marshaller = Gob{}
 	err = bb.Update(func(t *bolt.Tx) error {
 		buckets := [][]byte{BucketEndpoints, BucketRequests, BucketSchedules, BucketStats}
@@ -39,6 +44,13 @@ func NewBbolt(l logger.AppLogger, path string) (bb BBolter, err error) {
 		return nil
 	})
 	return
+}
+
+func (s *BBolter) PublishChange(kind PubType, variant PubVerb, contents interface{}) {
+	if s.pubsub == nil {
+		return
+	}
+	s.pubsub.Publish(string(kind), string(variant), contents)
 }
 
 func (s *BBolter) GetItem(bucket []byte, id string, j interface{}) error {
@@ -78,10 +90,34 @@ func (s *BBolter) Size() (int64, error) {
 	}
 	return int64(stat.Size()), err
 }
+func (s *BBolter) updater(id string, bucket []byte, f func(b []byte) ([]byte, error)) error {
+	if id == "" {
+		return ErrMissingIdArg
+	}
+	if bucket == nil {
+		return ErrMissingIdArg
+	}
+	err := s.Update((func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(bucket)
+		b := bucket.Get([]byte(id))
+		if len(b) == 0 {
+			return ErrNotFound
+		}
+		newBytes, err := f(b)
+		if err != nil {
+			return err
+		}
+
+		return bucket.Put([]byte(id), newBytes)
+	}))
+
+	return err
+}
 
 type BBolter struct {
 	*bolt.DB
-	l logger.AppLogger
+	pubsub PubSubPublisher
+	l      logger.AppLogger
 	Marshaller
 }
 

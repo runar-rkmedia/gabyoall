@@ -18,6 +18,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/runar-rkmedia/gabyoall/api/bboltStorage"
 	_ "github.com/runar-rkmedia/gabyoall/api/docs"
+	"github.com/runar-rkmedia/gabyoall/api/handlers"
 	"github.com/runar-rkmedia/gabyoall/api/requestContext"
 	"github.com/runar-rkmedia/gabyoall/api/scheduler"
 	"github.com/runar-rkmedia/gabyoall/api/types"
@@ -64,6 +65,18 @@ type ApiConfig struct {
 	logger.LogConfig
 }
 
+type PubSub struct {
+	ch chan handlers.Msg
+}
+
+func (ps *PubSub) Publish(kind, variant string, content interface{}) {
+	ps.ch <- handlers.Msg{
+		Kind:     kind,
+		Variant:  variant,
+		Contents: content,
+	}
+}
+
 //go:generate swagger generate spec -o generated-swagger.yml
 //go:generate sh -c "cd ../frontend && yarn gen"
 func main() {
@@ -72,7 +85,8 @@ func main() {
 		panic(err)
 	}
 	cfg := ApiConfig{
-		Address:      "0.0.0.0",
+		Address: "0.0.0.0",
+		// Port:    8084,
 		Port:         443,
 		RedirectPort: 80,
 		CertFile:     "server.crt",
@@ -86,7 +100,8 @@ func main() {
 	logger.InitLogger(cfg.LogConfig)
 	l := logger.GetLogger("main")
 	l.Info().Str("version", Version).Time("buildDate", BuildDate).Time("buildDateLocal", BuildDate.Local()).Str("gitHash", GitHash).Msg("Starting")
-	db, err := bboltStorage.NewBbolt(l, "db.bbolt")
+	pubsub := PubSub{make(chan handlers.Msg)}
+	db, err := bboltStorage.NewBbolt(l, "db.bbolt", &pubsub)
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to initialize storage")
 	}
@@ -116,7 +131,9 @@ func main() {
 	handler.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
 	handler.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 	handler.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
-	// http.Handle("/api/", http.StripPrefix("/api/", EndpointsHandler(ctx)))
+	// TODO: consider using a buffered channel.
+	handler.Handle("/ws/", handlers.NewWsHandler(logger.GetLoggerWithLevel("ws", "debug"), pubsub.ch, handlers.WsOptions{}))
+
 	handler.Handle("/api/",
 		gziphandler.GzipHandler(
 			http.StripPrefix("/api/", EndpointsHandler(ctx))))

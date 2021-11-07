@@ -15,11 +15,13 @@ import (
 type CompactRequestStatistics struct {
 	Stats
 	// required: true
-	StartTime       time.Time
-	RunID           string
-	TimeSeries      *TimeSeriesMap
-	ResponseHashMap ByteHashMap `json:"response_hash_map,omitempty"`
-	Requests        map[ErrorType]CompactStat
+	StartTime         time.Time
+	TotalRequests     int `json:"total_requests"`
+	CompletedRequests int `json:"completed_requests`
+	RunID             string
+	TimeSeries        *TimeSeriesMap
+	ResponseHashMap   ByteHashMap `json:"response_hash_map,omitempty"`
+	Requests          map[ErrorType]CompactStat
 	// TODO: Implement streaming Average,p99 etc
 }
 

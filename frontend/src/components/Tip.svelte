@@ -3,6 +3,7 @@
 
   import Alert from './Alert.svelte'
   import Icon from './Icon.svelte'
+  import Button from './Button.svelte'
   /**
    * Key should be a unique identifier for this tip, preferably human-readable
    *
@@ -30,13 +31,13 @@
  -->
 <Alert kind="info" collapse={read}>
   <slot />
-  <button
-    class="icon-button secondary"
-    on:click|preventDefault={() => {
+  <Button
+    color="secondary"
+    on:click={() => {
       $state.seenHints[key] = [version, new Date()]
       read = false
     }}>
     <Icon icon={'success'} />
     Got it
-  </button>
+  </Button>
 </Alert>

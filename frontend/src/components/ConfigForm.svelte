@@ -8,6 +8,7 @@
   import Icon from './Icon.svelte'
   import Tip from './Tip.svelte'
   import { api } from '../api'
+  import Button from './Button.svelte'
 
   /** Clears the form. This should be done after submission.*/
   export const clear = store.reset
@@ -42,12 +43,13 @@
     in the Config, it will take precedence. Null-values are ignored
   </p>
 </Tip>
-<button
-  class="icon-button danger"
+<Button
+  color="danger"
+  icon="delete"
   disabled={!$store.__didChange}
-  on:click|preventDefault={() => store.restore()}>
-  <Icon icon={'delete'} />
-  Reset</button>
+  on:click={() => store.restore()}>
+  Reset
+</Button>
 
 <div class="label-group">
   <label>
@@ -206,32 +208,38 @@
             <input type="text" bind:value={r.result_jmes_path} /></label>
         </paper>
       {/each}
-      {#await dryDynamicPromise then res}
-        <Code code={JSON.stringify(res)} convert={true} />
-      {/await}
-      <Code code={JSON.stringify($store.auth.dynamic)} convert={true} />
-      <button
-        class="primary"
-        on:click|preventDefault={() => {
-          const d = $store.auth.dynamic
-          dryDynamicPromise = api.dryDynamic({
-            ...d,
-            requests: d.requests.map(({ headers, ...req }) => {
-              return {
-                ...req,
-                // headers: req.headers?.reduce((r, h) => {
-                //   // TODO: map
-                //   return r
-                // }, {}),
-              }
-            }),
-          })
-        }}>
-        Dry-run
-      </button>
-      <button
-        class="secondary"
-        on:click|preventDefault={() =>
+      <paper>
+        <Collapse key="auth-dry-run">
+          <Button
+            color="primary"
+            on:click={() => {
+              const d = $store.auth.dynamic
+              dryDynamicPromise = api.dryDynamic({
+                ...d,
+                requests: d.requests.map(({ headers, ...req }) => {
+                  return {
+                    ...req,
+                    // headers: req.headers?.reduce((r, h) => {
+                    //   // TODO: map
+                    //   return r
+                    // }, {}),
+                  }
+                }),
+              })
+            }}>
+            Perform dry-run
+          </Button>
+          <h4 slot="title">Dry-run</h4>
+          {#await dryDynamicPromise then res}
+            <Code code={JSON.stringify(res)} convert={true} />
+          {/await}
+          <Code code={JSON.stringify($store.auth.dynamic)} convert={true} />
+        </Collapse>
+      </paper>
+
+      <Button
+        color="secondary"
+        on:click={() =>
           ($store.auth.dynamic.requests = [
             ...$store.auth.dynamic.requests,
             {
@@ -245,7 +253,7 @@
             },
           ])}>
         Add request
-      </button>
+      </Button>
     {:else if $store.auth.kind === 'impersonation'}
       <div class="label-group">
         <label>

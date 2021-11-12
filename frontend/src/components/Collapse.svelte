@@ -50,4 +50,7 @@
   .icon {
     font-size: 1.4rem;
   }
+  :global(.collapse > fieldset) {
+    border: unset;
+  }
 </style>

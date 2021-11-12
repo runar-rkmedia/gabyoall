@@ -1,7 +1,13 @@
 <script type="ts">
   import formatDate from '../dates'
   import Button from './Button.svelte'
-  import Chart from './Chart.svelte'
+  import type ChartType from './Chart.svelte'
+  let Chart: ChartType
+  import { onMount } from 'svelte'
+  onMount(async () => {
+    const { default: def } = await import('./Chart.svelte')
+    Chart = def as any
+  })
 
   export let stat: ApiDef.StatEntity
   function formatDuration(duration: number | undefined | null) {
@@ -53,34 +59,37 @@
   </div>
   {#if stat.TimeSeries && showChart}
     <div class="chart-container">
-      <Chart
-        data={Object.entries(stat.TimeSeries).map(([k, s], i) => {
-          const count = s.Series.length
-          return s.Series.reduce(
-            (r, [x, y]) => {
-              r.x.push(x + y)
-              r.y.push(y)
-              /* r.marker.color.push(y) */
+      {#if Chart}
+        <svelte:component
+          this={Chart}
+          data={Object.entries(stat.TimeSeries).map(([k, s], i) => {
+            const count = s.Series.length
+            return s.Series.reduce(
+              (r, [x, y]) => {
+                r.x.push(x + y)
+                r.y.push(y)
+                /* r.marker.color.push(y) */
 
-              return r
+                return r
+              },
+              {
+                x: [],
+                y: [],
+                type: 'scatter',
+                name: `${k || 'ok'} (${count})`,
+                mode: 'markers',
+                marker: { size: 5, color: i },
+              }
+            )
+          })}
+          layout={{
+            title: 'Request-duration.',
+            yaxis: {
+              type: 'log',
+              autorange: true,
             },
-            {
-              x: [],
-              y: [],
-              type: 'scatter',
-              name: `${k || 'ok'} (${count})`,
-              mode: 'markers',
-              marker: { size: 5, color: i },
-            }
-          )
-        })}
-        layout={{
-          title: 'Request-duration.',
-          yaxis: {
-            type: 'log',
-            autorange: true,
-          },
-        }} />
+          }} />
+      {/if}
     </div>
   {/if}
 </div>

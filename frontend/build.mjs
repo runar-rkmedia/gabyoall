@@ -1,5 +1,5 @@
 import { pnpPlugin } from '@yarnpkg/esbuild-plugin-pnp'
-import { build } from 'esbuild'
+import { build, analyzeMetafile } from 'esbuild'
 import sveltePlugin from 'esbuild-svelte'
 import sveltePreprocess from 'svelte-preprocess'
 import fs from 'fs'
@@ -58,7 +58,7 @@ const typecheck = async () => {
 createTypescriptApiDefinitions()
 typecheck()
 
-await build({
+const result = await build({
   plugins: [
     pnpPlugin(),
     sveltePlugin({
@@ -67,12 +67,16 @@ await build({
   ],
   entryPoints: [srcDir + 'entry.ts'],
   bundle: true,
+  splitting: true,
+  format: 'esm',
   outdir: outDir,
   logLevel: 'info',
-  sourcemap: 'external',
+  // sourcemap: 'external',
   legalComments: 'external',
   minify: true,
+  metafile: true,
   ...(isDev && {
+    metafile: false,
     watch: {
       onRebuild: (error, result) => {
         if (error) {
@@ -106,6 +110,11 @@ await build({
     sourcemap: 'inline',
   }),
 })
+
+if (result.metafile) {
+  const analysis = await analyzeMetafile(result.metafile, { verbose: true })
+  console.log(fs.writeFileSync("js-analysis.log", analysis))
+}
 
 fs.copyFile(srcDir + 'index.html', outDir + '/index.html', (err) => {
   if (err) throw err

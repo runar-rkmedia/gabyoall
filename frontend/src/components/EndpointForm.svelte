@@ -2,12 +2,12 @@
   import createId from '../createId'
 
   import { api, db } from '../api'
-  import Code from './Code.svelte'
   import Collapse from './Collapse.svelte'
   import ConfigForm from './ConfigForm.svelte'
   import configStore from './configStore'
   import Icon from './Icon.svelte'
   import Spinner from './Spinner.svelte'
+  import Button from './Button.svelte'
 
   export let editID = ''
   let createResponse: ReturnType<typeof api.endpoint.create> | undefined
@@ -137,20 +137,15 @@
     </Collapse>
   </paper>
 
-  <button
-    class="primary"
+  <Button
+    color="primary"
+    icon="gEndpoint"
     disabled={loading || !!$configStore.__validationMessage}
     type="submit"
-    on:click|preventDefault={endpointCreate}>
+    on:click={endpointCreate}>
     {!!editID ? 'Update' : 'Create'}{' '}
     endpoint
-  </button>
-  <Code
-    code={JSON.stringify($configStore.__validationPayload)}
-    convert={true} />
-  <Code
-    code={JSON.stringify($configStore.__validationMessage)}
-    convert={true} />
+  </Button>
 </form>
 
 <style>

@@ -60,6 +60,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@joshnuss/svelte-codemirror@npm:^0.2.6":
+  version: 0.2.6
+  resolution: "@joshnuss/svelte-codemirror@npm:0.2.6"
+  peerDependencies:
+    codemirror: ^5.61.0
+  checksum: c44da15bd320d1a21a61ef6d48a2e998a1a8559cf48c71ba505451fef907bfd98818f49aa38eca21eeeddbdd0a12b670964cbe0915a290a7b0125cd9397a4467
+  languageName: node
+  linkType: hard
+
 "@mapbox/geojson-rewind@npm:^0.5.0":
   version: 0.5.1
   resolution: "@mapbox/geojson-rewind@npm:0.5.1"
@@ -267,10 +276,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/codemirror@npm:^5.60.5":
+  version: 5.60.5
+  resolution: "@types/codemirror@npm:5.60.5"
+  dependencies:
+    "@types/tern": "*"
+  checksum: 423b6378b6415b626d9f54d37d69477f96940b30a695d4ec36402feb59a96f7ab42d1c17b8472fbb222a0966f6061deee234e37bcd3e34c75836e989dc95929d
+  languageName: node
+  linkType: hard
+
 "@types/d3@npm:^3":
   version: 3.5.46
   resolution: "@types/d3@npm:3.5.46"
   checksum: 7646a64887301b8c4934999dc0d9024913caebd6f10c5fe260afde67625408f8988d81f73ec831e250743717d5f6768e69e045dc5d77855b63a02ade6bd4a98a
+  languageName: node
+  linkType: hard
+
+"@types/estree@npm:*":
+  version: 0.0.50
+  resolution: "@types/estree@npm:0.0.50"
+  checksum: 9a2b6a4a8c117f34d08fbda5e8f69b1dfb109f7d149b60b00fd7a9fb6ac545c078bc590aa4ec2f0a256d680cf72c88b3b28b60c326ee38a7bc8ee1ee95624922
   languageName: node
   linkType: hard
 
@@ -328,6 +353,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 3f86d2eaf4988a2775fc0fc164d35e73ce82d71228191da7b11d97ad5e8ac129f1c5f798307e31482f8cfebab758bd3b24e731860bed81afe5a1bbe13fa2b2df
+  languageName: node
+  linkType: hard
+
+"@types/tern@npm:*":
+  version: 0.23.4
+  resolution: "@types/tern@npm:0.23.4"
+  dependencies:
+    "@types/estree": "*"
+  checksum: d8fd304f147ed08f1d075f09cb8d440b7f785f69c9ec5c30eadf98132fe3f58f3b1bbbd11283858bb261afac5a2039c1c255f290b0f6e4a47cd6a746f30a6aa8
   languageName: node
   linkType: hard
 
@@ -669,6 +703,13 @@ __metadata:
   version: 1.1.0
   resolution: "code-point-at@npm:1.1.0"
   checksum: 17d5666611f9b16d64fdf48176d9b7fb1c7d1c1607a189f7e600040a11a6616982876af148230336adb7d8fe728a559f743a4e29db3747e3b1a32fa7f4529681
+  languageName: node
+  linkType: hard
+
+"codemirror@npm:^5.63.3":
+  version: 5.63.3
+  resolution: "codemirror@npm:5.63.3"
+  checksum: f805b92f1aea98a6c21b0bf79263ccd428c7fe38aa664f4aa91397746ecba867389da3c0f8c605acbdc8c15590800fcb19b063fa3273e4733e42789abb5ff2ba
   languageName: node
   linkType: hard
 
@@ -2010,13 +2051,16 @@ fsevents@~2.3.2:
   dependencies:
     "@dtsgenerator/replace-namespace": ^1.5.1
     "@felte/reporter-tippy": ^0.3.9
+    "@joshnuss/svelte-codemirror": ^0.2.6
     "@tsconfig/svelte": ^2.0.1
+    "@types/codemirror": ^5.60.5
     "@types/lodash.debounce": ^4.0.6
     "@types/lodash.merge": ^4.6.6
     "@types/node": ^16.10.2
     "@types/plotly.js": ^1.54.16
     "@yarnpkg/esbuild-plugin-pnp": ^2.0.0-rc.1
     chart.js: ^3.6.0
+    codemirror: ^5.63.3
     date-fns: ^2.25.0
     dtsgenerator: ^3.13.1
     esbuild: ^0.13.3
@@ -2034,7 +2078,6 @@ fsevents@~2.3.2:
     sass: ^1.42.1
     simplytyped: ^3.3.0
     svelte: ^3.43.1
-    svelte-highlight: ^5.0.0
     svelte-preprocess: ^4.9.8
     svelte-preprocess-sass: ^2.0.1
     svelte-tiny-linked-charts: ^1.0.6
@@ -2093,13 +2136,6 @@ fsevents@~2.3.2:
   dependencies:
     function-bind: ^1.1.1
   checksum: b9ad53d53be4af90ce5d1c38331e712522417d017d5ef1ebd0507e07c2fbad8686fffb8e12ddecd4c39ca9b9b47431afbb975b8abf7f3c3b82c98e9aad052792
-  languageName: node
-  linkType: hard
-
-"highlight.js@npm:11.2.0":
-  version: 11.2.0
-  resolution: "highlight.js@npm:11.2.0"
-  checksum: 12bfd562899a6a70d20321460ec40a94456bd8a9cb7deedbb70630c1981b937690fa0c7cf056d8f12c3c39981b400fb1a4f8b784b97399b26bd812460809cc0e
   languageName: node
   linkType: hard
 
@@ -3713,15 +3749,6 @@ resolve@^0.6.1:
   version: 1.0.0
   resolution: "superscript-text@npm:1.0.0"
   checksum: 4c437554359b4a7f78d17caa9b870e0a62cef59039608470ccf48bcdae7922d8c893712906b3f0371a3e45a6c57e8476a6364b0202f188d3604403cc7b6e262c
-  languageName: node
-  linkType: hard
-
-"svelte-highlight@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "svelte-highlight@npm:5.0.0"
-  dependencies:
-    highlight.js: 11.2.0
-  checksum: 89cd0b90c77316c32e53c381ababc0d732449b40d27bdf18443329f0d7b48448bd5113b00f1b94b9b47c2443207f8f52f03700f88698ecfd716151b32fd36f50
   languageName: node
   linkType: hard
 

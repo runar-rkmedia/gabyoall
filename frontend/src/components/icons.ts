@@ -17,6 +17,8 @@ export const iconMap = {
   clock: 'fa-clock',
   refresh: 'fa-sync',
   play: 'fa-play',
+  toggleOn: 'fa-toggle-on',
+  toggleOff: 'fa-toggle-off',
 } as const
 
 export type Icon = keyof typeof iconMap

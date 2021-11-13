@@ -108,11 +108,11 @@ select:focus {
   box-shadow: var(--elevation-4);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* *, */
+/* *::before, */
+/* *::after { */
+/*   box-sizing: border-box; */
+/* } */
 
 form label {
   display: flex;

@@ -2,6 +2,7 @@
   export let language = 'json'
   export let code: string
   export let convert = false
+  export let noFormatSelector = false
   import { onMount } from 'svelte'
 
   let component: any
@@ -11,6 +12,11 @@
 </script>
 
 {#if component}
-  <svelte:component this={component} {language} {code} {convert} />
+  <svelte:component
+    this={component}
+    {noFormatSelector}
+    {language}
+    {code}
+    {convert} />
 {/if}
 loading

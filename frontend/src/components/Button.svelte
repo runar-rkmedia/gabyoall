@@ -5,19 +5,25 @@
   import { createEventDispatcher } from 'svelte'
   export let preventDefault = true
 
+  export let active = false
+  export let toggle: boolean | null = null
   export let icon: IconType | undefined = undefined
   // TODO: support all colors
   export let color: Colors | 'danger' = ''
   export let disabled: boolean = false
   export let type: string = ''
   const dispatch = createEventDispatcher()
+  $: iconToUse =
+    icon || (toggle === true && 'toggleOn') || (toggle === false && 'toggleOff')
 </script>
 
 <button
   class:btn-reset={true}
   class={color}
+  class:active
+  class:toggle
   {type}
-  class:icon-button={!!icon}
+  class:icon-button={!!icon || toggle}
   {disabled}
   on:click={(e) => {
     if (preventDefault) {
@@ -25,8 +31,8 @@
     }
     dispatch('click', e)
   }}>
-  {#if icon}
-    <Icon {icon} />
+  {#if iconToUse}
+    <Icon icon={iconToUse} />
   {/if}
   <slot />
 </button>
@@ -38,5 +44,12 @@
     box-shadow: 0 8px 16px -2px rgba(0, 32, 128, 0.25);
     transform: scale(1.05);
     transition: all 120ms ease-in-out;
+  }
+
+  .active {
+    filter: brightness(0.8);
+    text-decoration: underline;
+    text-decoration-color: var(--color-red);
+    text-decoration-thickness: 4px;
   }
 </style>

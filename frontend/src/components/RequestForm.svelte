@@ -4,6 +4,9 @@
   import ConfigForm from './ConfigForm.svelte'
   import configStore from './configStore'
   import Spinner from './Spinner.svelte'
+  import Editor from './Editor.svelte'
+  import Button from './Button.svelte'
+  import GraphqlEditor from './GraphqlEditor.svelte'
 
   let query = 'query {galaxies}'
   let variables = '{}'
@@ -11,8 +14,10 @@
   let method = 'POST'
   let operationName = 'Name'
   let isGraphql = false
+
   let createResponse: ReturnType<typeof api.request.create> | undefined
   let loading = false
+
   async function endpointCreate() {
     loading = true
     const payload: ApiDef.RequestPayload = {
@@ -57,24 +62,36 @@
     <input type="checkbox" bind:checked={isGraphql} />
   </label>
   {#if isGraphql}
-    <label>
-      query
-      <textarea type="text" bind:value={query} />
+    <label for="query-editor">
+      Query
+      <GraphqlEditor
+        name="query"
+        id="query-editor"
+        initialValue={query}
+        initialLanguage="graphql"
+        bind:value={query}
+        noFormatSelector={true} />
     </label>
-    <label>
-      variables
-      <textarea type="text" bind:value={variables} />
+    <label for="variables-editor">
+      Variables
+      <Editor
+        name="variables"
+        id="variables-editor"
+        initialValue={variables}
+        bind:value={variables} />
     </label>
   {:else}
-    <label>
-      body
-      <textarea type="text" bind:value={body} />
-    </label>
+    <paper>
+      <Collapse key="request-body">
+        <label for="body-editor" slot="title"> Body </label>
+        <Editor
+          name="body"
+          id="body-editor"
+          initialValue={body}
+          bind:value={body} />
+      </Collapse>
+    </paper>
   {/if}
-  <button
-    disabled={loading || !!$configStore.__validationMessage}
-    type="submit"
-    on:click|preventDefault={endpointCreate}>Create request</button>
   <div class="spinner"><Spinner active={loading} /></div>
   <paper>
     <Collapse key="request-config">
@@ -82,6 +99,14 @@
       <ConfigForm />
     </Collapse>
   </paper>
+  <Button
+    icon="gRequest"
+    color="primary"
+    disabled={loading || !!$configStore.__validationMessage}
+    type="submit"
+    on:click={endpointCreate}>
+    Create request
+  </Button>
   {#if createResponse}
     {#await createResponse then [_, err]}
       {#if err}

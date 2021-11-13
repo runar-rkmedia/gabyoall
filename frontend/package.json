@@ -16,7 +16,9 @@
   },
   "dependencies": {
     "@felte/reporter-tippy": "^0.3.9",
+    "@joshnuss/svelte-codemirror": "^0.2.6",
     "chart.js": "^3.6.0",
+    "codemirror": "^5.63.3",
     "date-fns": "^2.25.0",
     "felte": "^0.8.5",
     "lodash.clonedeep": "^4.5.0",
@@ -26,7 +28,6 @@
     "nanoid": "^3.1.29",
     "plotly.js": "^2.6.2",
     "svelte": "^3.43.1",
-    "svelte-highlight": "^5.0.0",
     "svelte-tiny-linked-charts": "^1.0.6",
     "tippy.js": "^6.3.3",
     "toml-js": "^0.0.8",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@dtsgenerator/replace-namespace": "^1.5.1",
     "@tsconfig/svelte": "^2.0.1",
+    "@types/codemirror": "^5.60.5",
     "@types/lodash.debounce": "^4.0.6",
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^16.10.2",

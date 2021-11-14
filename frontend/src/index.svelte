@@ -65,9 +65,7 @@
       <paper>
         <EndpointForm bind:editID={endpointID} />
       </paper>
-      <paper>
-        <EndpointList bind:selectedID={endpointID} />
-      </paper>
+      <EndpointList bind:selectedID={endpointID} />
     {:else if $state.tab === 'stat'}
       <h2>Statistics</h2>
       <paper>
@@ -78,9 +76,7 @@
       <paper>
         <RequestForm />
       </paper>
-      <paper>
-        <RequestLIst />
-      </paper>
+      <RequestLIst />
     {/if}
   </main>
   {#if $state.serverStats}

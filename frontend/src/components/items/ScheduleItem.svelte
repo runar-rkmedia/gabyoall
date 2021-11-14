@@ -42,7 +42,7 @@
     Last Run: {formatDate(schedule.lastRun)}
   </svelte:fragment>
   <svelte:fragment slot="details">
-    <Collapse key="bob">
+    <Collapse key="item-config">
       <span slot="title">Details</span>
       {#if schedule.config}
         <div class="sub-item">

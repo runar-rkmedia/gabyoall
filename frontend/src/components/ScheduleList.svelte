@@ -1,13 +1,14 @@
 <script lang="ts">
   import { api, db } from '../api'
-  import Spinner from './Spinner.svelte'
   import ScheduleItem from './items/ScheduleItem.svelte'
+  import EntityList from './EntityList.svelte'
   export let selectedID: string = ''
   let loading = true
+  let error: undefined | string = undefined
+  $: deletedCount = Object.values($db.schedule).filter((s) => s.deleted).length
 </script>
 
-<div class="spinner"><Spinner active={loading} /></div>
-<ul>
+<EntityList {loading} {error} {deletedCount}>
   {#each Object.values($db.schedule)
     .sort((a, b) => {
       const A = a.start_date || ''
@@ -28,18 +29,4 @@
       onEdit={(id) => (selectedID = id)}
       onDelete={(id) => api.schedule.delete(id)} />
   {/each}
-</ul>
-
-<style>
-  .spinner {
-    float: right;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border-radius: var(--radius);
-    box-shadow: var(--elevation-4);
-  }
-</style>
+</EntityList>

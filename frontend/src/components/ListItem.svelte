@@ -56,6 +56,9 @@
 
 <style>
   .deleted {
+    background-color: hsl(0, 88%, 96.1%);
+  }
+  .deleted .item-header {
     text-decoration: line-through;
   }
   .error {

@@ -1,20 +1,22 @@
 <script lang="ts">
   import { api, db } from '../api'
-  import { slide } from 'svelte/transition'
-  import Spinner from './Spinner.svelte'
+  import EntityList from './EntityList.svelte'
   import RequestItem from './items/RequestItem.svelte'
-  let requests = api.request.list()
+
   let loading = true
-  requests.then(() => (loading = false))
+  let error: undefined | string = undefined
+  export let selectedID: string = ''
+
+  let requests = api.request.list()
+  requests.then((response) => {
+    loading = false
+    error = response[1]?.error
+  })
+
+  $: deletedCount = Object.values($db.request).filter((s) => s.deleted).length
 </script>
 
-<div class="spinner"><Spinner active={loading} /></div>
-{#await requests then [_, err]}
-  {#if err}
-    {err.error}
-  {/if}
-{/await}
-<ul>
+<EntityList {loading} {error} {deletedCount}>
   {#each Object.values($db.request)
     .sort((a, b) => {
       const A = a.createdAt
@@ -29,12 +31,10 @@
       return 0
     })
     .reverse() as v}
-    <RequestItem request={v} />
+    <RequestItem
+      {selectedID}
+      onEdit={(id) => (selectedID = id)}
+      onDelete={(id) => api.request.delete(id)}
+      request={v} />
   {/each}
-</ul>
-
-<style>
-  .spinner {
-    float: right;
-  }
-</style>
+</EntityList>

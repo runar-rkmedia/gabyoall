@@ -1,32 +1,20 @@
 <script lang="ts">
   import { api, db } from '../api'
-  import Spinner from './Spinner.svelte'
   import EndpointItem from './items/EndpointItem.svelte'
-  import Button from './Button.svelte'
-  import Alert from './Alert.svelte'
   import { state } from '../state'
+  import EntityList from './EntityList.svelte'
   export let selectedID = ''
   let endpoints = api.endpoint.list()
   let loading = true
   endpoints.then(() => (loading = false))
+  $: deletedCount = Object.values($db.endpoint).filter((e) => e.deleted).length
+  let error: string | undefined = undefined
+  $: {
+    endpoints.then((response) => (error = response[1]?.error))
+  }
 </script>
 
-<div class="spinner"><Spinner active={loading} /></div>
-{#await endpoints then [_, err]}
-  {#if err}
-    {err.error}
-  {/if}
-{/await}
-<Button
-  icon="delete"
-  on:click={() => ($state.showDeleted = !$state.showDeleted)}>
-  {#if $state.showDeleted}
-    Hide deleted
-  {:else}
-    Show deleted
-  {/if}
-</Button>
-<ul>
+<EntityList {error} {loading} {deletedCount}>
   {#each Object.values($db.endpoint)
     .filter((e) => {
       if (!$state.showDeleted) {
@@ -47,21 +35,9 @@
       return 0
     })
     .reverse() as v}
-    {#if v.deleted}
-      <Alert kind="warning">
-        <EndpointItem endpoint={v} />
-      </Alert>
-    {:else}
-      <EndpointItem endpoint={v} />
-      <div class="item-actions">
-        <Button icon="edit" on:click={() => (selectedID = v.id)}>Edit</Button>
-      </div>
-    {/if}
+    <EndpointItem
+      endpoint={v}
+      onEdit={(id) => (selectedID = id)}
+      onDelete={(id) => api.endpoint.delete(id)} />
   {/each}
-</ul>
-
-<style>
-  .spinner {
-    float: right;
-  }
-</style>
+</EntityList>

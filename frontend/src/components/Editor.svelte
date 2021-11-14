@@ -40,7 +40,6 @@
   $: {
     if (editor && config.readOnly) {
       editor.setValue(value)
-      console.log('setting value')
       editor.setOption('mode', _config.mode)
     }
   }

@@ -38,7 +38,6 @@
         saturday: deserilizeInputDuration(_values.saturday),
         sunday: deserilizeInputDuration(_values.sunday),
       }
-      console.log('submit', values)
       scheduleCreate(values as any)
     },
     validate: (values) => {
@@ -73,7 +72,6 @@
     return duration.replace(':', 'h') + 'm'
   }
   function serializeInputDuration(duration: string | undefined | number) {
-    console.log('dur', duration)
     if (!duration) {
       return ''
     }
@@ -85,7 +83,6 @@
       .split('h')
       .map((s) => s.padStart(2, '0'))
       .join(':')
-    console.log('durOut', res)
     // TODO: type for weekdays are wrong
     return res as any
   }
@@ -96,7 +93,6 @@
     const s = typeof date == 'string' ? new Date(date) : date
 
     const str = format(s, "yyyy-MM-dd'T'HH:mm")
-    console.log('date', date, s, str, s.toISOString().slice(0, 16))
     return str
   }
   function deserializeInputDate(s: string | undefined) {

@@ -255,7 +255,6 @@ export const configStoreToConfigPayload = (
   if (!Object.keys(c).length) {
     return [null, null]
   }
-  console.log('aaa', c, a)
   return [c, null]
 }
 

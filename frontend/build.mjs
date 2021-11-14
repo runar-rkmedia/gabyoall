@@ -10,7 +10,6 @@ const args = process.argv.slice(2)
 const srcDir = './src/'
 const outDir = './dist/'
 const staticDir = './static/'
-console.log('CWD:', process.cwd(), process.env.PWD)
 
 const execP = (args) => {
 
@@ -113,7 +112,7 @@ const result = await build({
 
 if (result.metafile) {
   const analysis = await analyzeMetafile(result.metafile, { verbose: true })
-  console.log(fs.writeFileSync("js-analysis.log", analysis))
+  console.info(fs.writeFileSync("js-analysis.log", analysis))
 }
 
 fs.copyFile(srcDir + 'index.html', outDir + '/index.html', (err) => {

@@ -76,7 +76,6 @@
       payload.config = $configStore.__validationPayload
       console.debug('payload-config', payload.config)
     }
-    console.log('payload', payload, payload.config?.auth)
     loading = true
     createResponse = !!editID
       ? api.endpoint.update(editID, payload)

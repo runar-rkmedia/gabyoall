@@ -74,17 +74,14 @@ wsSubscribe({
       return
     }
     if (!msg.contents) {
-      console.log("msg has no contents", msg)
       return
     }
     if (typeof msg.contents !== 'object') {
-      console.log("msg has not of type object", msg)
       return
 
     }
 
     if (msg.contents.id) {
-      console.log('replacing field', msg.contents.id, msg)
       replaceField(msg.kind, msg.contents, msg.contents.id)
     }
   },

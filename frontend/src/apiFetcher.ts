@@ -109,8 +109,11 @@ export const wsSubscribe = (options: {
   try {
 
     const conn = new WebSocket(wsUrl);
+    conn.onerror = function(evt) {
+      console.error('[ws] connection error: ', evt)
+    }
     conn.onclose = function(evt) {
-      console.log('[ws]: connection closed')
+      console.debug('[ws]: connection closed', evt)
       onClose?.()
       wsDisconnects++
       if (autoReconnect) {
@@ -118,10 +121,8 @@ export const wsSubscribe = (options: {
           () => wsSubscribe(options), 1000 * (wsDisconnects + wsFails)
         )
       }
-
     };
     conn.onmessage = function(evt) {
-      console.log('[ws]: got message', evt.data)
       try {
         const json = JSON.parse(evt.data)
         onMessage(json)

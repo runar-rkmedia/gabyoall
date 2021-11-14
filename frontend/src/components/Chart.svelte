@@ -1,5 +1,5 @@
 <script type="ts">
-  import Plotly from 'plotly.js/dist/plotly'
+  import Plotly from 'plotly.js-basic-dist-min'
   import { afterUpdate } from 'svelte'
   let div: HTMLDivElement
   export let data: any = {}

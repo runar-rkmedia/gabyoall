@@ -1,13 +1,7 @@
 <script type="ts">
   import formatDate from '../dates'
   import Button from './Button.svelte'
-  import type ChartType from './Chart.svelte'
-  let Chart: ChartType
-  import { onMount } from 'svelte'
-  onMount(async () => {
-    const { default: def } = await import('./Chart.svelte')
-    Chart = def as any
-  })
+  import Chart from './Chart.svelte'
 
   export let stat: ApiDef.StatEntity
   function formatDuration(duration: number | undefined | null) {

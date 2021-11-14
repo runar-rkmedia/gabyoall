@@ -1,21 +1,15 @@
 <script lang="ts">
-  export let language = 'json'
+  export let language: 'json' | 'yaml' | 'toml' = 'json'
   export let code: string
-  export let convert = false
   export let noFormatSelector = false
-  import { onMount } from 'svelte'
-
-  let component: any
-  onMount(async () =>
-    import('./CodeInner.svelte').then((d) => (component = d.default))
-  )
+  import Editor from './Editor.svelte'
 </script>
 
-{#if component}
-  <svelte:component
-    this={component}
-    {noFormatSelector}
-    {language}
-    {code}
-    {convert} />
-{/if}
+<Editor
+  initialValue={code}
+  bind:value={code}
+  {noFormatSelector}
+  config={{ readOnly: true, mode: language }}
+  initialLanguage={language}>
+  <slot name="title" slot="title" />
+</Editor>

@@ -26,9 +26,8 @@
     "lodash.isequal": "^4.5.0",
     "lodash.merge": "^4.6.2",
     "nanoid": "^3.1.29",
-    "plotly.js": "^2.6.2",
+    "plotly.js-basic-dist-min": "^2.6.3",
     "svelte": "^3.43.1",
-    "svelte-tiny-linked-charts": "^1.0.6",
     "tippy.js": "^6.3.3",
     "toml-js": "^0.0.8",
     "yaml": "^1.10.2"

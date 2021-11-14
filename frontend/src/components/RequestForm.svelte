@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api } from '../api'
+  import { api, db } from '../api'
   import Collapse from './Collapse.svelte'
   import ConfigForm from './ConfigForm.svelte'
   import configStore from './configStore'
@@ -14,9 +14,34 @@
   let method = 'POST'
   let operationName = 'Name'
   let isGraphql = false
+  export let editID = ''
+  let lastEdit = ''
 
   let createResponse: ReturnType<typeof api.request.create> | undefined
   let loading = false
+  $: {
+    if (editID && lastEdit !== editID) {
+      const r = $db.request[editID]
+      if (r) {
+        if (r.config) {
+          configStore.restore(r.config)
+          console.debug(r.config)
+        } else {
+          configStore.reset()
+        }
+        console.log(r)
+
+        lastEdit = editID
+        query = r.query || ''
+        variables = r.variables ? JSON.stringify(r.variables) : '{}'
+        body =
+          typeof r.body === 'string' ? r.body : JSON.stringify(r.body) || ''
+        method = r.method || ''
+        operationName = r.operationName || ''
+        isGraphql = !!r.query
+      }
+    }
+  }
 
   async function endpointCreate() {
     loading = true
@@ -26,7 +51,7 @@
       ...(isGraphql
         ? {
             query,
-            variables: JSON.parse(variables),
+            variables: JSON.parse(variables || '{}'),
           }
         : {
             body,
@@ -42,7 +67,10 @@
     if ($configStore.__validationPayload) {
       payload.config = $configStore.__validationPayload
     }
-    createResponse = api.request.create(payload)
+    console.log('isF', isGraphql, payload)
+    createResponse = !!editID
+      ? api.request.update(editID, payload)
+      : api.request.create(payload)
     await createResponse
     loading = false
   }
@@ -105,7 +133,7 @@
     disabled={loading || !!$configStore.__validationMessage}
     type="submit"
     on:click={endpointCreate}>
-    Create request
+    {editID ? 'Update' : 'Create'} request
   </Button>
   {#if createResponse}
     {#await createResponse then [_, err]}

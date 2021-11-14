@@ -5,8 +5,6 @@
   import EntityList from './EntityList.svelte'
   export let selectedID = ''
   let endpoints = api.endpoint.list()
-  export let loading: boolean
-  export let error: string | undefined
   endpoints.then(() => (loading = false))
   $: deletedCount = Object.values($db.endpoint).filter((e) => e.deleted).length
   $: loading = $db.responseStates.schedule.loading

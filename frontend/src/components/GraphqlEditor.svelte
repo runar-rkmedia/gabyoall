@@ -17,9 +17,9 @@
     mode: 'graphql',
     ...config,
   }}
-  {id}
-  {name}
-  {value}
-  {initialValue}
-  {noFormatSelector}
-  {initialLanguage} />
+  bind:id
+  bind:name
+  bind:value
+  bind:initialValue
+  bind:noFormatSelector
+  bind:initialLanguage />

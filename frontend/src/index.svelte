@@ -7,7 +7,18 @@
   import ScheduleForm from './components/ScheduleForm.svelte'
   import ScheduleList from './components/ScheduleList.svelte'
   import ServerInfo from './components/ServerInfo.svelte'
-  import Stats from './components/Stats.svelte'
+  import type StatsType from './components/Stats.svelte'
+  let Stats: StatsType
+  let loaded: null | boolean = null
+  import { onMount } from 'svelte'
+  onMount(() => {
+    loaded = false
+    import('./components/Stats.svelte').then((s) => {
+      Stats = s.default as any
+      loaded = !!s.default
+    })
+  })
+
   import Tabs from './components/Tabs.svelte'
   import Alert from './components/Alert.svelte'
   import { state } from './state'
@@ -18,6 +29,7 @@
   import Button from './components/Button.svelte'
   let scheduleID = ''
   let endpointID = ''
+  let requestID = ''
   api.endpoint.list()
   api.request.list()
   api.schedule.list()
@@ -69,14 +81,19 @@
     {:else if $state.tab === 'stat'}
       <h2>Statistics</h2>
       <paper>
-        <Stats />
+        {JSON.stringify(loaded)}
+        {#if loaded}
+          <scelte:component this={Stats} />
+        {:else}
+          Loading...
+        {/if}
       </paper>
     {:else}
       <h2>Request</h2>
       <paper>
-        <RequestForm />
+        <RequestForm bind:editID={requestID} />
       </paper>
-      <RequestLIst />
+      <RequestLIst bind:selectedID={requestID} />
     {/if}
   </main>
   {#if $state.serverStats}

@@ -3,9 +3,9 @@
   import ScheduleItem from './items/ScheduleItem.svelte'
   import EntityList from './EntityList.svelte'
   export let selectedID: string = ''
-  let loading = true
-  let error: undefined | string = undefined
   $: deletedCount = Object.values($db.schedule).filter((s) => s.deleted).length
+  $: loading = $db.responseStates.schedule.loading
+  $: error = $db.responseStates.schedule.error?.error
 </script>
 
 <EntityList {loading} {error} {deletedCount}>

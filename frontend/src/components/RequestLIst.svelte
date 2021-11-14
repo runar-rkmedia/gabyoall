@@ -3,17 +3,11 @@
   import EntityList from './EntityList.svelte'
   import RequestItem from './items/RequestItem.svelte'
 
-  let loading = true
-  let error: undefined | string = undefined
   export let selectedID: string = ''
 
-  let requests = api.request.list()
-  requests.then((response) => {
-    loading = false
-    error = response[1]?.error
-  })
-
   $: deletedCount = Object.values($db.request).filter((s) => s.deleted).length
+  $: loading = $db.responseStates.schedule.loading
+  $: error = $db.responseStates.schedule.error?.error
 </script>
 
 <EntityList {loading} {error} {deletedCount}>

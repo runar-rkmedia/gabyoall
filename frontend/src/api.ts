@@ -15,6 +15,7 @@ export type DB = {
   stat: Record<string, ApiDef.StatEntity>
   serverInfo: ApiDef.ServerInfo
   dryDynamic: ApiResponses.DryDynamicResponse
+  responseStates: Pick<Record<keyof DB, { loading: boolean, error?: ApiDef.ApiError }>, 'schedule' | 'request' | 'endpoint' | 'stat'>
 }
 
 export const api = {
@@ -58,7 +59,9 @@ export const db = createStore<DB, null>({
   initialValue: objectKeys(api).reduce((r, k) => {
     r[k] = {}
     return r
-  }, {} as DB),
+  }, {
+    responseStates: objectKeys(api).reduce((r, k) => ({ ...r, [k]: { loading: false } }), {})
+  } as DB),
 })
 
 
@@ -111,7 +114,7 @@ const mergeMap = <K extends DBKeyValue, V extends DB[K]>(key: K, value: V) => {
 
 
 // Keys in in that are of type Record<string, T>
-type DBKeyValue = keyof Omit<DB, 'serverInfo' | 'dryDynamic'>
+type DBKeyValue = keyof Omit<DB, 'serverInfo' | 'dryDynamic' | 'responseStates'>
 
 const replaceField = <K extends DBKeyValue, V extends DB[K]['s']>(
   key: K,
@@ -164,19 +167,40 @@ function CrudFactory<Payload extends {}, K extends DBKeyValue>(
 
 function apiGetListFactory<K extends DBKeyValue>(subPath: string, storeKey: K) {
   return async (options?: ApiFetchOptions) => {
+    db.update(s => {
+      return {
+        ...s,
+        responseStates: {
+          ...s.responseStates,
+          [storeKey]: {
+            ...s.responseStates?.[storeKey],
+            loading: true,
+          }
+        }
+      }
+    })
     const res = await fetchApi<DB[K]>(
       subPath,
       (e) => mergeMap(storeKey, e),
       options
     )
-    if (!res[1]) {
-      if (res[0].data) {
-        db.update((s) => ({
-          ...s,
+    db.update(s => {
+      return {
+        ...s,
+        ...(!res[1] && !!res[0].data && {
+
           [storeKey]: { ...s[storeKey], ...res[0].data },
-        }))
+        }),
+        responseStates: {
+          ...s.responseStates,
+          [storeKey]: {
+            ...s.responseStates?.[storeKey],
+            loading: false,
+            error: res[1],
+          }
+        }
       }
-    }
+    })
     return res
   }
 }

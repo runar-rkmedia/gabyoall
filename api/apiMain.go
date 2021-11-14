@@ -339,6 +339,17 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
 				return
 			}
+			// Update request
+			if isPut && len(paths) == 2 {
+				var input types.RequestPayload
+				if err := rc.ValidateBytes(body, &input); err != nil {
+					// rc.WriteErr(err, requestContext.CodeErrDBUpdateRequest)
+					return
+				}
+				e, err := ctx.DB.UpdateRequest(paths[1], input)
+				rc.WriteAuto(e, err, requestContext.CodeErrDBUpdateRequest)
+				return
+			}
 			// Delete Request
 			if isDelete && len(paths) == 2 {
 				e, err := ctx.DB.SoftDeleteRequest(paths[1])

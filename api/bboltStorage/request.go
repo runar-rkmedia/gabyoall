@@ -3,6 +3,7 @@ package bboltStorage
 import (
 	"time"
 
+	"github.com/imdario/mergo"
 	"github.com/runar-rkmedia/gabyoall/api/types"
 	"github.com/runar-rkmedia/gabyoall/requests"
 	bolt "go.etcd.io/bbolt"
@@ -23,7 +24,7 @@ func (s *BBolter) CreateRequest(p types.RequestPayload) (types.RequestEntity, er
 			OperationName: p.OperationName,
 			Method:        p.Method,
 		},
-		Config: &p.Config,
+		Config: p.Config,
 		Entity: s.NewEntity(),
 	}
 
@@ -39,6 +40,61 @@ func (s *BBolter) CreateRequest(p types.RequestPayload) (types.RequestEntity, er
 		s.PublishChange(PubTypeRequest, PubVerbCreate, e)
 	}
 	return e, err
+}
+
+func (s *BBolter) UpdateRequest(id string, p types.RequestPayload) (types.RequestEntity, error) {
+	var j types.RequestEntity
+	if id == "" {
+		return j, ErrMissingIdArg
+	}
+	request := types.RequestEntity{
+		Request: requests.Request{
+			Body:          p.Body,
+			Query:         p.Query,
+			Variables:     p.Variables,
+			Headers:       p.Headers,
+			OperationName: p.OperationName,
+			Method:        p.Method,
+		},
+		Config: p.Config,
+	}
+	err := s.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(BucketRequests)
+		b := bucket.Get([]byte(id))
+		if len(b) == 0 {
+			return ErrNotFound
+		}
+
+		err := s.Unmarshal(b, &j)
+		if err != nil {
+			return err
+		}
+		err = mergo.Merge(&j.Request, request.Request, mergo.WithOverride)
+		if err != nil {
+			return err
+		}
+		if p.Config != nil {
+			if j.Config == nil {
+				j.Config = &types.Config{}
+			}
+			err = mergo.Merge(j.Config, p.Config, mergo.WithOverride)
+			if err != nil {
+				return err
+			}
+		}
+		now := time.Now()
+		j.UpdatedAt = &now
+		bytes, err := s.Marshal(j)
+		if err != nil {
+			return err
+		}
+		return bucket.Put([]byte(id), bytes)
+
+	})
+	if err != nil {
+		s.l.Error().Err(err).Msg("Failed during UpdateRequest")
+	}
+	return j, err
 }
 
 func (s *BBolter) Requests() (es map[string]types.RequestEntity, err error) {

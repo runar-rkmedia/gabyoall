@@ -37,7 +37,7 @@ type RequestPayload struct {
 	Headers       map[string]string      `json:"headers,omitempty" validate:"dive,max=1000"`
 	OperationName string                 `json:"operationName,required"`
 	Method        string                 `json:"method"`
-	Config        Config                 `json:"config,omitempty"`
+	Config        *Config                `json:"config,omitempty"`
 }
 
 type EndpointEntity struct {

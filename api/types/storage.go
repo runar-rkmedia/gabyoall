@@ -14,6 +14,7 @@ type Storage interface {
 	Requests() (es map[string]RequestEntity, err error)
 	Request(id string) (RequestEntity, error)
 	CreateRequest(e RequestPayload) (RequestEntity, error)
+	UpdateRequest(id string, p RequestPayload) (RequestEntity, error)
 	SoftDeleteRequest(id string) (RequestEntity, error)
 
 	Schedules() (es map[string]ScheduleEntity, err error)

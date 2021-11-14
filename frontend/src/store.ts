@@ -215,14 +215,14 @@ function createStore<T extends {}, V = null, VK extends string = string>({
       if (ns === s) {
         return ns
       }
-      ns = validate(ns)
-
       // If there is no validator, we assume we dont care about changes.
       if (!storeState && validator) {
         if (restoreValue) {
           ns.__didChange = didChange(ns)
         }
       }
+      ns = validate(ns)
+
 
       if (saveToStorage) {
         storeState ? _saveToStorageNow(ns) : saveToStorage(ns)
@@ -251,11 +251,11 @@ function createStore<T extends {}, V = null, VK extends string = string>({
     return s
   }
   const set = (s: S) => {
+    s.__didChange = didChange(s)
     if (saveToStorage) {
       saveToStorage(s)
     }
     s = validate(s)
-    s.__didChange = didChange(s)
     _set(merge({}, s))
   }
   const reset = () => {

@@ -108,11 +108,11 @@ select:focus {
   box-shadow: var(--elevation-4);
 }
 
-/* *, */
-/* *::before, */
-/* *::after { */
-/*   box-sizing: border-box; */
-/* } */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 form label {
   display: flex;
@@ -265,6 +265,7 @@ select:invalid, select[aria-invalid]
 .input-button button:last-of-type {
   position: absolute;
   right:0;
+  top: 0;
   height: 100%;
   border-bottom-right-radius: var(--radius-md);
   border-top-right-radius: var(--radius-md);

@@ -339,6 +339,12 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 				rc.WriteAuto(es, err, requestContext.CodeErrRequest)
 				return
 			}
+			// Delete Request
+			if isDelete && len(paths) == 2 {
+				e, err := ctx.DB.SoftDeleteRequest(paths[1])
+				rc.WriteAuto(e, err, requestContext.CodeErrDBDeleteRequest)
+				return
+			}
 		case "stat":
 			// List stats
 			if isGet && len(paths) == 1 {
@@ -386,6 +392,12 @@ func EndpointsHandler(ctx requestContext.Context) http.HandlerFunc {
 				rc.WriteAuto(es, err, requestContext.CodeErrSchedule)
 				return
 			}
+		}
+		// Delete Schedule
+		if isDelete && len(paths) == 2 {
+			e, err := ctx.DB.SoftDeleteSchedule(paths[1])
+			rc.WriteAuto(e, err, requestContext.CodeErrDBDeleteSchedule)
+			return
 		}
 		// http.FileServer(frontend.StaticFiles).ServeHTTP(rc.Rw, rc.rw)
 

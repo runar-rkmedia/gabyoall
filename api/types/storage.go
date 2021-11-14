@@ -14,11 +14,13 @@ type Storage interface {
 	Requests() (es map[string]RequestEntity, err error)
 	Request(id string) (RequestEntity, error)
 	CreateRequest(e RequestPayload) (RequestEntity, error)
+	SoftDeleteRequest(id string) (RequestEntity, error)
 
 	Schedules() (es map[string]ScheduleEntity, err error)
 	Schedule(id string) (ScheduleEntity, error)
 	CreateSchedule(e SchedulePayload) (ScheduleEntity, error)
 	UpdateSchedule(id string, p Schedule) (ScheduleEntity, error)
+	SoftDeleteSchedule(id string) (ScheduleEntity, error)
 
 	CompactStats() (es map[string]StatEntity, err error)
 	CleanCompactStats() (err error)

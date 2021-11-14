@@ -41,6 +41,8 @@ const (
 	CodeErrDBUpdateSchedule ErrorCodes = "Error: Database Update Schedule"
 	CodeErrDBUpdateEndpoint ErrorCodes = "Error: Database Update Endpoint"
 	CodeErrDBDeleteEndpoint ErrorCodes = "Error: Database Delete Endpoint"
+	CodeErrDBDeleteRequest  ErrorCodes = "Error: Database Delete Request"
+	CodeErrDBDeleteSchedule ErrorCodes = "Error: Database Delete Schedule"
 	CodeErrDBCreateEndpoint ErrorCodes = "Error: Database Create Endpoint"
 	CodeErrSchedule         ErrorCodes = "Error: Database Create Schedule"
 	CodeErrDBCreateRequest  ErrorCodes = "Error: Database Create Request"

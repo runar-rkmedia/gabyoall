@@ -1,6 +1,8 @@
 package bboltStorage
 
 import (
+	"time"
+
 	"github.com/runar-rkmedia/gabyoall/api/types"
 	"github.com/runar-rkmedia/gabyoall/requests"
 	bolt "go.etcd.io/bbolt"
@@ -63,4 +65,35 @@ func (s *BBolter) Requests() (es map[string]types.RequestEntity, err error) {
 	}
 
 	return es, err
+}
+
+func (s *BBolter) softDeleteRequest(id string, delete *bool) (j types.RequestEntity, err error) {
+	err = s.updater(id, BucketRequests, func(b []byte) ([]byte, error) {
+		if err := s.Unmarshal(b, &j); err != nil {
+			return nil, err
+		}
+		now := time.Now()
+		if delete == nil {
+			if j.Deleted == nil {
+				j.Deleted = &now
+			} else {
+				j.Deleted = nil
+			}
+		} else if *delete == false {
+			j.Deleted = nil
+		} else if *delete == true {
+			j.Deleted = &now
+		}
+		j.UpdatedAt = &now
+		return s.Marshal(j)
+	})
+	if err == nil {
+		s.PublishChange(PubTypeRequest, PubVerbSoftDelete, j)
+	}
+
+	return
+}
+
+func (s *BBolter) SoftDeleteRequest(id string) (j types.RequestEntity, err error) {
+	return s.softDeleteRequest(id, nil)
 }

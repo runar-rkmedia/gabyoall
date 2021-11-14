@@ -68,6 +68,7 @@ func (s *BBolter) softDeleteEndpoint(id string, delete *bool) (j types.EndpointE
 
 	return
 }
+
 func (s *BBolter) SoftDeleteEndpoint(id string) (j types.EndpointEntity, err error) {
 	return s.softDeleteEndpoint(id, nil)
 }

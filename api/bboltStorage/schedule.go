@@ -138,3 +138,34 @@ func (s *BBolter) Schedules() (es map[string]types.ScheduleEntity, err error) {
 
 	return es, err
 }
+
+func (s *BBolter) softDeleteSchedule(id string, delete *bool) (j types.ScheduleEntity, err error) {
+	err = s.updater(id, BucketSchedules, func(b []byte) ([]byte, error) {
+		if err := s.Unmarshal(b, &j); err != nil {
+			return nil, err
+		}
+		now := time.Now()
+		if delete == nil {
+			if j.Deleted == nil {
+				j.Deleted = &now
+			} else {
+				j.Deleted = nil
+			}
+		} else if *delete == false {
+			j.Deleted = nil
+		} else if *delete == true {
+			j.Deleted = &now
+		}
+		j.UpdatedAt = &now
+		return s.Marshal(j)
+	})
+	if err == nil {
+		s.PublishChange(PubTypeSchedule, PubVerbSoftDelete, j)
+	}
+
+	return
+}
+
+func (s *BBolter) SoftDeleteSchedule(id string) (j types.ScheduleEntity, err error) {
+	return s.softDeleteSchedule(id, nil)
+}

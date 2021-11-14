@@ -360,8 +360,14 @@
   {#if !$isValid}
     <FormErrors formErrors={$formErrors} />
   {/if}
-  <Button preventDefault={false} color="primary" {disabled} type="submit">
+  <Button
+    icon="gSchedule"
+    preventDefault={false}
+    color="primary"
+    {disabled}
+    type="submit">
     {!!editID ? 'Update' : 'Create'}
+    Endpoint
   </Button>
 
   <div class="spinner"><Spinner active={loading} /></div>

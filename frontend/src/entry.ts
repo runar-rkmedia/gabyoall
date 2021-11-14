@@ -1,7 +1,7 @@
-import Test from './index.svelte'
+import App from './App.svelte'
 import 'pollen-css'
 import './entry.css'
 
-new Test({
+new App({
   target: document.body,
 })

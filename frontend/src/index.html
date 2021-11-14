@@ -6,17 +6,31 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 
-    <script
-      src="https://kit.fontawesome.com/1fd20a1c59.js"
-      crossorigin="anonymous"
-    ></script>
     <link rel="manifest" href="/site.webmanifest" />
 
     <title>Gobyoall</title>
-    <link rel="stylesheet" href="./entry.css" />
+    <link rel="stylesheet" href="./entry.css"  media="print" onload="this.media='all'" />
   </head>
 
   <body>
-    <script type="module" src="./entry.js"></script>
+  <div id="loading">Loading...</div>
+
+<style>
+  #loading {
+    padding-inline: 30px;
+    padding-block: 20px;
+    text-align: center;
+    font-size: 1.6rem;
+    background-color: hsl(233.8, 61.8%, 60%);
+    color:  hsl(204, 45.5%, 97.8%);
+  }
+</style>
+    <script async type="module" src="./entry.js"></script>
+    <script
+      src="https://kit.fontawesome.com/1fd20a1c59.js"
+      crossorigin="anonymous"
+      async
+      defer
+    ></script>
   </body>
 </html>

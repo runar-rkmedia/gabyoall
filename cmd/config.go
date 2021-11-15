@@ -53,6 +53,16 @@ type Config struct {
 	Mock              bool                   `cfg:"mock" description:"Enable to mock the requests."`
 	Concurrency       int                    `cfg:"concurrency" description:"Amount of concurrent requests." default:"100" short:"c"`
 	RequestCount      int                    `cfg:"request-count" default:"200" description:"Number of request to make total" short:"n"`
+	Api               ApiConfig              `cfg:"api" description:"Used with the api-server"`
+}
+
+type ApiConfig struct {
+	Address      string `cfg:"address" default:"0.0.0.0" description:"Address (interface) to listen to)"`
+	RedirectPort int    `cfg:"redirect-port" default:"80" description:"Used normally to redirect from http to https. Will be ignored if zero or same as listening-port"`
+	Port         int    `cfg:"port" default:"80" description:"Port to listen to"`
+	CertFile     string `cfg:"cert-file" default:"" description:"Number of request to make total"`
+	CertKey      string `cfg:"cert-key" default:"" description:"Number of request to make total"`
+	DBLocation   string `cfg:"db-path" default:"./storage/db.bbolt" description:"Filepatht to where to store the database"`
 }
 
 type DynamicAuth struct {
@@ -75,6 +85,7 @@ func GetConfig(l logger.AppLogger) *Config {
 	if cfg.Concurrency > cfg.RequestCount {
 		cfg.Concurrency = cfg.RequestCount
 	}
+	l.Info().Str("config-file", viper.ConfigFileUsed()).Msg("Using config-file")
 	return &cfg
 }
 

@@ -62,6 +62,7 @@ type ApiConfig struct {
 	Port         int
 	CertFile     string
 	CertKey      string
+	DBLocation   string
 	logger.LogConfig
 }
 
@@ -84,20 +85,27 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	cfg := ApiConfig{
-		Address: "0.0.0.0",
-		// Port:    8084,
-		Port:         443,
-		RedirectPort: 80,
-		CertFile:     "server.crt",
-		CertKey:      "server.key",
-		LogConfig: logger.LogConfig{
-			Level:      "info",
-			Format:     "human",
-			WithCaller: true,
-		},
+	// TODO: owen the config!
+	config := cmd.GetConfig(logger.GetLogger("initial"))
+	cfg := config.Api
+	if cfg.Address == "" {
+		cfg.Address = "0.0.0.0"
 	}
-	logger.InitLogger(cfg.LogConfig)
+	if cfg.Port == 0 {
+		cfg.Port = 80
+	}
+	if config.LogFormat == "" {
+		config.LogFormat = "json"
+	}
+	if config.LogLevel == "" {
+		config.LogLevel = "info"
+	}
+	logger.InitLogger(logger.LogConfig{
+		Level:  config.LogLevel,
+		Format: config.LogFormat,
+		// We add this option during local development, but also if loglevel is debug
+		WithCaller: config.LogLevel == "debug" || GitHash == "",
+	})
 	l := logger.GetLogger("main")
 	l.Info().Str("version", Version).Time("buildDate", BuildDate).Time("buildDateLocal", BuildDate.Local()).Str("gitHash", GitHash).Msg("Starting")
 	pubsub := PubSub{make(chan handlers.Msg)}

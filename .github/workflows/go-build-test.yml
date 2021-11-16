@@ -71,9 +71,9 @@ jobs:
         docker push "runardocker/gobyoall:latest"
         docker push "runardocker/gobyoall:$(git describe --tag)"
 
-        docker build -t "runardocker/gobyoall:alpine-latest" -t "runardocker/gobyoall:alpine-$(git describe --tag)" -f Dockerfile.alpine  .
-        docker push "runardocker/gobyoall:alpine-latest"
-        docker push "runardocker/gobyoall:alpine-$(git describe --tag)"
+        docker build -t "runardocker/gobyoall:debug-latest" -t "runardocker/gobyoall:debug-$(git describe --tag)" -f Dockerfile.debug  .
+        docker push "runardocker/gobyoall:debug-latest"
+        docker push "runardocker/gobyoall:debug-$(git describe --tag)"
     - uses: "marvinpinto/action-automatic-releases@latest"
       name: "Release version"
       if: startsWith( github.ref, 'refs/tags/v')

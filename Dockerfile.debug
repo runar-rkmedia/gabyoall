@@ -1,6 +1,6 @@
-FROM alpine:3.14.3
+FROM gcr.io/distroless/base:debug
 
 WORKDIR /app
 COPY  ./dist/gobyoall-server-linux-amd64   ./gobyoall-server
 COPY   README.md api-conf-sample.toml ./
-CMD [ "./gobyoall-server" ]
+CMD [ "/app/gobyoall-server" ]

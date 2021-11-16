@@ -124,7 +124,7 @@ func main() {
 		Time("buildDate", BuildDate).
 		Time("buildDateLocal", BuildDate.Local()).
 		Str("gitHash", GitHash).
-		Str("db", config.Api.DBLocation).
+		Str("db", cfg.DBLocation).
 		Msg("Starting")
 	pubsub := PubSub{make(chan handlers.Msg)}
 	db, err := bboltStorage.NewBbolt(l, cfg.DBLocation, &pubsub)

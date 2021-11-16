@@ -1,0 +1,29 @@
+# This is a sample-configuration-file written in TOML-format.
+# If used, it should be named gobyoall.conf.toml.
+# To use yaml, name it gobyoall.config.yaml
+# To use json, name it gobyoall.config.json
+
+# LogLevel to use. Defaults to info
+# logLevel = "info"
+
+# LofFormat to use. Defaults to 'json'. Can be 'json' or 'human'
+# logFormat = "human"
+
+[api]
+# Address to listen to
+# address = "0.0.0.0"
+
+# Port to listen on. Defaults to port 80
+# port = 80
+
+# Location of database-file
+# DBLocation = "/storage/db.bbolt"
+
+# If using TLS, this should be the location of the certificate.
+# CertFile = ""
+
+# If using TLS, this should be the location of the certificate-key.
+# CertKey = ""     
+
+# If you want to redirect http to https, this can be set to port 80 to enable this feature, or a different port if you are using non-standard-ports
+# RedirectPort = 80

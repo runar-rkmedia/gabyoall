@@ -70,6 +70,10 @@ jobs:
         docker build -t "runardocker/gobyoall:latest" -t "runardocker/gobyoall:$(git describe --tag)"  .
         docker push "runardocker/gobyoall:latest"
         docker push "runardocker/gobyoall:$(git describe --tag)"
+
+        docker build -t "runardocker/gobyoall:alpine-latest" -t "runardocker/gobyoall:alpine-$(git describe --tag)" -f Dockerfile.alpine  .
+        docker push "runardocker/gobyoall:alpine-latest"
+        docker push "runardocker/gobyoall:alpine-$(git describe --tag)"
     - uses: "marvinpinto/action-automatic-releases@latest"
       name: "Release version"
       if: startsWith( github.ref, 'refs/tags/v')
@@ -78,11 +82,9 @@ jobs:
         prerelease: false
         files: |
           README.md
-          bin/*
-          static/swagger.yaml
-          static/swagger.md
-          static/config.md
-          static/config-json-schema.md
+          dist/*
+          api/generated-swagger.yml
+          *sample*
     - uses: "marvinpinto/action-automatic-releases@latest"
       name: "Release latest"
       if: startsWith( github.ref, 'refs/tags/v')
@@ -94,6 +96,7 @@ jobs:
           README.md
           dist/*
           api/generated-swagger.yml
+          *sample*
      
     
 

@@ -15,14 +15,18 @@ build-cli:
 	go build -ldflags="${ldflags}" -o dist/gobyoall${SUFFIX} main.go
 clean:
 	rm -rf dist
+	rm -rf frontend/dist
 test:
 	go test ./...
 lint:
 	golangci-lint run
 test-watch:
 	fd -e go | entr -r sh -c 'printf "%*s\n" "${COLUMNS:-$(tput cols)}" "" | tr " " - && gotest ./... | grep -v "no test files"'
+build-web:
+	cd frontend && yarn build
 build:
 	${MAKE} clean
+	${MAKE} build-web
 	@GOOS=linux   GOARCH=amd64    SUFFIX="-linux-amd64"  ${MAKE} build-server
 	@GOOS=darwin                  SUFFIX="-darwin"       ${MAKE} build-server
 	@GOOS=windows                 SUFFIX=".exe"         ${MAKE} build-server

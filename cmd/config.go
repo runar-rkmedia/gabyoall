@@ -62,7 +62,7 @@ type ApiConfig struct {
 	Port         int    `cfg:"port" default:"80" description:"Port to listen to"`
 	CertFile     string `cfg:"cert-file" default:"" description:"Number of request to make total"`
 	CertKey      string `cfg:"cert-key" default:"" description:"Number of request to make total"`
-	DBLocation   string `cfg:"db-path" default:"./storage/db.bbolt" description:"Filepatht to where to store the database"`
+	DBLocation   string `cfg:"db-path" default:"./storage/db.bbolt" description:"Filepath to where to store the database"`
 }
 
 type DynamicAuth struct {

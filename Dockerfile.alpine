@@ -1,5 +1,6 @@
 FROM alpine:3.14.3
 
 WORKDIR /app
-COPY  ./dist/gobyoall-server-linux-amd64 README.md api-conf-sample.toml ./
+COPY  ./dist/gobyoall-server-linux-amd64   ./gobyoall-server
+COPY   README.md api-conf-sample.toml ./
 CMD [ "./gobyoall-server" ]

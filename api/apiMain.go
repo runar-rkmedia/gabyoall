@@ -78,6 +78,15 @@ func (ps *PubSub) Publish(kind, variant string, content interface{}) {
 	}
 }
 
+func getDefaultDBLocation() string {
+	if s, err := os.Stat("./gobyoall.bbolt"); err == nil && !s.IsDir() {
+		return "./storage/gobyoall.bbolt"
+	} else if s, err := os.Stat("./storage"); err == nil && s.IsDir() {
+		return "./storage/gobyoall.bbolt"
+	}
+	return "./gobyoall.bbolt"
+}
+
 //go:generate swagger generate spec -o generated-swagger.yml
 //go:generate sh -c "cd ../frontend && yarn gen"
 func main() {
@@ -100,6 +109,9 @@ func main() {
 	if config.LogLevel == "" {
 		config.LogLevel = "info"
 	}
+	if cfg.DBLocation == "" {
+		cfg.DBLocation = getDefaultDBLocation()
+	}
 	logger.InitLogger(logger.LogConfig{
 		Level:  config.LogLevel,
 		Format: config.LogFormat,
@@ -107,9 +119,15 @@ func main() {
 		WithCaller: config.LogLevel == "debug" || GitHash == "",
 	})
 	l := logger.GetLogger("main")
-	l.Info().Str("version", Version).Time("buildDate", BuildDate).Time("buildDateLocal", BuildDate.Local()).Str("gitHash", GitHash).Msg("Starting")
+	l.Info().
+		Str("version", Version).
+		Time("buildDate", BuildDate).
+		Time("buildDateLocal", BuildDate.Local()).
+		Str("gitHash", GitHash).
+		Str("db", config.Api.DBLocation).
+		Msg("Starting")
 	pubsub := PubSub{make(chan handlers.Msg)}
-	db, err := bboltStorage.NewBbolt(l, "db.bbolt", &pubsub)
+	db, err := bboltStorage.NewBbolt(l, cfg.DBLocation, &pubsub)
 	if err != nil {
 		l.Fatal().Err(err).Msg("Failed to initialize storage")
 	}

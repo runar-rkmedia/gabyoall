@@ -22,6 +22,29 @@ jobs:
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
+    - name: Setup Golang caches
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-golang${{ inputs.cache-key-suffix }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-golang${{ inputs.cache-key-suffix }}-
+    - name: Test
+
+      run: |
+        mkdir frontend/dist
+        touch frontend/dist/test
+        touch api/generated-swagger.yml
+        go test -v ./...
+        rm frontend/dist/test
+    - name: Fetch Go-Swagger
+      run: |
+        download_url=$(curl -s https://api.github.com/repos/go-swagger/go-swagger/releases/latest | \
+        jq -r '.assets[] | select(.name | contains("'"$(uname | tr '[:upper:]' '[:lower:]')"'_amd64")) | .browser_download_url')
+        curl -o /usr/local/bin/swagger -L'#' "$download_url"
+        chmod +x /usr/local/bin/swagger
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(cd frontend && yarn config get cacheFolder)"
@@ -33,29 +56,12 @@ jobs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-    - name: Setup Golang caches
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-golang${{ inputs.cache-key-suffix }}-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-golang${{ inputs.cache-key-suffix }}-
-    - name: Fetch Go-Swagger
-      run: |
-        download_url=$(curl -s https://api.github.com/repos/go-swagger/go-swagger/releases/latest | \
-        jq -r '.assets[] | select(.name | contains("'"$(uname | tr '[:upper:]' '[:lower:]')"'_amd64")) | .browser_download_url')
-        curl -o /usr/local/bin/swagger -L'#' "$download_url"
-        chmod +x /usr/local/bin/swagger
     - name: Yarn (frontend)
       run: cd frontend && yarn
     - name: Generate
       run: go generate -v ./...
     - name: Build frontend
       run: cd frontend && yarn build
-    - name: Test
-      run: go test -v ./...
     - name: Build server
       run: make build
     - name: Login to Docker Hub

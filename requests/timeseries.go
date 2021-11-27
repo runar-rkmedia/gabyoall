@@ -1,7 +1,19 @@
 package requests
 
+/*
+
+This turned out a bit more complex than originally anticipated.
+
+- We try to compact the timeseries upon storage as much as possible. For this we use the gorilla algorithm from go-tsz.
+- However, this requries all timeseries to be pushed in a timely ordered fashion.
+- We want to push timeseries from each go-routine
+- We want to preview the timeseries as it is populated on an interval.
+
+*/
+
 import (
 	"encoding/json"
+	"sort"
 	"sync"
 	"time"
 
@@ -9,19 +21,68 @@ import (
 )
 
 type TimeSeries struct {
+	ordered        bool
+	finished       bool
+	orderingValues *orderingSlice
 	tsz.Series
 }
 
-func NewTimeSeries(startTime time.Time) *TimeSeries {
-	st := uint64(startTime.UnixMilli())
-	return &TimeSeries{
-		*tsz.New(st),
+type orderingSlice []Serie
+
+func (o orderingSlice) Len() int           { return len(o) }
+func (o orderingSlice) Less(i, j int) bool { return o[i][0] > o[j][0] }
+func (o orderingSlice) Swap(i, j int)      { o[i], o[j] = o[j], o[i] }
+
+type TimeSeriesOptions struct {
+	// Set to true if the caller can guarantee that the pushed values are coming in at an timely ordered fashion.
+	// This will reduce the memory-requirement, but if items are out of order, the times produced will be garbled.
+	Ordered bool
+}
+
+func NewTimeSeries(startTime time.Time, options ...TimeSeriesOptions) *TimeSeries {
+	var opts TimeSeriesOptions
+	if len(options) > 0 {
+		opts = options[0]
+	} else {
+		opts = TimeSeriesOptions{false}
 	}
+	st := uint64(startTime.UnixMilli())
+	t := TimeSeries{
+		ordered: opts.Ordered,
+		Series:  *tsz.New(st),
+	}
+	if !t.ordered {
+		t.orderingValues = &orderingSlice{}
+	}
+	return &t
+}
+
+func (ts *TimeSeries) Finish() {
+	// This may require locking
+	if ts.finished {
+		return
+	}
+	if !ts.ordered {
+		ts.ordered = true
+		sort.Sort(*ts.orderingValues)
+		for i := 0; i < len(*ts.orderingValues); i++ {
+			// fmt.Println(
+			// 	(*ts.orderingValues)[i].time, (*ts.orderingValues)[i].v,
+			// )
+			ts.Push(TimeSeriePointToTime((*ts.orderingValues)[i][0]), float64((*ts.orderingValues)[i][1]))
+		}
+	}
+	ts.Series.Finish()
+	ts.finished = true
 }
 
 // Each push must be in order!
 func (ts *TimeSeries) Push(t time.Time, v float64) {
 	st := uint64(t.UnixMilli())
+	if !ts.ordered {
+		*ts.orderingValues = append(*ts.orderingValues, Serie{st, uint64(v)})
+		return
+	}
 	ts.Series.Push(st, v)
 	return
 }
@@ -29,8 +90,22 @@ func (ts *TimeSeries) Expand() *TimeSeriesExpanded {
 	if ts == nil {
 		return nil
 	}
-	iter := ts.Iter()
 	exp := TimeSeriesExpanded{}
+	if !ts.finished && !ts.ordered {
+		if len(*ts.orderingValues) == 0 {
+			return &exp
+		}
+		sort.Sort(ts.orderingValues)
+		t0 := uint64((*ts.orderingValues)[0][0])
+		exp.StartTime = TimeSeriePointToTime((*ts.orderingValues)[0][0])
+		for i := 0; i < len(*ts.orderingValues); i++ {
+			t := (*ts.orderingValues)[i][0]
+			exp.Series = append(exp.Series, Serie{t - t0, uint64((*ts.orderingValues)[i][1])})
+		}
+
+		return &exp
+	}
+	iter := ts.Iter()
 	if ok := iter.Next(); !ok {
 		return nil
 	}
@@ -64,7 +139,7 @@ type TimeSeriesMap struct {
 func (tsm *TimeSeriesMap) Push(label string, t time.Time, value float64) {
 
 	// Not really sure if this is beneficial, but the idea is this:
-	// Normally, a new Timeseries with lable x is only created only, but there are lots of .Push'es.
+	// Normally, a new Timeseries with label x is only created only, but there are lots of .Push'es.
 	// Therefire, we attempt to only use a read-lock and check if we need to add a TimeSeries, which will require locking.
 	// When we issue the write-lock, we must first unlock the read-lock.
 	tsm.lock.RLock()

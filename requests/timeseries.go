@@ -52,7 +52,7 @@ func (ts *TimeSeries) Expand() *TimeSeriesExpanded {
 }
 
 func TimeSeriePointToTime(v uint64) time.Time {
-	return time.UnixMilli(int64(v))
+	return time.UnixMilli(int64(v)).UTC()
 }
 
 type TimeSeriesMap struct {
